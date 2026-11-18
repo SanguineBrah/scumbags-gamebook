@@ -48,6 +48,7 @@ export const SECTIONS = {
     ],
   },
   dog_moved: {
+    on: [{ flag: 'deedCopy' }],
     text: ['The dog is the size of a pony and the temperament of a cushion. Under it, warm and slightly damp, is the town’s copy of the deed.'],
     choices: [{ text: 'Take the copy', to: 'deed' }],
   },
@@ -57,6 +58,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
   deed_forged: {
+    on: [{ flag: 'deedCopy' }],
     text: ['With the clerk’s help and an old seal from a drawer, you produce a copy of the deed so good that the clerk files it and forgets it was ever a forgery.'],
     choices: [{ text: 'Take the copy', to: 'deed' }],
   },
@@ -71,7 +73,9 @@ export const SECTIONS = {
   },
   deed: {
     on: [{ flag: 'deed' }, { item: 'deed' }],
-    text: ['Under a pile of scented handkerchiefs in Grimsby’s carriage is a framed parchment: the deed to the square, granting it to the people of Middle Whelping forever. Grimsby doesn’t own the square at all. He’s been charging the market rent on it for twelve years.'],
+    text: (c) => [c.flags.deedCopy
+      ? 'The deed grants the square to the people of Middle Whelping forever. Grimsby doesn’t own it at all. He’s been charging the market rent on it for twelve years.'
+      : 'Under a pile of scented handkerchiefs in Grimsby’s carriage is a framed parchment: the deed to the square, granting it to the people of Middle Whelping forever. Grimsby doesn’t own the square at all. He’s been charging the market rent on it for twelve years.'],
     choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }],
   },
   bailiffs: {
@@ -244,7 +248,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the room', to: 'apex' }],
   },
   burn: {
-    text: ['You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels and a melted jar.'],
+    text: (c) => [`You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
     on: [{ flag: 'burnt' }],
     choices: [{ text: 'Go and collect your fee', to: 'payday' }],
   },
@@ -265,7 +269,7 @@ export const SECTIONS = {
             : c.flags.kobsBeaten
               ? 'The kobolds are gone. Lord Grimsby pays you, eventually, after counting it twice.'
               : 'The pyramid is still in the square, and the kobolds are still in it. Lord Grimsby pays you nothing, and says so, loudly, from a safe distance.',
-      `You walk away from Middle Whelping with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      `You walk away from Middle Whelping with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };

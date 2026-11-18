@@ -109,7 +109,14 @@ export class Game {
     const list = mundane ? c.mundane : c.significant;
     const limit = mundane ? MUNDANE_LIMIT : SIGNIFICANT_LIMIT;
     const size = mundane ? 1 : (SIGNIFICANT[id].slots || 1);
-    const used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    let used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    // Coins are the easiest thing to leave behind: drop enough of them to make room for the item.
+    if (!mundane && used + size > limit && itemSlots(c) + size <= limit) {
+      const keep = (limit - itemSlots(c) - size) * 50;
+      const dropped = c.gold - keep; c.gold = keep;
+      this.say(`To make room, you leave ${dropped}GP behind.`, 'bad');
+      used = itemSlots(c) + Math.ceil(c.gold / 50);
+    }
     if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
     list.push(makeItem(id)); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
     return true;

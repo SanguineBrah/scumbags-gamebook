@@ -8,7 +8,7 @@ export const META = {
 
 const twin = (name) => ({ name, lvl: 2, hp: 7, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' });
 const count = { name: 'Count Fortunato', lvl: 7, range: 'engaged', feats: ['undead', 'unluckyAura', 'critWide'], note: 'Luck vampire; each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' };
-const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
+const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning. Not long till dawn', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
 const GAME = { add: ['hour', 1] };
 
 export const SECTIONS = {
@@ -21,7 +21,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go down the steps', to: 'doors' }],
   },
   doors: {
-    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says one. “Dress code,” says the other. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
+    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says Rex. “Dress code,” says Tex. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
     choices: [
       { text: 'Flash your purse (needs 30GP)', to: 'floor', if: { gold: 30 } },
       { text: 'Tell them you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'twins_fight' },
@@ -35,7 +35,7 @@ export const SECTIONS = {
   },
   twins_fight: {
     text: ['“Then you’ll—” “—be leaving.” They come at you from both sides, which leaves their backs wide open.'],
-    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
+    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
   twins_win: {
     on: [{ flag: 'twinsDown' }, { gold: 20, msg: 'Their tips jar: 20GP.' }], onceOnly: true,
@@ -87,7 +87,7 @@ export const SECTIONS = {
     text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. The Bouncer Twins look up from the door.'],
     fight: {
       unless: { flag: 'twinsDown' },
-      monsters: [twin('Rex'), twin('Dex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
+      monsters: [twin('Rex'), twin('Tex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
     },
     choices: [{ text: 'Back to the floor, before anyone else notices', to: 'floor' }],
   },
@@ -165,7 +165,7 @@ export const SECTIONS = {
   bar_bad: { on: [{ damage: 'd4', from: 'The Bloody Count' }], text: ['It is not tomato juice. You feel dreadful.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
   bar_gossip: {
     on: [{ flag: 'gossip' }],
-    text: ['The barman leans closer. “Can’t stand his own reflection, the Count. No mirrors down here, ever. And come dawn he’s in his coffin, out like a light, till dusk. Keeps the coffin key in the office. Not that I told you.”'],
+    text: ['The barman leans closer. “Terrified of mirrors, the Count. Won’t have one down here. And come dawn he’s in his coffin, out like a light, till dusk. Keeps the coffin key in the office. Not that I told you.”'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   bar_shrug: { text: ['“Never heard of him,” says the barman, polishing a glass with a shaking hand.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
@@ -241,7 +241,7 @@ export const SECTIONS = {
   },
   count_won: {
     on: [{ gold: -1000, msg: 'You lose everything you have.' }],
-    text: ['You cut the deck. Ace. He cuts. Ace, again, and the one under it. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
+    text: ['You cut the deck. Ace. He cuts. Another ace, of a suit you’re fairly sure doesn’t exist. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
     choices: [{ text: 'Attack him, since you’ve nothing left to lose', to: 'count_fight' }, { text: 'Crawl back upstairs', to: 'floor' }],
   },
   mirror: {
@@ -280,20 +280,20 @@ export const SECTIONS = {
       ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
       : ['At the door, the Bouncer Twins look at your bulging pockets. “Leaving—” says one. “—so soon?” says the other. “Exit fee.”'],
     choices: [
-      { text: 'Walk out into the dawn', to: 'dawn_out', show: { flag: 'twinsDown' } },
+      { text: 'Walk out', to: 'dawn_out', show: { flag: 'twinsDown' } },
       { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { notFlag: 'twinsDown' } },
       { text: 'Fight your way out', to: 'exit_fight', show: { notFlag: 'twinsDown' } },
     ],
   },
   exit_fight: {
     text: ['“Then you’ll—” “—be staying.”'],
-    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'dawn_out' },
+    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'dawn_out' },
   },
   dawn_out: {
     end: 'victory',
     text: (c) => [
-      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That, too, is none of your business.',
-      `You leave with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That is none of your business.',
+      `You leave with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };

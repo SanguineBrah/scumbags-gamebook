@@ -1311,7 +1311,7 @@ const SECTIONS = {
   },
   stump_friend: {
     on: [{ flag: 'stump' }],
-    text: ['“Thirty years,” says Mrs Stump, “making nine-foot cakes.” She puts down the whisk. “The hat goes back in the vault at eleven. There’s a dumbwaiter from this kitchen straight up to it. Rope’s sound. Dumbwaiter isn’t. And watch out for Big Ned.” She doesn’t say who Big Ned is. She doesn’t have to.'],
+    text: ['“Thirty years,” says Mrs Stump, “making nine-foot cakes.” She puts down the whisk. “The hat’s in the vault till the unveiling. There’s a dumbwaiter from this kitchen straight up to it. Rope’s sound. Dumbwaiter isn’t. And watch out for Big Ned.” She doesn’t say who Big Ned is. She doesn’t have to.'],
     choices: [{ text: 'Step into the kitchen', to: 'kitchen' }],
   },
   stump_cross: {
@@ -1377,7 +1377,7 @@ const SECTIONS = {
     ],
   },
   speech_listen: {
-    text: ['The speech is about height. It goes on for some time. The Lord announces that the Lofty Hat will be unveiled at nine, “and then returned to the vault, whose key is somewhere very high up, ha ha”. Nobody laughs, because he is the Lord, and then everybody does.'],
+    text: ['The speech is about height. It goes on for some time. The Lord announces that the Lofty Hat will be unveiled at midnight. “Until then it stays in the vault, whose key is somewhere very high up, ha ha.” Nobody laughs, because he is the Lord, and then everybody does.'],
     on: [{ flag: 'keyHigh' }],
     choices: [{ text: 'Back to the party', to: 'long_hall' }],
   },
@@ -1439,7 +1439,7 @@ const SECTIONS = {
     text: ['The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. Under the pillow is a diary.'],
     choices: [
       { text: 'Take the diary', to: 'diary', show: { notFlag: 'diary' } },
-      { text: 'Steal a pair of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
+      { text: 'Steal one of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
       { text: 'Back to the gallery', to: 'gallery' },
     ],
   },
@@ -1586,13 +1586,14 @@ const SECTIONS = {
   grubb: {
     end: 'victory',
     on: [
-      { sell: { item: 'hat', gold: 400, text: 'Mother Grubb takes the Lofty Hat and counts out the money' } },
+      { sell: { item: 'hat', gold: 370, text: 'Mother Grubb takes the Lofty Hat and counts out 400 gold, less the 30 she lent you' } },
       { sell: { item: 'diary', gold: 100, text: 'Lord Shortshanks buys the diary, laughing so hard he has to sit down' } },
       { sell: { item: 'candlestick', gold: 25, text: 'Mother Grubb takes the candlestick' } },
+      { if: { notFlag: 'sold_hat' }, gold: -30, msg: 'She takes back the 30GP she lent you.' },
     ],
     text: (c) => [
       'Mother Grubb’s barrow is waiting in the alley behind the Drowned Rat, as if it had always been there.',
-      c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says. “Then you owe me thirty gold. I’ll put it on your tab.” You don’t have a tab. You have one now.',
+      c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says, and holds out her hand for her thirty gold. Whatever you can’t pay goes on your tab. You didn’t have a tab before. You do now.',
       'Every 200GP you squander on a pointless endeavour gains you a level.',
     ],
   },
@@ -1616,7 +1617,7 @@ const META = {
 
 const twin = (name) => ({ name, lvl: 2, hp: 7, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' });
 const count = { name: 'Count Fortunato', lvl: 7, range: 'engaged', feats: ['undead', 'unluckyAura', 'critWide'], note: 'Luck vampire; each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' };
-const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
+const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning. Not long till dawn', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
 const GAME = { add: ['hour', 1] };
 
 const SECTIONS = {
@@ -1629,7 +1630,7 @@ const SECTIONS = {
     choices: [{ text: 'Go down the steps', to: 'doors' }],
   },
   doors: {
-    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says one. “Dress code,” says the other. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
+    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says Rex. “Dress code,” says Tex. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
     choices: [
       { text: 'Flash your purse (needs 30GP)', to: 'floor', if: { gold: 30 } },
       { text: 'Tell them you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'twins_fight' },
@@ -1643,7 +1644,7 @@ const SECTIONS = {
   },
   twins_fight: {
     text: ['“Then you’ll—” “—be leaving.” They come at you from both sides, which leaves their backs wide open.'],
-    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
+    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
   twins_win: {
     on: [{ flag: 'twinsDown' }, { gold: 20, msg: 'Their tips jar: 20GP.' }], onceOnly: true,
@@ -1695,7 +1696,7 @@ const SECTIONS = {
     text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. The Bouncer Twins look up from the door.'],
     fight: {
       unless: { flag: 'twinsDown' },
-      monsters: [twin('Rex'), twin('Dex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
+      monsters: [twin('Rex'), twin('Tex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
     },
     choices: [{ text: 'Back to the floor, before anyone else notices', to: 'floor' }],
   },
@@ -1773,7 +1774,7 @@ const SECTIONS = {
   bar_bad: { on: [{ damage: 'd4', from: 'The Bloody Count' }], text: ['It is not tomato juice. You feel dreadful.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
   bar_gossip: {
     on: [{ flag: 'gossip' }],
-    text: ['The barman leans closer. “Can’t stand his own reflection, the Count. No mirrors down here, ever. And come dawn he’s in his coffin, out like a light, till dusk. Keeps the coffin key in the office. Not that I told you.”'],
+    text: ['The barman leans closer. “Terrified of mirrors, the Count. Won’t have one down here. And come dawn he’s in his coffin, out like a light, till dusk. Keeps the coffin key in the office. Not that I told you.”'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   bar_shrug: { text: ['“Never heard of him,” says the barman, polishing a glass with a shaking hand.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
@@ -1849,7 +1850,7 @@ const SECTIONS = {
   },
   count_won: {
     on: [{ gold: -1000, msg: 'You lose everything you have.' }],
-    text: ['You cut the deck. Ace. He cuts. Ace, again, and the one under it. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
+    text: ['You cut the deck. Ace. He cuts. Another ace, of a suit you’re fairly sure doesn’t exist. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
     choices: [{ text: 'Attack him, since you’ve nothing left to lose', to: 'count_fight' }, { text: 'Crawl back upstairs', to: 'floor' }],
   },
   mirror: {
@@ -1888,20 +1889,20 @@ const SECTIONS = {
       ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
       : ['At the door, the Bouncer Twins look at your bulging pockets. “Leaving—” says one. “—so soon?” says the other. “Exit fee.”'],
     choices: [
-      { text: 'Walk out into the dawn', to: 'dawn_out', show: { flag: 'twinsDown' } },
+      { text: 'Walk out', to: 'dawn_out', show: { flag: 'twinsDown' } },
       { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { notFlag: 'twinsDown' } },
       { text: 'Fight your way out', to: 'exit_fight', show: { notFlag: 'twinsDown' } },
     ],
   },
   exit_fight: {
     text: ['“Then you’ll—” “—be staying.”'],
-    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'dawn_out' },
+    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'dawn_out' },
   },
   dawn_out: {
     end: 'victory',
     text: (c) => [
-      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That, too, is none of your business.',
-      `You leave with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That is none of your business.',
+      `You leave with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };
@@ -2002,7 +2003,7 @@ const SECTIONS = {
     text: ['The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. A pair of knitting needles like lances. A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel.'],
     choices: [
       { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
-      { text: 'Take a knitting needle as a lance', to: 'needle', show: { notFlag: 'needle' } },
+      { text: 'Drag a knitting needle to the edge of the table', to: 'needle', show: { notFlag: 'needle' } },
       { text: 'Climb down', to: 'kitchen' },
     ],
   },
@@ -2104,7 +2105,7 @@ const SECTIONS = {
   nursery: {
     text: (c) => c.flags.babyAsleep
       ? ['The baby is asleep in its cot, sucking a thumb the size of a ham.']
-      : ['In a cot the size of a cottage sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
+      : ['In a cot the size of a barn sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
     choices: [
       { text: 'Give it its rattle', to: 'baby_rattle', if: { item: 'rattle' }, show: { notFlag: 'babyAsleep' } },
       { text: 'Sing it a lullaby', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you’ve sung people to sleep before' }, pass: 'baby_sleep', fail: 'baby_cries', show: { notFlag: 'babyAsleep' } },
@@ -2192,8 +2193,9 @@ const SECTIONS = {
     choices: [{ text: 'Climb down into the kitchen', to: 'kitchen' }],
   },
   vicar: {
-    text: ['The vicar arrives at teatime. He is an ordinary-sized man who has been the hill giants’ vicar for forty years and is unsurprised by anything. He looks at you in your jar. “Ah,” he says. “Turnbull sent you, did he?” While Mother pours the tea, he unscrews the lid, quietly puts the Golden Turnip back on the mantelpiece if you had it, and drops you into his coat pocket. He carries you down the hill without a word, and sets you down in the lane. “Go home,” he says.'],
-    on: [{ lose: 'turnip' }],
+    text: (c) => ['The vicar arrives at teatime. He is an ordinary-sized man who has been the hill giants’ vicar for forty years and is unsurprised by anything. He looks at you in your jar. “Ah,” he says. “Turnbull sent you, did he?”',
+      `While Mother pours the tea, he unscrews the lid${c.flags.vicarTookIt ? ', quietly puts the Golden Turnip back on the mantelpiece' : ''} and drops you into his coat pocket. He carries you down the hill without a word, and sets you down in the lane. “Go home,” he says.`],
+    on: [{ if: { item: 'turnip' }, flag: 'vicarTookIt' }, { lose: 'turnip' }, { unflag: 'turnip' }],
     choices: [{ text: 'Go to Turnbull’s', to: 'turnbull' }],
   },
   turnbull: {
@@ -2204,7 +2206,7 @@ const SECTIONS = {
     ],
     text: (c) => [
       c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a shotgun. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
-      `You come down from Hogback Hill with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      `You come down from Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };
@@ -2267,6 +2269,7 @@ const SECTIONS = {
     ],
   },
   dog_moved: {
+    on: [{ flag: 'deedCopy' }],
     text: ['The dog is the size of a pony and the temperament of a cushion. Under it, warm and slightly damp, is the town’s copy of the deed.'],
     choices: [{ text: 'Take the copy', to: 'deed' }],
   },
@@ -2276,6 +2279,7 @@ const SECTIONS = {
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
   deed_forged: {
+    on: [{ flag: 'deedCopy' }],
     text: ['With the clerk’s help and an old seal from a drawer, you produce a copy of the deed so good that the clerk files it and forgets it was ever a forgery.'],
     choices: [{ text: 'Take the copy', to: 'deed' }],
   },
@@ -2290,7 +2294,9 @@ const SECTIONS = {
   },
   deed: {
     on: [{ flag: 'deed' }, { item: 'deed' }],
-    text: ['Under a pile of scented handkerchiefs in Grimsby’s carriage is a framed parchment: the deed to the square, granting it to the people of Middle Whelping forever. Grimsby doesn’t own the square at all. He’s been charging the market rent on it for twelve years.'],
+    text: (c) => [c.flags.deedCopy
+      ? 'The deed grants the square to the people of Middle Whelping forever. Grimsby doesn’t own it at all. He’s been charging the market rent on it for twelve years.'
+      : 'Under a pile of scented handkerchiefs in Grimsby’s carriage is a framed parchment: the deed to the square, granting it to the people of Middle Whelping forever. Grimsby doesn’t own the square at all. He’s been charging the market rent on it for twelve years.'],
     choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }],
   },
   bailiffs: {
@@ -2463,7 +2469,7 @@ const SECTIONS = {
     choices: [{ text: 'Back to the room', to: 'apex' }],
   },
   burn: {
-    text: ['You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels and a melted jar.'],
+    text: (c) => [`You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
     on: [{ flag: 'burnt' }],
     choices: [{ text: 'Go and collect your fee', to: 'payday' }],
   },
@@ -2484,7 +2490,7 @@ const SECTIONS = {
             : c.flags.kobsBeaten
               ? 'The kobolds are gone. Lord Grimsby pays you, eventually, after counting it twice.'
               : 'The pyramid is still in the square, and the kobolds are still in it. Lord Grimsby pays you nothing, and says so, loudly, from a safe distance.',
-      `You walk away from Middle Whelping with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      `You walk away from Middle Whelping with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };
@@ -2607,7 +2613,14 @@ class Game {
     const list = mundane ? c.mundane : c.significant;
     const limit = mundane ? MUNDANE_LIMIT : SIGNIFICANT_LIMIT;
     const size = mundane ? 1 : (SIGNIFICANT[id].slots || 1);
-    const used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    let used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    // Coins are the easiest thing to leave behind: drop enough of them to make room for the item.
+    if (!mundane && used + size > limit && itemSlots(c) + size <= limit) {
+      const keep = (limit - itemSlots(c) - size) * 50;
+      const dropped = c.gold - keep; c.gold = keep;
+      this.say(`To make room, you leave ${dropped}GP behind.`, 'bad');
+      used = itemSlots(c) + Math.ceil(c.gold / 50);
+    }
     if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
     list.push(makeItem(id)); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
     return true;

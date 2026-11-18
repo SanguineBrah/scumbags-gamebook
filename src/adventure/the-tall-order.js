@@ -99,7 +99,7 @@ export const SECTIONS = {
   },
   stump_friend: {
     on: [{ flag: 'stump' }],
-    text: ['“Thirty years,” says Mrs Stump, “making nine-foot cakes.” She puts down the whisk. “The hat goes back in the vault at eleven. There’s a dumbwaiter from this kitchen straight up to it. Rope’s sound. Dumbwaiter isn’t. And watch out for Big Ned.” She doesn’t say who Big Ned is. She doesn’t have to.'],
+    text: ['“Thirty years,” says Mrs Stump, “making nine-foot cakes.” She puts down the whisk. “The hat’s in the vault till the unveiling. There’s a dumbwaiter from this kitchen straight up to it. Rope’s sound. Dumbwaiter isn’t. And watch out for Big Ned.” She doesn’t say who Big Ned is. She doesn’t have to.'],
     choices: [{ text: 'Step into the kitchen', to: 'kitchen' }],
   },
   stump_cross: {
@@ -165,7 +165,7 @@ export const SECTIONS = {
     ],
   },
   speech_listen: {
-    text: ['The speech is about height. It goes on for some time. The Lord announces that the Lofty Hat will be unveiled at nine, “and then returned to the vault, whose key is somewhere very high up, ha ha”. Nobody laughs, because he is the Lord, and then everybody does.'],
+    text: ['The speech is about height. It goes on for some time. The Lord announces that the Lofty Hat will be unveiled at midnight. “Until then it stays in the vault, whose key is somewhere very high up, ha ha.” Nobody laughs, because he is the Lord, and then everybody does.'],
     on: [{ flag: 'keyHigh' }],
     choices: [{ text: 'Back to the party', to: 'long_hall' }],
   },
@@ -227,7 +227,7 @@ export const SECTIONS = {
     text: ['The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. Under the pillow is a diary.'],
     choices: [
       { text: 'Take the diary', to: 'diary', show: { notFlag: 'diary' } },
-      { text: 'Steal a pair of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
+      { text: 'Steal one of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
       { text: 'Back to the gallery', to: 'gallery' },
     ],
   },
@@ -374,13 +374,14 @@ export const SECTIONS = {
   grubb: {
     end: 'victory',
     on: [
-      { sell: { item: 'hat', gold: 400, text: 'Mother Grubb takes the Lofty Hat and counts out the money' } },
+      { sell: { item: 'hat', gold: 370, text: 'Mother Grubb takes the Lofty Hat and counts out 400 gold, less the 30 she lent you' } },
       { sell: { item: 'diary', gold: 100, text: 'Lord Shortshanks buys the diary, laughing so hard he has to sit down' } },
       { sell: { item: 'candlestick', gold: 25, text: 'Mother Grubb takes the candlestick' } },
+      { if: { notFlag: 'sold_hat' }, gold: -30, msg: 'She takes back the 30GP she lent you.' },
     ],
     text: (c) => [
       'Mother Grubb’s barrow is waiting in the alley behind the Drowned Rat, as if it had always been there.',
-      c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says. “Then you owe me thirty gold. I’ll put it on your tab.” You don’t have a tab. You have one now.',
+      c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says, and holds out her hand for her thirty gold. Whatever you can’t pay goes on your tab. You didn’t have a tab before. You do now.',
       'Every 200GP you squander on a pointless endeavour gains you a level.',
     ],
   },

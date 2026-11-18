@@ -84,3 +84,22 @@ test('monster armour soaks damage before HP', async () => {
   hurtMonster(g, f, m, 8);
   assert.equal(m.ap, 0); assert.equal(m.hp, 4);
 });
+
+test('a big item makes room by leaving coins behind', () => {
+  const g = new Game(adv, 8); g.begin(make(8));
+  g.c.gold = 550;   // 11 slots of coin + the starting potion = 12
+  g.give('hat');    // 4 slots
+  assert.ok(g.c.significant.some((i) => i.id === 'hat'));
+  assert.ok(g.c.gold <= 350 && g.c.gold >= 300);
+});
+
+test('every adventure is complete and its final section is a victory', async () => {
+  const { ADVENTURES, buildAdventure } = await import('../src/adventure/index.js');
+  assert.equal(ADVENTURES.length, 5);
+  for (const a of ADVENTURES) {
+    const b = buildAdventure(a.id);
+    assert.equal(b.numbers.start, 1);
+    assert.equal(b.numbers[a.final], b.count);
+    assert.equal(b.sections[a.final].end, 'victory');
+  }
+});

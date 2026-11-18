@@ -86,7 +86,7 @@ export const SECTIONS = {
     text: ['The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. A pair of knitting needles like lances. A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel.'],
     choices: [
       { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
-      { text: 'Take a knitting needle as a lance', to: 'needle', show: { notFlag: 'needle' } },
+      { text: 'Drag a knitting needle to the edge of the table', to: 'needle', show: { notFlag: 'needle' } },
       { text: 'Climb down', to: 'kitchen' },
     ],
   },
@@ -188,7 +188,7 @@ export const SECTIONS = {
   nursery: {
     text: (c) => c.flags.babyAsleep
       ? ['The baby is asleep in its cot, sucking a thumb the size of a ham.']
-      : ['In a cot the size of a cottage sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
+      : ['In a cot the size of a barn sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
     choices: [
       { text: 'Give it its rattle', to: 'baby_rattle', if: { item: 'rattle' }, show: { notFlag: 'babyAsleep' } },
       { text: 'Sing it a lullaby', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you’ve sung people to sleep before' }, pass: 'baby_sleep', fail: 'baby_cries', show: { notFlag: 'babyAsleep' } },
@@ -276,8 +276,9 @@ export const SECTIONS = {
     choices: [{ text: 'Climb down into the kitchen', to: 'kitchen' }],
   },
   vicar: {
-    text: ['The vicar arrives at teatime. He is an ordinary-sized man who has been the hill giants’ vicar for forty years and is unsurprised by anything. He looks at you in your jar. “Ah,” he says. “Turnbull sent you, did he?” While Mother pours the tea, he unscrews the lid, quietly puts the Golden Turnip back on the mantelpiece if you had it, and drops you into his coat pocket. He carries you down the hill without a word, and sets you down in the lane. “Go home,” he says.'],
-    on: [{ lose: 'turnip' }],
+    text: (c) => ['The vicar arrives at teatime. He is an ordinary-sized man who has been the hill giants’ vicar for forty years and is unsurprised by anything. He looks at you in your jar. “Ah,” he says. “Turnbull sent you, did he?”',
+      `While Mother pours the tea, he unscrews the lid${c.flags.vicarTookIt ? ', quietly puts the Golden Turnip back on the mantelpiece' : ''} and drops you into his coat pocket. He carries you down the hill without a word, and sets you down in the lane. “Go home,” he says.`],
+    on: [{ if: { item: 'turnip' }, flag: 'vicarTookIt' }, { lose: 'turnip' }, { unflag: 'turnip' }],
     choices: [{ text: 'Go to Turnbull’s', to: 'turnbull' }],
   },
   turnbull: {
@@ -288,7 +289,7 @@ export const SECTIONS = {
     ],
     text: (c) => [
       c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a shotgun. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
-      `You come down from Hogback Hill with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+      `You come down from Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
 };
