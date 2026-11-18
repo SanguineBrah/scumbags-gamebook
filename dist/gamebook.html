@@ -565,9 +565,9 @@ const BLURB = 'Usurer Vane died owing nobody anything. Everybody owed him. His c
 
 const SECTIONS = {
   start: {
-    on: [{ gold: 50, msg: 'The proceeds of selling your neighbour’s goat. Your neighbour’s goat.' }], onceOnly: true,
+    on: [{ gold: 50 }], onceOnly: true,
     text: [
-      'The Drowned Rat is the worst tavern in Scumbag Town, which is saying something, because Scumbag Town has a tavern that is literally on fire. You are here for one reason: Old Nobby is selling a map.',
+      'The Drowned Rat is the worst tavern in Scumbag Town, which is saying something, because Scumbag Town has a tavern that is literally on fire. You are here for one reason: Old Nobby is selling a map. In your pocket is fifty gold, the proceeds of selling a goat. Your neighbour’s goat.',
       '“The Counting House of Usurer Vane,” he wheezes, tapping the parchment with a finger like a burnt sausage. “Vault’s still full. Fifty gold, and I’ll throw in the directions.” The directions are on the map.',
     ],
     choices: [
@@ -636,7 +636,7 @@ const SECTIONS = {
   },
   traveller_friend: {
     on: [{ item: 'ipad' }, { item: 'card' }], onceOnly: true,
-    text: ['He takes it surprisingly well. “No signal. No board meeting.” He presses the glowing slate and a little card into your hands. “Take it. It’s at three per cent. That’s all of us, really, isn’t it?” He walks off into the fields to found a commune.'],
+    text: ['He takes it surprisingly well. “No signal. No board meeting.” He presses the glowing slate and a little card into your hands. “Take it. It still glows, sort of. It’s at three per cent. That’s all of us, really, isn’t it?” He walks off into the fields to found a commune.'],
     choices: [{ text: 'Climb Gallows Hill', to: 'hill' }],
   },
   traveller_bored: {
@@ -678,7 +678,7 @@ const SECTIONS = {
   },
   front_door: {
     text: (c) => [
-      'The brass plaque reads: VANE & NOBODY. APPOINTMENTS ONLY. No callers after the heat death of the universe.',
+      'The brass plaque reads: VANE & NOBODY, MONEYLENDERS. STRICTLY BY APPOINTMENT.',
       c.flags.bureaucratDead ? 'The hatch hangs open. Nobody is home, because you killed him.' : 'A hatch slides open at eye level. A pair of spectacles and a moustache regard you. “Name? Appointment? Form 7B?” says the moustache.',
     ],
     choices: [
@@ -727,7 +727,7 @@ const SECTIONS = {
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
   front_fight: {
-    text: ['The door bangs open and out comes a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
+    text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
     fight: {
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'front_win', flee: { to: 'hill', label: 'Retreat down the hill' },
@@ -750,7 +750,7 @@ const SECTIONS = {
     choices: [{ text: 'Dust yourself off', to: 'kitchen' }],
   },
   kitchen_arrive: {
-    text: ['You drop neatly into the hearth beside a bubbling pot, which is more than the cook expected.'],
+    text: ['You drop neatly into the hearth beside a bubbling pot. The cook was not expecting you, and neither was the soup.'],
     choices: [{ text: 'Look around', to: 'kitchen' }],
   },
   kitchen: {
@@ -766,7 +766,7 @@ const SECTIONS = {
   },
   chef_talk: {
     on: [{ flag: 'hintLedger' }],
-    text: ['He has cooked for the master for twenty years. “He still comes up for soup. Well, he doesn’t eat it. He just counts the croutons.” He lowers his voice. “He can’t stop counting while that ledger of his is whole. Burn it and he’ll have nothing left to count.”'],
+    text: ['He has cooked for the master for fifty years, the last twenty of them since the master died. “He still comes up for soup. Well, he doesn’t eat it. He just counts the croutons.” He lowers his voice. “He can’t stop counting while that ledger of his is whole. Burn it and he’ll have nothing left to count.”'],
     choices: [{ text: 'Thank him and go through to the great hall', to: 'hall' }],
   },
   chef_snub: {
@@ -819,7 +819,7 @@ const SECTIONS = {
   },
   fishwife_fed: {
     on: [{ flag: 'hintLedger' }, { item: 'potion', msg: 'She gives you a jar of pickled eels. They are, she insists, medicinal. (Healing potion.)' }], onceOnly: true,
-    text: ['She eats the biscuit, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
+    text: ['She eats the food, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   pollute_win: {
@@ -828,7 +828,7 @@ const SECTIONS = {
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   fishwife_ambush: {
-    text: ['You come at her from behind.'],
+    text: ['You creep up behind her, weapon raised.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_fight: {
@@ -841,7 +841,7 @@ const SECTIONS = {
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   cellar: {
-    text: ['Steps lead up into a wine cellar. Racks of dusty bottles are labelled TAX, in Vane’s spidery hand. A staircase leads up into the house.'],
+    text: ['Steps climb from the cistern into a wine cellar. Every dusty bottle is labelled TAX, in Vane’s spidery hand. At the far end, a staircase leads up into the house.'],
     choices: [
       { text: 'Help yourself to the tax wine', test: { stat: 'Con', dd: 6, save: true, mods: [{ if: { feature: 'noPoison' }, auto: true, text: 'Sottish: you could drink this all day. You very nearly do.' }] }, pass: 'wine_good', fail: 'wine_bad', show: { notFlag: 'wine' } },
       { text: 'Go upstairs', to: 'hall' },
@@ -989,8 +989,8 @@ const SECTIONS = {
   office_noise: {
     on: [{ damage: 'd4', from: 'The desk' }],
     text: (c) => c.flags.impDead
-      ? ['The desk fights back, in the sense that you hit it very hard with your hand. The drawer is unmoved.']
-      : ['The desk fights back, in the sense that you hit it very hard with your hand. The noise wakes something in the inkwell. A small black shape climbs out, dripping, holding a quill like a spear and a contract like a shield. It is an inkwell imp, and it would very much like your signature.'],
+      ? ['The desk wins. Something in your hand goes crunch, and the drawer doesn’t move.']
+      : ['The desk wins. Something in your hand goes crunch, and the drawer doesn’t move. The racket wakes something in the inkwell. A small black shape climbs out, dripping, holding a quill like a spear and a contract like a shield. It is an inkwell imp, and it would very much like your signature.'],
     fight: {
       unless: { flag: 'impDead' },
       monsters: [{ name: 'Inkwell imp', lvl: 1, range: 'short', feats: ['contract'], note: 'Flicks ink from short range; on hit, d4 Cha save or you’ve signed something (lose 10GP)' }],
@@ -1011,7 +1011,7 @@ const SECTIONS = {
   vault_stairs: {
     dark: true,
     text: (c) => c.flags.assessorsGone
-      ? ['The stair winds down to the antechamber, where the two little assessors no longer bother you.']
+      ? ['The stair winds down to the antechamber and the round iron door. Nobody is collecting tolls now.']
       : ['The stair winds down a long way. At the bottom, in front of a round iron door, two tiny men in tiny armour stand guard, each about a foot tall. One holds a spear like a knitting needle; the other, a bow like a wishbone. “Halt,” says one. “Toll,” says the other. “Ten gold.”'],
     choices: [
       { text: 'Show them your approved Form 7B', to: 'vault_door', if: { flag: 'appointment' }, show: { notFlag: 'assessorsGone' }, effects: [{ flag: 'assessorsGone' }] },
@@ -1102,7 +1102,7 @@ const SECTIONS = {
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   vault_taxes: {
-    text: ['You place fifty gold on the desk. Vane stops counting. He looks at the coins, then at you, for a long moment. “Paid,” he whispers. “In full.” He stamps the ledger, and fades away, at peace. Nobody has paid him willingly in three hundred years.'],
+    text: ['You place fifty gold on the desk. Vane stops counting. He looks at the coins, then at you, for a long moment. “Paid,” he whispers. “In full.” He stamps the ledger and fades away, at peace. Nobody has ever paid him willingly before.'],
     choices: [{ text: 'Take the rest', to: 'treasure' }],
   },
   vault_turned: {
@@ -1110,7 +1110,7 @@ const SECTIONS = {
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   vault_obeys: {
-    on: [{ gold: 50, msg: 'He shows you a secret drawer: 50GP extra, for your trouble, master.' }], onceOnly: true,
+    on: [{ gold: 50, msg: 'He shows you a secret drawer with another 50GP in it. “For your trouble, master.”' }], onceOnly: true,
     text: ['You present your symbol of glorious entropy. Vane’s copper eyes glaze over and he bows. “Master,” he whispers. “What would you have me count?” You tell him to count the gold into sacks for you. He is very, very good at it.'],
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
@@ -1120,7 +1120,7 @@ const SECTIONS = {
   },
   treasure: {
     on: [{ item: 'abacus' }, { gold: 600, msg: 'You stuff your pockets, your pack, your boots and your hat with gold.' }], onceOnly: true,
-    text: ['There is more here than you can ever carry. That doesn’t stop you trying. Every 50 gold takes up a significant item slot, so choose wisely, or at least greedily.'],
+    text: ['There is more here than you could ever carry. That doesn’t stop you trying. Every 50 gold fills one of your significant item slots, so you take all you have room for and leave the rest, weeping a little.'],
     choices: [{ text: 'Head back up the stairs', to: 'escape' }],
   },
   escape: {
