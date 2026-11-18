@@ -1623,7 +1623,8 @@ const META = {
   blurb: 'Under the town of Lesser Wager, in a crypt full of candles and card tables, Count Fortunato runs the only casino where the house always wins. He is a luck vampire: he feeds on yours. Tonight, you’re going to take his bank.',
 };
 
-const twin = (name) => ({ name, lvl: 2, hp: 7, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' });
+// Rex is half of a fighting duo. His brother Tex, who used to guard his back and finish his sentences, is missing.
+const rex = { name: 'Rex', lvl: 2, hp: 10, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' };
 const count = { name: 'Count Fortunato', lvl: 7, range: 'engaged', feats: ['undead', 'unluckyAura', 'critWide'], note: 'Luck vampire; each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' };
 const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning. Not long till dawn', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
 const GAME = { add: ['hour', 1] };
@@ -1638,25 +1639,29 @@ const SECTIONS = {
     choices: [{ text: 'Go down the steps', to: 'doors' }],
   },
   doors: {
-    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says Rex. “Dress code,” says Tex. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
+    text: (c) => [
+      'At the bottom of the steps, one enormous man in a waistcoat blocks the door. Beside him is a gap exactly his size, where somebody else in a matching waistcoat ought to be standing.',
+      '“Evening,” he says. “Dress code. No paupers, no—” He stops, and looks to his left, and waits. Nobody finishes the sentence. His face falls. This is Rex, of the Bouncer Twins. His brother Tex hasn’t been seen for a week, and Rex hasn’t finished a sentence since.',
+    ],
     choices: [
       { text: 'Flash your purse (needs 30GP)', to: 'floor', if: { gold: 30 } },
-      { text: 'Tell them you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'twins_fight' },
-      { text: 'Start a sentence and don’t finish it', test: { stat: 'Int', dd: 6, skill: ['analysis', 'languages'], why: 'you’ve spotted how they talk' }, pass: 'twins_puzzled', fail: 'twins_fight' },
-      { text: 'Fight them', to: 'twins_fight' },
+      { text: 'Tell him you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'rex_fight' },
+      { text: 'Finish his sentence for him', test: { stat: 'Cha', dd: 6, skill: ['social', 'languages'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you know how to look after people' }, pass: 'rex_finished', fail: 'rex_fight' },
+      { text: 'Fight him', to: 'rex_fight' },
     ],
   },
-  twins_puzzled: {
-    text: ['“I was wondering whether—” you say, and stop. Both twins lean forward, desperate to finish it. “—whether we could—” “—let you in?” “—of course—” They’re still arguing about how the sentence ends as you walk past.'],
+  rex_finished: {
+    on: [{ flag: 'rexFriend' }],
+    text: ['“—garlic,” you say. Rex turns to you with tears in his eyes. “That’s—” “—exactly what Tex would have said,” you say. He lets you in, and tells you, in halves of sentences, that Tex went downstairs to play the Count at double or nothing, and never came back up.'],
     choices: [{ text: 'Go in', to: 'floor' }],
   },
-  twins_fight: {
-    text: ['“Then you’ll—” “—be leaving.” They come at you from both sides, which leaves their backs wide open.'],
-    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
+  rex_fight: {
+    text: ['“Then you’ll—” says Rex, and waits for a brother who isn’t there, and then just hits you. He fights like half of a team: brilliantly at the front, with nobody at all watching his back.'],
+    fight: { monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
-  twins_win: {
-    on: [{ flag: 'twinsDown' }, { gold: 20, msg: 'Their tips jar: 20GP.' }], onceOnly: true,
-    text: ['The twins sit down against the wall. “That was—” “—uncalled for,” they agree, and fall asleep.'],
+  rex_win: {
+    on: [{ flag: 'rexDown' }, { gold: 20, msg: 'His tips jar: 20GP.' }], onceOnly: true,
+    text: ['Rex sits down against the wall. “That was—” he says, and nobody finishes it for him, so he falls asleep instead.'],
     choices: [{ text: 'Go in', to: 'floor' }],
   },
   floor: {
@@ -1701,16 +1706,16 @@ const SECTIONS = {
   },
   caught: {
     on: [{ gold: -20 }],
-    text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. The Bouncer Twins look up from the door.'],
+    text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. Rex looks up from the door.'],
     fight: {
-      unless: { flag: 'twinsDown' },
-      monsters: [twin('Rex'), twin('Tex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
+      unless: { any: [{ flag: 'rexDown' }, { flag: 'rexFriend' }] },
+      monsters: [rex], win: 'rex_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
     },
     choices: [{ text: 'Back to the floor, before anyone else notices', to: 'floor' }],
   },
-  twins_win_floor: {
-    on: [{ flag: 'twinsDown' }],
-    text: ['The twins go down together, as they do everything. The gamblers barely look up.'],
+  rex_win_floor: {
+    on: [{ flag: 'rexDown' }],
+    text: ['Rex goes down, looking over his shoulder for somebody who isn’t there. The gamblers barely look up.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   wheel: {
@@ -1889,22 +1894,32 @@ const SECTIONS = {
   },
   bank: {
     on: [{ gold: 400, msg: 'Thirty years of Lesser Wager’s losses. You take what you can carry.' }], onceOnly: true,
-    text: ['The bank is a vault full of coins, IOUs, deeds, wedding rings, false teeth and a surprising number of goats’ bells. It is everything the town ever lost.'],
-    choices: [{ text: 'Go upstairs and out', to: 'exit' }],
+    text: ['The bank is a vault full of coins, IOUs, deeds, wedding rings, false teeth and a surprising number of goats’ bells. It is everything the town ever lost.', 'In the corner, tied up with a pink ribbon and a label reading LOT 4,117, sits an enormous man in a waistcoat. He looks up hopefully. “Is that—” he says.'],
+    choices: [
+      { text: 'Untie him', to: 'tex' },
+      { text: 'Leave him, and go upstairs', to: 'exit' },
+    ],
+  },
+  tex: {
+    on: [{ flag: 'texFree' }],
+    text: ['“—Rex?” he finishes, hopefully. “No,” you say, untying the ribbon. “But he’s upstairs.” Tex, the other Bouncer Twin, lost himself to the Count at double or nothing a week ago, and has been sitting in the bank ever since, waiting for somebody to start a sentence.'],
+    choices: [{ text: 'Take him upstairs', to: 'exit' }],
   },
   exit: {
-    text: (c) => c.flags.twinsDown
-      ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
-      : ['At the door, the Bouncer Twins look at your bulging pockets. “Leaving—” says one. “—so soon?” says the other. “Exit fee.”'],
+    text: (c) => c.flags.texFree
+      ? ['At the door, Rex turns, sees his brother, and drops the money he was counting. “Tex! I thought—” “—you’d never see me again?” “—exactly!” They hug, back to back, as is their custom. Nobody asks you for anything on the way out.']
+      : c.flags.rexDown
+        ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
+        : ['At the door, Rex looks at your bulging pockets. “Leaving so—” He waits. “Exit fee,” he says miserably.'],
     choices: [
-      { text: 'Walk out', to: 'dawn_out', show: { flag: 'twinsDown' } },
-      { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { notFlag: 'twinsDown' } },
-      { text: 'Fight your way out', to: 'exit_fight', show: { notFlag: 'twinsDown' } },
+      { text: 'Walk out', to: 'dawn_out', show: { any: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
+      { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
+      { text: 'Fight your way out', to: 'exit_fight', show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
     ],
   },
   exit_fight: {
-    text: ['“Then you’ll—” “—be staying.”'],
-    fight: { monsters: [twin('Rex'), twin('Tex')], win: 'dawn_out' },
+    text: ['“Then you’ll—” says Rex, and there’s nobody to finish it.'],
+    fight: { monsters: [rex], win: 'dawn_out' },
   },
   dawn_out: {
     end: 'victory',
