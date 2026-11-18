@@ -3,17 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Five Bad Ideas — Scumbags! gamebooks</title>
+<title>Scumbags! Five Bad Ideas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
 <style>
+  /* The rulebook's typewriter face (GNU Typewriter, subset from the Scumbags! PDF). Inlined by tools/build.mjs. */
+  @font-face { font-family: 'Scumbags Type'; src: url('assets/gnu-typewriter.ttf') format('truetype'); font-display: block; }
   :root {
     color-scheme: light;
     --paper: #f3ecdc; --paper-2: #e9dfc8; --ink: #22190f; --ink-soft: #5c4d3c; --rule: #b9a682;
     --blood: #8e1b12; --good: #2f5d2a; --bad: #8e1b12; --gold: #9a6b12;
     --serif: 'Alegreya', Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
     --display: 'IM Fell English SC', 'Alegreya', Georgia, serif;
+    --brand: 'Scumbags Type', 'Courier New', Courier, monospace;
     --sheet-w: 320px;
   }
   * { box-sizing: border-box; }
@@ -127,6 +130,10 @@
   .dice { display: inline-flex; gap: .3rem; vertical-align: middle; }
   .die { display: inline-grid; place-items: center; min-width: 2rem; height: 2rem; padding: 0 .3rem; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
   .title-page { text-align: center; padding-top: clamp(1.5rem, 8vh, 5rem); }
+  .logo { font-family: var(--brand); font-size: clamp(3.2rem, 15vw, 6.5rem); line-height: 1; letter-spacing: .02em; margin: 0 0 .9rem; color: var(--ink); text-shadow: .03em .03em 0 #00000022; }
+  .titlebar { display: inline-block; background: var(--ink); color: var(--paper); font-family: var(--brand); font-size: clamp(1.2rem, 4.5vw, 1.8rem); padding: .25rem 1rem .15rem; margin: 0 0 .4rem; }
+  .strap { font-family: var(--brand); font-size: .85rem; letter-spacing: .12em; color: var(--ink-soft); margin-top: .3rem; }
+  .topbar .mark { font-family: var(--brand); font-size: 1.1rem; margin-right: .35rem; }
   .title-page .blurb { max-width: 32rem; margin: 1rem auto 1.6rem; font-style: italic; }
   .title-page .row { justify-content: center; }
   .rule { border: 0; border-top: 1px solid var(--rule); margin: 1.4rem 0; }

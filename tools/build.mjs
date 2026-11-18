@@ -37,9 +37,11 @@ for (const [file, m] of mods) {
 }
 bundle += `__req(${JSON.stringify(key(entry))});\n})();\n`;
 
-const html = readFileSync(resolve(root, 'index.html'), 'utf8')
+let html = readFileSync(resolve(root, 'index.html'), 'utf8')
   .replace(/<script type="module" src="src\/main.js"><\/script>/, () => `<script>\n${bundle.replace(/<\/script/g, '<\\/script')}</script>`);
 if (!html.includes('__req(')) throw new Error('index.html script tag not found');
+// Inline local font files so the single HTML file works anywhere.
+html = html.replace(/url\('(assets\/[^']+\.ttf)'\)/g, (_, f) => `url('data:font/ttf;base64,${readFileSync(resolve(root, f)).toString('base64')}')`);
 mkdirSync(resolve(root, 'dist'), { recursive: true });
 writeFileSync(resolve(root, 'dist/gamebook.html'), html);
 console.log(`dist/gamebook.html written: ${mods.size} modules, ${(html.length / 1024).toFixed(1)} KB`);

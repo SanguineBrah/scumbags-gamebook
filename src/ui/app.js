@@ -62,7 +62,7 @@ function render() {
 function topbar(extra) {
   const g = ui.game; const c = g && g.c;
   return h('header', { class: 'topbar' },
-    h('span', { class: 'brand' }, adv.title),
+    h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), adv.title),
     c && h('span', { class: `chip hp${c.hp <= c.maxHp / 3 ? ' low' : ''}`, title: 'Hit points' }, 'HP ', h('b', null, `${Math.max(0, c.hp)}/${c.maxHp}`)),
     c && c.armour && h('span', { class: 'chip', title: 'Armour points' }, 'AP ', h('b', null, `${c.ap}`)),
     c && h('span', { class: 'chip', title: 'Gold pieces' }, 'GP ', h('b', null, c.gold)),
@@ -76,8 +76,9 @@ function titleScreen() {
   const savedAdv = saved && ADVENTURES.find((x) => x.id === saved.adv);
   return h('div', null,
     h('main', { class: 'page title-page' },
-      h('div', { class: 'muted small' }, 'SCUMBAGS! GAMEBOOKS'),
-      h('h1', null, 'Five Bad Ideas'),
+      h('h1', { class: 'logo', 'aria-label': 'Scumbags!' }, 'Scumbags!'),
+      h('div', { class: 'titlebar' }, 'Five Bad Ideas'),
+      h('div', { class: 'strap' }, 'GAMEBOOKS'),
       h('p', { class: 'blurb' }, 'Five short adventures for one contemptible opportunist. Survive one, squander the takings, and take your scumbag on to the next.'),
       h('div', { class: 'row' },
         saved && savedAdv && h('button', { class: 'btn', onclick: () => resume(saved) }, `Continue ${savedAdv.title}`),
@@ -94,7 +95,7 @@ function chooseAdventure(id) { adv = buildAdventure(id); go('pick'); }
 function pickScreen() {
   const list = roster();
   return h('div', null,
-    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, adv.title)),
+    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), adv.title)),
     h('main', { class: 'page' },
       h('h2', null, 'Who’s going?'),
       h('p', { class: 'muted' }, `${adv.title} is for a level ${adv.levels} scumbag.`),
@@ -158,7 +159,7 @@ function createScreen() {
   const shift = (r) => ['up 3', 'up 2', 'up 1', 'same row', 'reroll', 'down 1', 'down 2', 'down 3'][r - 1];
   const mundaneCount = k.mundane.size;
   return h('div', null,
-    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, 'New scumbag')),
+    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), 'New scumbag')),
     h('main', { class: 'page' },
       h('h2', null, 'Who are you?'),
       h('div', { class: 'card' },
