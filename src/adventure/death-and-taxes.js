@@ -531,7 +531,7 @@ export const SECTIONS = {
   town: {
     end: 'victory',
     text: (c) => [
-      'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.gold ? `${c.gold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
+      'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
       'But gold in your pocket is no use to a scumbag. To become a better, more experienced scumbag, you must squander it. Every 200GP you waste on a pointless endeavour gains you a level.',
     ],
   },

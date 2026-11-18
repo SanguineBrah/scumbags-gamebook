@@ -267,7 +267,8 @@ function endingView() {
   for (const w of e.wasted) {
     out.push(h('div', { class: 'endeavour' }, h('div', null, dice(w.roll), ' ', h('b', null, ENDEAVOURS[w.roll - 1])),
       h('div', { class: 'small' }, `200GP squandered. Level ${w.report.level}! +${w.report.hpRoll} max HP. `,
-        Object.entries(w.report.statRolls).map(([s, r]) => `${s} ${r.roll}${r.up ? ' ↑' : ''}`).join(', '), '.')));
+        (() => { const up = Object.entries(w.report.statRolls).filter(([, r]) => r.up).map(([s]) => s); return up.length ? `+1 ${up.join(', ')}. ` : 'No stats go up. '; })(),
+        h('span', { class: 'muted' }, '(d20 per stat, up if it beats the stat: ', Object.entries(w.report.statRolls).map(([s, r]) => `${s} ${r.roll}`).join(', '), ')'))));
   }
   if (!e.done) {
     out.push(h('p', null, `You have ${c.gold}GP.`),

@@ -41,6 +41,7 @@ export class Game {
       if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
       else this.spendLight(src);
     }
+    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
     if (s.fight && !(s.fight.unless && check(c, s.fight.unless).ok)) {

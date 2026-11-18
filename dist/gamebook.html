@@ -414,7 +414,8 @@ function endingView() {
   for (const w of e.wasted) {
     out.push(h('div', { class: 'endeavour' }, h('div', null, dice(w.roll), ' ', h('b', null, ENDEAVOURS[w.roll - 1])),
       h('div', { class: 'small' }, `200GP squandered. Level ${w.report.level}! +${w.report.hpRoll} max HP. `,
-        Object.entries(w.report.statRolls).map(([s, r]) => `${s} ${r.roll}${r.up ? ' ↑' : ''}`).join(', '), '.')));
+        (() => { const up = Object.entries(w.report.statRolls).filter(([, r]) => r.up).map(([s]) => s); return up.length ? `+1 ${up.join(', ')}. ` : 'No stats go up. '; })(),
+        h('span', { class: 'muted' }, '(d20 per stat, up if it beats the stat: ', Object.entries(w.report.statRolls).map(([s, r]) => `${s} ${r.roll}`).join(', '), ')'))));
   }
   if (!e.done) {
     out.push(h('p', null, `You have ${c.gold}GP.`),
@@ -1079,7 +1080,7 @@ const SECTIONS = {
   town: {
     end: 'victory',
     text: (c) => [
-      'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.gold ? `${c.gold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
+      'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
       'But gold in your pocket is no use to a scumbag. To become a better, more experienced scumbag, you must squander it. Every 200GP you waste on a pointless endeavour gains you a level.',
     ],
   },
@@ -1136,6 +1137,7 @@ class Game {
       if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
       else this.spendLight(src);
     }
+    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
     if (s.fight && !(s.fight.unless && check(c, s.fight.unless).ok)) {
