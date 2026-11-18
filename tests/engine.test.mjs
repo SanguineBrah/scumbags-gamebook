@@ -95,11 +95,42 @@ test('a big item makes room by leaving coins behind', () => {
 
 test('every adventure is complete and its final section is a victory', async () => {
   const { ADVENTURES, buildAdventure } = await import('../src/adventure/index.js');
-  assert.equal(ADVENTURES.length, 5);
+  assert.equal(ADVENTURES.length, 10);
   for (const a of ADVENTURES) {
     const b = buildAdventure(a.id);
     assert.equal(b.numbers.start, 1);
     assert.equal(b.numbers[a.final], b.count);
     assert.equal(b.sections[a.final].end, 'victory');
   }
+});
+
+test('adventures are revealed one by one, and none can be repeated', async () => {
+  const { ADVENTURES, availableFor, revealedFor } = await import('../src/adventure/index.js');
+  const c = make(21);
+  assert.deepEqual(availableFor(c).map((a) => a.id), ['death-and-taxes']);
+  c.done.push('death-and-taxes');
+  const next = availableFor(c).map((a) => a.id);
+  assert.ok(!next.includes('death-and-taxes'));
+  assert.deepEqual(next.sort(), ['fortunes-fang', 'tall-order']);
+  // every adventure is reachable by doing them in order, and the last leaves nothing to do
+  const d = make(22);
+  for (let i = 0; i < ADVENTURES.length; i++) {
+    const a = availableFor(d); assert.ok(a.length, `nothing available after ${d.done.length}`);
+    d.done.push(a[0].id);
+  }
+  assert.equal(availableFor(d).length, 0);
+  assert.equal(revealedFor(d).length, ADVENTURES.length);
+});
+
+test('the town: inn, market, apothecary and fence', async () => {
+  const town = await import('../src/engine/town.js');
+  const c = make(23); c.gold = 100; c.hp = 1;
+  assert.ok(town.restAtInn(c)); assert.equal(c.hp, c.maxHp); assert.equal(c.gold, 95);
+  const torch = c.mundane.find((i) => i.id === 'torches'); torch.tokens = 1;
+  town.restock(c); assert.equal(torch.tokens, 5);
+  assert.ok(town.buy(c, 'potion')); assert.equal(c.gold, 85);
+  const idx = c.significant.findIndex((i) => i.id === 'potion');
+  assert.ok(town.sell(c, idx)); assert.equal(c.gold, 90);
+  assert.equal(town.sellPrice('hat'), 370);
+  c.gold = 0; assert.equal(town.restAtInn(c), null);
 });

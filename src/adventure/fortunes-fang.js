@@ -2,7 +2,7 @@
 // The `hour` counter moves on with every game you play; at 4, dawn sends the Count to his coffin.
 
 export const META = {
-  id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
+  after: ['death-and-taxes'], id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
   blurb: 'Under the town of Lesser Wager, in a crypt full of candles and card tables, Count Fortunato runs the only casino where the house always wins. He is a luck vampire: he feeds on yours. Tonight, you’re going to take his bank.',
 };
 
@@ -68,6 +68,7 @@ export const SECTIONS = {
     text: ['At the Bones, you bet on two dice made from the knucklebones of the Count’s previous accountant. The croupier is a skeleton. The minimum stake is 20GP.'],
     choices: [
       { text: 'Bet 20GP and trust your luck', test: { stat: 'Cha', dd: 8, save: true }, pass: 'bones_win', fail: 'bones_lose', if: { gold: 20 }, effects: [GAME] },
+      { text: 'Study the dice through your jeweller’s loupe, then bet 20GP on the heavy side', test: { stat: 'Int', dd: 4, skill: ['analysis'] }, pass: 'bones_win', fail: 'bones_lose', if: { gold: 20, item: 'loupe' }, effects: [GAME] },
       { text: 'Bet 20GP and palm a loaded die', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'bones_cheat', fail: 'caught', if: { gold: 20 }, effects: [GAME] },
       { text: 'Back to the floor', to: 'floor' },
     ],
@@ -132,6 +133,7 @@ export const SECTIONS = {
       : ['The Liar’s Dice table is run by Mr Pinch, a croupier-crab the size of an armchair, in a bow tie. He deals with one claw and takes your money with the other. You each roll under a cup and bid on what’s underneath. The trick is lying, and not blinking.'],
     choices: [
       { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { notFlag: 'pinchDown' } },
+      { text: 'Play a hand with your hand mirror propped against the candlestick, angled under his cup (20GP)', test: { stat: 'Dex', dd: 4, skill: ['skulduggery'] }, pass: 'crab_win', fail: 'pinch_fight', if: { gold: 20, item: 'mirror' }, effects: [GAME], show: { notFlag: 'pinchDown' } },
       { text: 'Accuse him of cheating', to: 'pinch_fight', show: { notFlag: 'pinchDown' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
@@ -179,6 +181,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' } },
       { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { notFlag: 'cageRobbed' } },
+      { text: 'Melt the cage lock with acid while it counts', to: 'cage_robbed', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { notFlag: 'cageRobbed' } },
+      { text: 'Lever the bars apart while it counts', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { anyItem: ['prybar', 'pick'] }, show: { notFlag: 'cageRobbed' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
   },
@@ -189,7 +193,7 @@ export const SECTIONS = {
   },
   cage_robbed: {
     on: [{ flag: 'cageRobbed' }, { gold: 120 }],
-    text: ['The lock clicks. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
+    text: ['The cage opens. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   cashier_fight: {
@@ -220,10 +224,14 @@ export const SECTIONS = {
       : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
     choices: [
       { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4] } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4] } },
       { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4] } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
+      { text: 'Cast Divine light on the table: the nearest thing to dawn he’s seen in three hundred years', cast: 'light', pass: 'count_dazzled', fail: 'count_fight', show: { below: ['hour', 4] } },
       { text: 'Attack him', to: 'count_fight', show: { below: ['hour', 4] } },
       { text: 'Go back upstairs', to: 'floor' },
     ],
@@ -251,6 +259,15 @@ export const SECTIONS = {
   },
   mirror: {
     text: ['You hold up the mirror. Count Fortunato looks into it and sees the room, the candles, the table, and no Count Fortunato at all. “No,” he whispers. “I’m… I’m not even here.” He sits down on the floor with his head in his hands and refuses to talk to anyone about anything. He’ll be like that for days.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  coffin_sealed: {
+    on: [{ flag: 'countLocked' }],
+    text: ['Inside the coffin, the snoring stops, then starts again, slightly worried. The lid isn’t opening before dusk, and possibly not after.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_dazzled: {
+    text: ['The deck of cards begins to glow, then the table, then the whole crypt, warm and gold as a summer morning. Count Fortunato throws his cloak over his face, screams something about the time, and dives into his coffin. The lid slams. He won’t be out till dusk.'],
     choices: [{ text: 'Open the bank', to: 'bank' }],
   },
   count_flees: {

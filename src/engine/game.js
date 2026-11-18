@@ -77,6 +77,7 @@ export class Game {
     if (once) { if (c.flags[once]) return; c.flags[once] = true; }
     for (const e of [].concat(effects)) {
       if (e.if && !check(c, e.if).ok) continue;
+      if (e.chance) { if (this.rng.chance(e.chance[0], e.chance[1])) this.apply(e.then || []); else if (e.otherwise) this.apply(e.otherwise); continue; }
       if (e.msg) this.say(e.msg, e.kind || 'info');
       if (e.sell) {
         if (!hasItem(c, e.sell.item)) continue;
@@ -225,6 +226,7 @@ export class Game {
     const dd = this.testDie(t);
     let skilled = this.testSkilled(t);
     if (!skilled && opts.versatile && hasFeature(c, 'versatile') && c.daily.versatile) { c.daily.versatile = false; skilled = true; lines.push('Versatile: once per day, you test as though skilled.'); }
+    if (!skilled && opts.insight && ['Wis', 'Int'].includes(t.stat) && hasItem(c, 'insight')) { this.take('insight'); skilled = true; lines.push('You drink the elixir of insight, and roll as though skilled.'); }
     const roll = () => statTest(rng, { stat: c.stats[t.stat], dd, skilled, forceRoll: true });
     let r = roll();
     const show = (r) => r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ');

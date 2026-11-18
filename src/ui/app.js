@@ -1,8 +1,10 @@
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-import { buildAdventure, ADVENTURES } from '../adventure/index.js';
+import { buildAdventure, ADVENTURES, availableFor, revealedFor } from '../adventure/index.js';
+import { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield } from '../engine/town.js';
+const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
 import { Game } from '../engine/game.js';
 import { Rng } from '../rules/dice.js';
-import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS } from '../rules/data.js';
+import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } from '../rules/data.js';
 import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS } from '../rules/character.js';
 import { alive } from '../engine/combat.js';
 
@@ -12,7 +14,7 @@ let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, pickFor: null };
+const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -53,7 +55,7 @@ function render() {
     ui.screen === 'title' ? titleScreen()
       : ui.screen === 'howto' ? howToScreen()
         : ui.screen === 'create' ? createScreen()
-          : ui.screen === 'pick' ? pickScreen()
+          : ui.screen === 'town' ? townScreen()
           : playScreen(),
   );
   save();
@@ -74,41 +76,78 @@ function topbar(extra) {
 function titleScreen() {
   const saved = loadSave();
   const savedAdv = saved && ADVENTURES.find((x) => x.id === saved.adv);
+  const list = roster();
   return h('div', null,
     h('main', { class: 'page title-page' },
       h('h1', { class: 'logo', 'aria-label': 'Scumbags!' }, 'Scumbags!'),
-      h('div', { class: 'titlebar' }, 'Five Bad Ideas'),
+      h('div', { class: 'titlebar' }, 'Ten Bad Ideas'),
       h('div', { class: 'strap' }, 'GAMEBOOKS'),
-      h('p', { class: 'blurb' }, 'Five short adventures for one contemptible opportunist. Survive one, squander the takings, and take your scumbag on to the next.'),
+      h('p', { class: 'blurb' }, 'Ten short adventures for one contemptible opportunist. Survive one, squander the takings, and see what else turns up. Most of them you’ll have to find first.'),
       h('div', { class: 'row' },
         saved && savedAdv && h('button', { class: 'btn', onclick: () => resume(saved) }, `Continue ${savedAdv.title}`),
+        h('button', { class: saved ? 'btn ghost' : 'btn', onclick: newScumbag }, 'New scumbag'),
         h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play')),
     ),
-    h('main', { class: 'page' }, ADVENTURES.map((a) => h('div', { class: 'card adv' },
-      h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`),
-      h('p', null, a.blurb),
-      h('button', { class: 'btn', onclick: () => chooseAdventure(a.id) }, 'Play')))));
+    list.length > 0 && h('main', { class: 'page' }, h('h2', null, 'Survivors'),
+      h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => { ui.char = c; ui.townMsg = ''; go('town'); } },
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${ADVENTURES.length} adventures done`)))))));
 }
 
-function chooseAdventure(id) { adv = buildAdventure(id); go('pick'); }
-
-function pickScreen() {
-  const list = roster();
-  return h('div', null,
-    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), adv.title)),
-    h('main', { class: 'page' },
-      h('h2', null, 'Who’s going?'),
-      h('p', { class: 'muted' }, `${adv.title} is for a level ${adv.levels} scumbag.`),
-      h('button', { class: 'btn', onclick: newScumbag }, 'A new scumbag'),
-      list.length > 0 && [h('h3', null, 'Survivors'), h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => takeScumbag(c) },
-        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${c.maxHp} HP`)))))],
-      h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
-    ));
+function charBar(c) {
+  return h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), 'Scumbag Town'),
+    h('span', { class: `chip hp${c.hp <= c.maxHp / 3 ? ' low' : ''}` }, 'HP ', h('b', null, `${c.hp}/${c.maxHp}`)),
+    h('span', { class: 'chip' }, 'GP ', h('b', null, c.gold)));
 }
 
-function takeScumbag(saved) {
-  const c = JSON.parse(JSON.stringify(saved));
-  c.flags = {}; c.hp = c.maxHp; c.ap = maxAp(c); resetDay(c);
+// ---------- Scumbag Town: the inn, the market, the fence, and the notice board
+function townScreen() {
+  const c = ui.char;
+  const act = (msg) => { if (msg) { ui.townMsg = msg; keepScumbag(c); } render(); };
+  const left = MUNDANE_LIMIT - c.mundane.length;
+  const avail = availableFor(c);
+  return h('div', null, charBar(c), h('main', { class: 'page' },
+    h('h2', null, `${c.name} in Scumbag Town`),
+    h('p', { class: 'muted' }, `Level ${c.level} ${c.profession.toLowerCase()}. ${c.hp}/${c.maxHp} HP, ${c.gold}GP, ${(c.done || []).length} adventure${(c.done || []).length === 1 ? '' : 's'} behind you.`),
+    ui.townMsg && h('div', { class: 'msg good' }, ui.townMsg),
+    h('div', { class: 'card' }, h('h3', null, 'The Drowned Rat'),
+      h('p', { class: 'small' }, 'Adventures don’t heal you. Beds do.'),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', disabled: c.gold < town.INN_PRICE || c.hp >= c.maxHp, onclick: () => act(town.restAtInn(c)) }, `Rent a bed (${town.INN_PRICE}GP): full HP`),
+        h('button', { class: 'btn ghost', disabled: c.hp >= c.maxHp, onclick: () => act(town.sleepRough(c, rng)) }, 'Sleep in a ditch (free)'))),
+    h('div', { class: 'card' }, h('h3', null, 'The market'),
+      h('p', { class: 'small' }, 'Mundane items cost next to nothing in town. Restock, or swap what you carry.'),
+      h('button', { class: 'btn ghost', onclick: () => { town.restock(c); act('You top up your torches, oil, ammunition and everything else that runs out.'); } }, 'Restock everything'),
+      h('h3', null, `Your mundane items (${c.mundane.length}/${MUNDANE_LIMIT})`),
+      h('div', { class: 'opts' }, c.mundane.map((i) => h('button', { class: 'opt', onclick: () => { town.dropMundane(c, i.id); act(`You leave the ${i.name.toLowerCase()} at home.`); } },
+        h('span', null, i.name, i.tokens !== undefined ? ` (${i.tokens})` : '', h('span', { class: 'note' }, 'Tap to leave it at home'))))),
+      left > 0 && [h('h3', null, `Pick up (${left} free)`), h('div', { class: 'opts' }, Object.entries(MUNDANE).filter(([id, m]) => !m.hidden && !c.mundane.some((i) => i.id === id)).map(([id, m]) =>
+        h('button', { class: 'opt', onclick: () => { town.addMundane(c, id); act(`You pick up ${m.name.toLowerCase()}.`); } }, h('span', null, m.name, m.note && h('span', { class: 'note' }, m.note)))))]),
+    h('div', { class: 'card' }, h('h3', null, 'The apothecary'),
+      h('div', { class: 'opts' }, town.SHOP.map((id) => { const d = SIGNIFICANT[id]; return h('button', { class: 'opt', disabled: c.gold < d.cost, onclick: () => act(town.buy(c, id)) }, h('span', null, `${d.name} — ${d.cost}GP`, h('span', { class: 'note' }, d.note))); }))),
+    h('div', { class: 'card' }, h('h3', null, 'The armourer'),
+      h('p', { class: 'small' }, `You have: ${c.weapon.name}${c.armour ? `, ${c.armour.name}` : ''}${c.shield ? `, ${c.shield.name}` : ''}. Buying replaces what you have.`),
+      h('div', { class: 'opts' },
+        town.weaponsFor(c).filter((w) => w.id !== c.weapon.id).map((w) => h('button', { class: 'opt', disabled: c.gold < town.weaponPrice(w), onclick: () => act(town.buyWeapon(c, w.id)) }, h('span', null, `${w.name} — ${town.weaponPrice(w)}GP`, h('span', { class: 'note' }, `d${WEAPON_DIE[w.weight]}${w.ranged ? ', ranged' : ''}`)))),
+        ARMOURS.filter((a) => a.weight <= profOf(c).prof && (!c.armour || a.id !== c.armour.id)).map((a) => h('button', { class: 'opt', disabled: c.gold < town.armourPrice(a), onclick: () => act(town.buyArmour(c, a.id)) }, h('span', null, `${a.name} — ${town.armourPrice(a)}GP`, h('span', { class: 'note' }, `${a.ap} AP; replaces a shield`)))),
+        SHIELDS.filter((x) => x.weight <= profOf(c).prof && (!c.shield || x.id !== c.shield.id)).map((x) => h('button', { class: 'opt', disabled: c.gold < town.shieldPrice(x), onclick: () => act(town.buyShield(c, x.id)) }, h('span', null, `${x.name} — ${town.shieldPrice(x)}GP`, h('span', { class: 'note' }, `blocks ${x.block.join('d')}; replaces armour`)))))),
+    c.significant.some((i) => town.sellPrice(i.id)) && h('div', { class: 'card' }, h('h3', null, 'The fence'),
+      h('div', { class: 'opts' }, c.significant.map((i, n) => town.sellPrice(i.id) ? h('button', { class: 'opt', onclick: () => act(town.sell(c, n)) }, h('span', null, `Sell ${i.name.toLowerCase()} — ${town.sellPrice(i.id)}GP`)) : null))),
+    c.gold >= LEVEL_COST && h('div', { class: 'card' }, h('h3', null, 'Squander your gold'),
+      h('p', { class: 'small' }, `Every ${LEVEL_COST}GP you waste on a pointless endeavour gains you a level.`),
+      h('button', { class: 'btn', onclick: () => { const roll = rng.die(20); const r = wasteForLevel(rng, c); const up = Object.entries(r.statRolls).filter(([, x]) => x.up).map(([k]) => k); act(`${ENDEAVOURS[roll - 1]} Level ${r.level}! +${r.hpRoll} max HP${up.length ? `, +1 ${up.join(', ')}` : ''}.`); } }, `Waste ${LEVEL_COST}GP`)),
+    h('div', { class: 'card' }, h('h3', null, 'The notice board'),
+      avail.length ? h('p', { class: 'small' }, 'Jobs for people with no scruples:') : h('p', { class: 'small' }, 'There’s nothing on the board for you. You’ve done it all. Retire, or find something worse to do.'),
+      avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`), h('p', null, a.blurb),
+        h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
+      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
+    h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title screen')),
+  ));
+}
+
+function startAdventure(id) {
+  adv = buildAdventure(id);
+  const c = JSON.parse(JSON.stringify(ui.char));
+  c.flags = {}; c.ap = maxAp(c); resetDay(c);   // HP carries over: rest in town first
   const g = new Game(adv, rng.int(1, 2 ** 31));
   g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
   go('play');
@@ -131,6 +170,9 @@ function howToScreen() {
     h('p', null, 'Dark places use up a torch, a flask of oil for a lantern, or some other light. Without one, every test uses at least a d12.'),
     h('h3', null, 'Treasure'),
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level.'),
+    h('h3', null, 'Between adventures'),
+    h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Each job you finish reveals new ones, and you can’t do the same job twice. There are ten, if you live.'),
+    h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
     h('button', { class: 'btn', onclick: () => go('title') }, 'Back'),
   ));
@@ -198,7 +240,7 @@ function createScreen() {
       ),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: mundaneCount !== MUNDANE_LIMIT, onclick: begin }, mundaneCount === MUNDANE_LIMIT ? 'Begin your adventure' : `Choose ${MUNDANE_LIMIT - mundaneCount} more item${MUNDANE_LIMIT - mundaneCount === 1 ? '' : 's'}`),
-        h('button', { class: 'btn ghost', onclick: () => go('pick') }, 'Back')),
+        h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
     ));
 }
 
@@ -207,8 +249,8 @@ function begin() {
   const g = new Game(adv, rng.int(1, 2 ** 31));
   const c = createCharacter(g.rng, k.origins, { name: (k.name || '').trim() || randomName(rng), weapon: k.weapon, protection: k.protection, alignment: k.alignment, mundane: [...k.mundane], extra: k.extra });
   c.id = `${Date.now().toString(36)}${rng.int(0, 1e6).toString(36)}`;
-  g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
-  go('play');
+  keepScumbag(c); ui.char = c; ui.townMsg = 'You arrive in Scumbag Town with nothing but your kit and your lack of scruples. Check the notice board.';
+  go('town');
 }
 
 // ---------- playing
@@ -243,7 +285,12 @@ function sectionView() {
     const btn = h('button', { class: `choice${ch.kind === 'test' || ch.kind === 'cast' ? ' test' : ''}`, disabled: !ch.ok, onclick: () => pick(ch.i) },
       h('span', null, ch.label, (ch.detail || ch.reason) && h('span', { class: 'sub' }, [ch.detail && `Test: ${ch.detail}`, !ch.ok && ch.reason].filter(Boolean).join(' — '))),
       h('span', { class: 'turn' }, ch.num ? `Turn to ${ch.num}` : 'Roll'));
-    return versatile ? h('div', null, btn, h('button', { class: 'btn ghost small', style: 'margin-top:.3rem', onclick: () => pick(ch.i, { versatile: true }) }, 'Roll as though skilled (Versatile, once per day)')) : btn;
+    const insight = ch.kind === 'test' && ch.ok && ch.detail && /^(Wis|Int) /.test(ch.detail) && !/, skilled|automatic/.test(ch.detail) && c.significant.some((i) => i.id === 'insight');
+    const extras = [
+      versatile && h('button', { class: 'btn ghost small', style: 'margin:.3rem .3rem 0 0', onclick: () => pick(ch.i, { versatile: true }) }, 'Roll as though skilled (Versatile, once per day)'),
+      insight && h('button', { class: 'btn ghost small', style: 'margin:.3rem .3rem 0 0', onclick: () => pick(ch.i, { insight: true }) }, 'Drink your elixir of insight first'),
+    ].filter(Boolean);
+    return extras.length ? h('div', null, btn, extras) : btn;
   })));
   return out;
 }
@@ -288,12 +335,12 @@ function endingView() {
       h('div', { class: 'banner dead' }, 'Your adventure ends here'),
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
     clearSaveSoon();
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });
@@ -309,25 +356,21 @@ function endingView() {
     out.push(h('p', null, `You have ${c.gold}GP.`),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: c.gold < LEVEL_COST, onclick: () => { const roll = g.rng.die(20); const report = wasteForLevel(g.rng, c); e.wasted.push({ roll, report }); render(); } }, `Waste ${LEVEL_COST}GP`),
-        h('button', { class: 'btn ghost', onclick: () => { e.done = true; keepScumbag(c); render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
-  } else {
-    out.push(h('div', { class: 'banner' }, 'The End'),
-      h('p', null, `${c.name} the level ${c.level} ${c.profession.toLowerCase()} has squandered ${c.wasted}GP in total, and has ${c.gold}GP left over.`),
-      h('p', { class: 'muted small' }, `${c.name} is waiting among the survivors for the next adventure.`),
-      h('div', { class: 'row' },
-        h('button', { class: 'btn', onclick: () => { clearSave(); go('title'); } }, 'Choose the next adventure'),
-        h('button', { class: 'btn ghost', onclick: again }, 'Play this one again')));
+        h('button', { class: 'btn ghost', onclick: () => finishAdventure(c) }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
   }
   return out;
 }
 let clearTimer = null;
 function clearSaveSoon() { clearTimeout(clearTimer); clearTimer = setTimeout(clearSave, 0); }
 
-function again() {
-  const old = ui.game.c;
-  const g = new Game(adv, rng.int(1, 2 ** 31));
-  old.flags = {}; old.hp = old.maxHp; old.ap = maxAp(old); resetDay(old);
-  g.begin(old); ui.game = g; ui.ending = null; go('play');
+function finishAdventure(c) {
+  c.done = [...new Set([...(c.done || []), adv.id])];
+  c.flags = {}; c.prone = false; c.blocking = false;
+  keepScumbag(c); clearSave();
+  const before = new Set(revealedFor({ ...c, done: (c.done || []).filter((x) => x !== adv.id) }).map((a) => a.id));
+  const fresh = availableFor(c).filter((a) => !before.has(a.id)).map((a) => a.title);
+  ui.char = c; ui.townMsg = `${adv.title}: done.${fresh.length ? ` Word gets round, and new work turns up on the notice board: ${fresh.join(' and ')}.` : ''}`;
+  go('town');
 }
 
 // ---------- adventure sheet

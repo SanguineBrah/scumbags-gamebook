@@ -42,7 +42,7 @@ export function createCharacter(rng, origins, choices) {
     maxHp: 0, hp: 0, ap: 0, gold: 0, wasted: 0, wasteBank: 0,
     alignment: profession.key === 'divine' ? (choices.alignment || 'law') : null,
     weapon: null, sidearm: null, armour: null, shield: null, mundane: [], significant: [],
-    slots: {}, daily: {}, flags: {}, hpRoll: 0,
+    slots: {}, daily: {}, flags: {}, hpRoll: 0, done: [],
   };
   c.hpRoll = rng.die(6);
   c.maxHp = c.hpRoll + 5 + HERO_HP_BONUS + (quality.key === 'hardened' ? 1 : 0);

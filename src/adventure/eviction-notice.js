@@ -1,7 +1,7 @@
 // EVICTION NOTICE — evict a kobold siege-pyramid from the town square. For a level 4–5 scumbag.
 
 export const META = {
-  id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
+  after: ['mothers-kitchen'], id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
   blurb: 'A kobold siege-pyramid has parked itself in the square at Middle Whelping and refuses to move. Lord Grimsby, who owns the square, owns the town and has never once bathed, will pay 300 gold to have it evicted. Nobody has asked the kobolds why they’re there.',
 };
 
@@ -42,6 +42,7 @@ export const SECTIONS = {
   town_hall: {
     text: ['The town hall is one room, one clerk and one enormous dog asleep on the records. The clerk confirms that the deed to the square was “borrowed for framing” by Lord Grimsby twelve years ago. “I’ve got a copy,” he says. “Somewhere. Under the dog.”'],
     choices: [
+      { text: 'Tempt the dog off the records with your rations', to: 'dog_moved', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Move the dog', test: { stat: 'Str', dd: 8, skill: ['bruteforce', 'survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'dog_moved', fail: 'dog_bite' },
       { text: 'Forge a new copy with your quill', test: { stat: 'Int', dd: 8, skill: ['skulduggery', 'analysis'], why: 'forgery is a kind of skulduggery' }, pass: 'deed_forged', fail: 'forge_smudge', if: { item: 'quill' } },
       { text: 'Back to the square', to: 'square' },
@@ -96,7 +97,7 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Knock on the door', to: 'door' },
-      { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living' }, pass: 'apex', fail: 'slingers' },
+      { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
       { text: 'Set fire to it', to: 'burn', if: { fire: true } },
       { text: 'Take your bow to the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
@@ -118,7 +119,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Tell it you’re here to help', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'inside', fail: 'sapper_fight' },
       { text: 'Show it the deed to the square', to: 'deed_shown', if: { item: 'deed' } },
-      { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'sapper_fight', fail: 'door_ouch' },
+      { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 4 }] }, pass: 'sapper_fight', fail: 'door_ouch' },
     ],
   },
   door_ouch: {
@@ -133,7 +134,10 @@ export const SECTIONS = {
   },
   sapper_fight: {
     text: ['The door swings open on a kobold sapper with a barrel of black powder on its back and a lit fuse in its teeth. It charges.'],
-    fight: { monsters: [sapper], win: 'inside', flee: { to: 'pyramid', label: 'Back away from the fuse' } },
+    fight: {
+      monsters: [sapper], win: 'inside', flee: { to: 'pyramid', label: 'Back away from the fuse' },
+      special: [{ label: 'Throw your bucket of water over its fuse', if: { item: 'bucket' }, flag: 'fuseOut', text: 'Fssst. The sapper looks at its soggy fuse, then at you, and runs upstairs to tell somebody.', win: true }],
+    },
   },
   inside: {
     text: (c) => [
@@ -142,6 +146,7 @@ export const SECTIONS = {
       'A ladder leads up to the middle floor, where you can hear arguing.',
     ],
     choices: [
+      { text: 'Share your rations with Gnasher', to: 'troll_fed', if: { item: 'rations' }, show: { notFlag: 'trollGone' } },
       { text: 'Ask Gnasher what he gets paid', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'] }, pass: 'troll_strike', fail: 'troll_fight', show: { notFlag: 'trollGone' } },
       { text: 'Jam the treadmill with your iron spikes', to: 'troll_jam', if: { item: 'spikes' }, show: { notFlag: 'trollGone' } },
       { text: 'Climb the ladder', to: 'council' },
@@ -165,6 +170,11 @@ export const SECTIONS = {
     on: [{ flag: 'storyTold' }],
     text: ['Your story has a moral, which kobold children can smell a mile off. They boo you out of the nursery.'],
     choices: [{ text: 'Back to the engine room', to: 'inside' }],
+  },
+  troll_fed: {
+    on: [{ flag: 'trollGone' }, { flag: 'trollFriend' }, { lose: 'rations' }],
+    text: ['Gnasher stops walking to eat. It’s the first time he’s stopped walking in a month. He eats five days of rations in one bite, and then sits down in his wheel to think about how nice that was, and doesn’t get up again.'],
+    choices: [{ text: 'Climb the ladder', to: 'council' }],
   },
   troll_strike: {
     on: [{ flag: 'trollGone' }, { flag: 'trollFriend' }],

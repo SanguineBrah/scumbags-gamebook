@@ -2,7 +2,7 @@
 // The `noise` counter rises with every clumsy act; at 3, Mother comes back (see `redirect` on the kitchen).
 
 export const META = {
-  id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
+  after: ['tall-order', 'fortunes-fang'], id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
   blurb: 'Farmer Turnbull lost the last oversized turnip at market to a stranger. Then a hill giant grew a bigger one, had it gilded, and won every prize in the county. Turnbull will pay 300 gold to see it gone. It sits on her mantelpiece, forty feet up.',
 };
 
@@ -27,7 +27,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Crawl under the front door', to: 'kitchen' },
       { text: 'Go through the cat flap', to: 'cat_flap' },
-      { text: 'Climb the ivy to the open window', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Hunter'], why: 'you know how to climb' }, pass: 'bedroom', fail: 'ivy_fall' },
+      { text: 'Climb the ivy to the open window', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Hunter'], why: 'you know how to climb', mods: [{ if: { anyItem: ['climbing', 'rope'] }, dd: 4 }] }, pass: 'bedroom', fail: 'ivy_fall' },
     ],
   },
   ivy_fall: {
@@ -41,12 +41,18 @@ export const SECTIONS = {
     choices: [
       { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight' },
       { text: 'Let your rat go as a distraction', to: 'tiddles_rat', if: { item: 'rat' } },
+      { text: 'Offer it your rations', to: 'tiddles_fed', if: { item: 'rations' } },
       { text: 'Fight it', to: 'tiddles_fight' },
     ],
   },
   tiddles_rat: {
     on: [{ lose: 'rat' }],
     text: ['Your rat takes one look at Tiddles and makes the decision any rat would. Tiddles follows it at high speed. You will miss that rat. You won’t miss it much.'],
+    choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
+  },
+  tiddles_fed: {
+    on: [{ lose: 'rations' }],
+    text: ['Tiddles sniffs your rations, eats all five days of them in one go, including the wrapping, and goes back to sleep. To a cat that size, it was a biscuit.'],
     choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
   },
   tiddles_fight: {
@@ -69,9 +75,9 @@ export const SECTIONS = {
       'A doorway leads to the nursery.',
     ],
     choices: [
-      { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
+      { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
       { text: 'Raid the larder', to: 'larder' },
-      { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
+      { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
       { text: 'Climb up to the mantelpiece', to: 'mantel_climb' },
       { text: 'Go into the nursery', to: 'nursery' },
       { text: 'Leave', to: 'turnbull' },
@@ -103,7 +109,11 @@ export const SECTIONS = {
   needle: {
     on: [{ flag: 'needle' }],
     text: ['A knitting needle is too big to use as a weapon, but just right as a bridge. You haul it to the edge of the table and swing the far end across to the mantelpiece. It’ll hold, probably.'],
-    choices: [{ text: 'Cross the needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall' }, { text: 'Back across the table', to: 'table' }],
+    choices: [
+      { text: 'Cross the needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall' },
+      { text: 'Tie your rope to the teacup handle as a safety line, then cross', to: 'mantel', if: { item: 'rope' } },
+      { text: 'Back across the table', to: 'table' },
+    ],
   },
   needle_fall: {
     on: [{ damage: '2d6', from: 'The fall' }, NOISE()],
@@ -115,6 +125,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Eat some ham', to: 'ham', show: { notFlag: 'ham' } },
       { text: 'Take the cheese off the mousetrap', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], why: 'disarming traps' }, pass: 'trap_cheese', fail: 'trap_snap', show: { notFlag: 'trap' } },
+      { text: 'Set the trap off from a safe distance with your pole, then take the cheese', to: 'trap_poked', if: { anyItem: ['pole', 'prybar'] }, show: { notFlag: 'trap' } },
+      { text: 'Jam the trap with an iron spike, then take the cheese', to: 'trap_cheese', if: { item: 'spikes' }, show: { notFlag: 'trap' } },
       { text: 'Back to the kitchen', to: 'kitchen' },
     ],
   },
@@ -132,6 +144,11 @@ export const SECTIONS = {
     on: [{ gold: 60, msg: 'The ruby is worth 60GP.' }],
     text: ['It glows like a coal in your pocket.'],
     choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  trap_poked: {
+    on: [{ flag: 'trap' }, NOISE()],
+    text: ['You poke the trigger plate from ten feet away. SNAP. The bar comes down like a portcullis on nothing at all, loud enough to rattle the crockery. Under the cheese, wedged in the trap, is a silver ring, lost by Mother years ago, with a ruby the size of an egg.'],
+    choices: [{ text: 'Prise out the ruby', to: 'ruby' }],
   },
   trap_snap: {
     on: [{ flag: 'trap' }, { damage: '2d6', from: 'The mousetrap' }, NOISE()],
@@ -244,10 +261,15 @@ export const SECTIONS = {
     on: [{ flag: 'motherHome' }],
     text: ['The front door swings open with a noise like a ship coming into harbour. Mother ducks in, puts down her bucket, and looks round her kitchen with an expression of infinite patience. She has heard something. She is going to find it.'],
     choices: [
+      { text: 'Throw your voice out of the window, like a lost lamb', cast: 'voice', pass: 'mother_out', fail: 'mother_finds' },
       { text: 'Hide under the dresser', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'you know how to lie still' }, pass: 'mother_sits', fail: 'mother_finds' },
       { text: 'Cast Shroud and hide in the darkness', cast: 'shroud', pass: 'mother_sits', fail: 'mother_finds' },
       { text: 'Run for the gap under the door', test: { stat: 'Dex', dd: 12, save: true }, pass: 'turnbull', fail: 'mother_finds' },
     ],
+  },
+  mother_out: {
+    text: ['“Baa,” says the garden, plaintively. Mother sighs, picks up her bucket again, and goes back outside to look for a lamb. She will be some time. Hill-giant lambs are very easy to find, and this one isn’t there.'],
+    choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },
   mother_sits: {
     on: [{ flag: 'motherAsleep' }],
@@ -258,6 +280,7 @@ export const SECTIONS = {
     text: ['A hand the size of a cart closes round you. Mother holds you up to her face. Her eyes are kind and enormous. “What’s this, then?” she says. She doesn’t squash you. She does something worse: she pops you in an empty jam jar, screws the lid on, and puts you on the windowsill to show the vicar.'],
     choices: [
       { text: 'Unscrew the lid from the inside', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },
+      { text: 'Lever the lid off with your pry bar', test: { stat: 'Str', dd: 6, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'prybar' } },
       { text: 'Pick the jar’s lid open', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'tools' } },
       { text: 'Wait for the vicar', to: 'vicar' },
     ],

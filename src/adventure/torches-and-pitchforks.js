@@ -1,0 +1,215 @@
+// TORCHES AND PITCHFORKS — escort Lord Grimsby across Blackmire Moor, through a mob of ghostly tenants. For a level 8–9 scumbag.
+// The mob is ghostly: ordinary weapons pass through it. Holy water, magic, a blessed weapon, turning or paperwork all work.
+
+export const META = {
+  after: ['unsolved'], id: 'torches-and-pitchforks', title: 'Torches and Pitchforks', levels: '8–9', final: 'grimsby_hall',
+  blurb: 'Lord Grimsby has inherited Grimsby Hall, on the far side of Blackmire Moor. So have three hundred years of Grimsbys’ evicted tenants, who rise every night with torches and pitchforks and are, technically, still owed their deposits. He’ll pay 400 gold for an escort. He has asked everyone else.',
+};
+
+const ghostTraits = { feats: ['ghostly', 'undead'], note: 'Ghostly (ordinary weapons pass through it; magic, holy water and blessed weapons don’t); undead' };
+const mob = { name: 'Spectral mob', lvl: 7, hp: 28, range: 'short', ...ghostTraits, note: 'Three hundred years of evicted tenants. ' + ghostTraits.note };
+const blob = { name: 'Bog blob', lvl: 6, hp: 36, range: 'engaged', onHit: { stat: 'Str', dd: 8, label: 'pull free', text: 'It closes over your legs and starts to digest your boots.', effect: 'damage', amount: 'd6' }, note: 'A great wobbling heap of moor; on hit, d8 Str save or take d6 more; full of marsh gas' };
+
+export const SECTIONS = {
+  start: {
+    text: [
+      'The Tumbledown Inn is the last building before Blackmire Moor, and Lord Grimsby is its only guest. He’s wrapped in three coats and a scarf with his family crest on it. “Four hundred gold,” he says, “to see me to Grimsby Hall by midnight. After midnight, the hall is legally mine, and the tenants can’t touch me. Before midnight, they can.”',
+      'The innkeeper, polishing a glass, adds: “Sword goes straight through ’em. Chaplain does blessings in the back, mind. Twenty gold.”',
+    ],
+    choices: [
+      { text: 'Have the chaplain bless your weapon (20GP)', to: 'blessed', if: { gold: 20 }, show: { notFlag: 'blessedWeapon' } },
+      { text: 'Fill your bucket at the trough and bless the water', cast: 'bless', pass: 'bucket_blessed', fail: 'bucket_oil', if: { item: 'bucket' }, show: { notFlag: 'holyBucket' } },
+      { text: 'Ask Grimsby exactly what the tenants want', to: 'grimsby_talk', show: { notFlag: 'knowsDeposits' } },
+      { text: 'Set out across the moor', to: 'moor' },
+    ],
+  },
+  blessed: {
+    on: [{ gold: -20 }, { flag: 'blessedWeapon' }],
+    text: ['The chaplain blesses your weapon, then charges you for the holy water, then blesses the receipt. Your weapon hums faintly. Ghosts won’t like it.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  bucket_blessed: {
+    on: [{ flag: 'holyBucket' }],
+    text: ['The water in your bucket goes clear and still and very slightly smug. A whole bucket of holy water. That’s a lot of ghost.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  bucket_oil: {
+    text: ['The water in your bucket goes thick and black and starts to smell of lamps. It’s oil, now. Your god is in a mood.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  grimsby_talk: {
+    on: [{ flag: 'knowsDeposits' }],
+    text: ['“Their deposits,” says Grimsby, as if it’s a disease. “My family kept every tenant’s deposit for three hundred years. Damp, wear and tear, that sort of thing. Now they want it back. All of it. With an apology. In writing.” He shudders. “A Grimsby has never written an apology. We don’t own the right sort of ink.”'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  moor: {
+    text: (c) => [
+      'Blackmire Moor is flat, black and soaked. The road wanders off to the left around the bog, past a crossroads with a gibbet on it. The old causeway goes straight across the bog, half sunk, and would save an hour. Grimsby looks at the causeway, then at his shoes.',
+      c.flags.lit ? '' : 'It is very dark.',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Take the causeway across the bog', to: 'bog' },
+      { text: 'Take the road, past the crossroads', to: 'gibbet' },
+    ],
+  },
+  bog: {
+    text: ['Halfway across, the causeway disappears under black water. Somewhere ahead it comes back. Somewhere around you, the bog belches.'],
+    choices: [
+      { text: 'Feel ahead for the stones with your pole', to: 'bog_far', if: { item: 'pole' } },
+      { text: 'Rope yourself to Grimsby and go first, so whoever sinks gets pulled out', to: 'bog_far', if: { item: 'rope' } },
+      { text: 'Find the way across by eye', test: { stat: 'Wis', dd: 10, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know wet ground', mods: [{ if: { light: true }, dd: 6 }] }, pass: 'bog_far', fail: 'blob' },
+      { text: 'Turn back and take the road', to: 'gibbet' },
+    ],
+  },
+  blob: {
+    text: ['The bog in front of you stands up. It is the size of a haycart, it wobbles, and it has a boot inside it that isn’t yours. Grimsby screams in a very aristocratic register.'],
+    fight: {
+      monsters: [blob], win: 'bog_far', flee: { to: 'moor', label: 'Drag Grimsby back the way you came' },
+      special: [{ label: 'Set light to the marsh gas', if: { fire: true }, flag: 'gasLit', text: 'WHUMP. A ball of blue fire rolls up off the blob, and it boils and shrinks.', dmg: '3d6' }],
+    },
+  },
+  bog_far: {
+    on: [{ flag: 'shortcut' }],
+    text: ['You come out of the bog on the far side, wet to the waist. Grimsby has lost a shoe. You’ve saved an hour, and the mob is still out on the road, looking for you. Far behind, a long line of ghostly torches turns towards you.'],
+    choices: [{ text: 'Hurry on to the hall', to: 'gates' }],
+  },
+  gibbet: {
+    text: (c) => [
+      'At the crossroads, a skeleton sways in the gibbet. As you pass, it turns its head. All around you, the fog lights up: torches, a hundred of them, carried by grey, see-through villagers in the clothes of three centuries, every one of them holding a pitchfork. “GRIIIMSBYYYY,” they moan. “DEPOOOSIT.”',
+      c.flags.knowsDeposits ? 'They want their deposits back, with an apology. In writing.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Write out an apology and three hundred years of receipts, and make Grimsby sign it', to: 'apology', if: { item: 'quill' }, show: { flag: 'knowsDeposits' } },
+      { text: 'Talk to them', test: { stat: 'Cha', dd: 10, skill: ['social', 'languages'], profs: ['Envoy', 'Missionary'], why: 'you know how to talk to a crowd' }, pass: 'demands', fail: 'mob_fight' },
+      { text: 'Turn them', turn: { dd: 10 }, pass: 'mob_flees', chaos: 'mob_obeys', fail: 'mob_fight', if: { magic: 'divine' } },
+      { text: 'Cast Shroud over yourself and Grimsby and sneak past', cast: 'shroud', pass: 'sneak', fail: 'mob_fight' },
+      { text: 'Hand Grimsby over', to: 'betrayal' },
+      { text: 'Pick up Grimsby and run', test: { stat: 'Str', dd: 10, skill: ['athletics'], profs: ['Bodyguard'], why: 'carrying clients out of trouble is your job' }, pass: 'gates', fail: 'mob_fight' },
+      { text: 'Fight', to: 'mob_fight' },
+    ],
+  },
+  demands: {
+    on: [{ flag: 'knowsDeposits' }],
+    text: ['The mob stops. The skeleton in the gibbet clears what’s left of its throat. “We want,” it says, “our deposits back. And an apology. In writing.” Grimsby, behind you, makes a noise like a cat being sat on.'],
+    choices: [
+      { text: 'Write out the apology and receipts, and make Grimsby sign', to: 'apology', if: { item: 'quill' } },
+      { text: 'Persuade Grimsby to apologise out loud', test: { stat: 'Cha', dd: 12, skill: ['social', 'lying'] }, pass: 'spoken', fail: 'mob_fight' },
+      { text: 'Hand Grimsby over', to: 'betrayal' },
+      { text: 'Fight', to: 'mob_fight' },
+    ],
+  },
+  apology: {
+    on: [{ flag: 'peace' }],
+    text: ['By torchlight, on your knee, you write it all out: I, the undersigned Grimsby, am sorry. Then three hundred years of receipts, one for every tenant, all marked PAID IN FULL. Grimsby signs it with his eyes shut. The skeleton reads it, nods, and the torches go out one by one, until there’s only fog and a very quiet moor.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  spoken: {
+    on: [{ flag: 'peace' }],
+    text: ['Grimsby says sorry. It takes him four goes, and on the third he gets as far as “sor-” before he has to sit down. The ghosts are not entirely satisfied, it not being in writing, but they’ve never heard a Grimsby say it before. They drift off into the fog to talk about it.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  sneak: {
+    text: ['A patch of darkness settles over you both, and you creep through the mob with Grimsby holding his breath. A ghost bumps into you, apologises, and moves on. Tenants are like that.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_flees: {
+    on: [{ flag: 'turned' }],
+    text: ['You raise your holy symbol, and the mob falls back, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_obeys: {
+    on: [{ flag: 'turned' }, { flag: 'ghostArmy' }],
+    text: ['The mob kneels. A hundred ghosts with torches and pitchforks now take their orders from you. You march Grimsby to his own front door at the head of a spectral army, which he does not enjoy at all.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  betrayal: {
+    on: [{ flag: 'betrayed' }, { item: 'strongkey' }],
+    text: ['You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear. The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_fight: {
+    text: (c) => [
+      'The mob surges. Pitchforks you can see through still go into you.',
+      c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
+    ],
+    fight: {
+      monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
+      special: [
+        { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },
+        { label: 'Use your mirror to show the ghosts what they look like', if: { item: 'mirror' }, flag: 'mirrored', text: 'The front rank sees itself in your mirror and stops, horrified. Three hundred years without a mirror. Some of them are wearing the same shirt.', stun: 1 },
+        { label: 'Throw Grimsby to them', flag: 'thrown', text: 'You shove Lord Grimsby into the mob. They forget all about you.', win: true },
+      ],
+    },
+  },
+  mob_gone: {
+    redirect: [{ if: { flag: 'thrown' }, to: 'betrayal' }],
+    text: ['The last ghost dissolves into the fog, dropping its pitchfork, which dissolves too. The skeleton in the gibbet shakes its head at you and goes back to swaying.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  gates: {
+    text: (c) => [
+      'Grimsby Hall stands on a rise at the end of the moor: tall, black and in need of a roof. The gates are locked, and the bell rope has rotted through. It is a quarter to midnight.',
+      c.flags.betrayed ? 'You have the key to the strongroom, but not the gates.' : '“I lost the key,” says Grimsby, “in 1704.”',
+    ],
+    choices: [
+      { text: 'Pick the lock', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'inside', fail: 'late', if: { item: 'tools' } },
+      { text: 'Climb the wall and open it from inside', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'climbing' } },
+      { text: 'Melt the lock with acid', to: 'inside', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Lever the gate off its hinges', to: 'inside', if: { anyItem: ['prybar', 'pick'] } },
+      { text: 'Throw your rope over the gatepost and climb', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'rope' } },
+      { text: 'Have your ghost army open it for you', to: 'inside', if: { flag: 'ghostArmy' } },
+      { text: 'Break it down', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'inside', fail: 'late' },
+    ],
+  },
+  late: {
+    redirect: [{ if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'shortcut' }] }, to: 'late_safe' }],
+    text: ['Midnight strikes while you’re still struggling with the gate. Behind you, the torches come over the rise.'],
+    choices: [{ text: 'Get through the gate however you can', to: 'last_stand' }],
+  },
+  late_safe: {
+    text: ['It takes far too long, but nothing comes out of the fog to stop you. Eventually, the gate groans open.'],
+    choices: [{ text: 'Inside', to: 'inside' }],
+  },
+  last_stand: {
+    text: ['The mob catches you at the gate. There’s no talking now.'],
+    fight: {
+      monsters: [{ ...mob, hp: 24 }], distance: 1, win: 'inside', flee: { to: 'grimsby_hall', label: 'Leave Grimsby to them and run' },
+      special: [{ label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' }],
+    },
+  },
+  inside: {
+    on: [{ if: { notFlag: 'betrayed' }, flag: 'delivered' }],
+    text: (c) => [
+      c.flags.betrayed
+        ? 'Grimsby Hall is cold and empty, and nobody will ever live in it again. The strongroom is under the stairs.'
+        : 'The clock in the hall strikes midnight as Grimsby crosses the threshold. “Mine,” he says, and kisses the floor, which is a mistake. The strongroom is under the stairs.',
+    ],
+    choices: [
+      { text: 'Open the strongroom with the skeleton’s key', to: 'strongroom', if: { item: 'strongkey' } },
+      { text: 'Pick the strongroom lock while Grimsby is busy kissing the floor', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'strongroom', fail: 'grimsby_hall', if: { item: 'tools' }, show: { notItem: 'strongkey' } },
+      { text: 'Collect your fee and leave', to: 'grimsby_hall' },
+    ],
+  },
+  strongroom: {
+    on: [{ lose: 'strongkey' }, { flag: 'deposits' }, { gold: 300, uncapped: true, msg: 'Three hundred years of deposits: 300GP in old coin.' }], onceOnly: true,
+    text: ['The strongroom holds three hundred years of other people’s deposits, in labelled bags, with notes about the damp.'],
+    choices: [{ text: 'Leave', to: 'grimsby_hall' }],
+  },
+  grimsby_hall: {
+    end: 'victory',
+    on: [{ if: { flag: 'delivered' }, gold: 400, uncapped: true, msg: 'Lord Grimsby pays your fee, minus a deduction for wear and tear. Then he puts the deduction back.' }],
+    text: (c) => [
+      c.flags.delivered
+        ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.' : 'Grimsby locks every door in the hall and sits up all night with a candle. The torches circle the hall till dawn. He’ll be fine. Probably.')
+        : c.flags.betrayed ? 'Out on the moor, the torches have gone out. Somewhere in the fog, a lord is still explaining about wear and tear.'
+          : 'You leave Grimsby to the mob. He has three hundred years of explaining to do.',
+      c.flags.deposits && !c.flags.betrayed ? 'You may not have mentioned the strongroom.' : '',
+      `You leave Blackmire Moor with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
+    ].filter(Boolean),
+  },
+};
+
+export const DEATH_TEXT = [
+  'You join the mob. Every night, you rise with a torch and a pitchfork and a grievance, and every night, you want your deposit back.',
+  'Your adventure ends here.',
+];

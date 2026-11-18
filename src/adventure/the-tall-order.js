@@ -2,7 +2,7 @@
 // Section format: see docs/WRITING.md.
 
 export const META = {
-  id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
+  after: ['death-and-taxes'], id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
   blurb: 'Lord Altimus Longshanks believes greatness is measured vertically. Tonight, at the top of the tallest house in the county, he unveils the Lofty Hat: nine feet of velvet and rubies. Mother Grubb will pay 400 gold for it, if you can get it home.',
 };
 
@@ -67,9 +67,15 @@ export const SECTIONS = {
       { text: 'Go round to the kitchen door', to: 'kitchen_door' },
     ],
   },
+  glued: {
+    on: [{ lose: 'glue' }],
+    text: ['You dab glue on your soles and plant your feet. The wind blows. You don’t. The doorman measures you, finds nothing to object to, and waves you in. You will be getting off these stilts with a chisel.'],
+    choices: [{ text: 'Go inside', to: 'long_hall' }],
+  },
   wobble: {
     text: ['As the stick comes up, so does a gust of wind. You sway. You sway the other way. The doorman narrows his eyes.'],
     choices: [
+      { text: 'Glue your feet to your stilts', to: 'glued', if: { item: 'glue' } },
       { text: 'Compliment his height, quickly', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry' },
       { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }] },
     ],
@@ -247,6 +253,7 @@ export const SECTIONS = {
       : ['On the landing outside the vault, four stilt-hounds look up from their bowls. They are bred for length, have legs like a heron’s, and cannot lie down. Nobody knows how they got up here, as they hate stairs. They hate strangers more.'],
     choices: [
       { text: 'Throw them your rations', to: 'hounds_fed', if: { item: 'rations' }, show: { notFlag: 'houndsGone' } },
+      { text: 'Let your rat go', to: 'hounds_rat', if: { item: 'rat' }, show: { notFlag: 'houndsGone' } },
       { text: 'Calm them the way you calm any animal', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'hounds_calm', fail: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Fight your way through', to: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Go on to the vault door', to: 'vault_door', show: { flag: 'houndsGone' } },
@@ -256,6 +263,11 @@ export const SECTIONS = {
   hounds_fed: {
     on: [{ flag: 'houndsGone' }, { lose: 'rations' }],
     text: ['The hounds fall on your rations. A stilt-hound eating from the floor has to do the splits to reach it, so they’ll be busy for a while.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  hounds_rat: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['You set your rat down on the landing. It looks at four stilt-hounds, and they look at it, and then it goes down the stairs very fast and so do they, all knees, howling. You hear them all the way to the cellar. Your rat will find its own way back. Rats do.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   hounds_calm: {
@@ -286,7 +298,7 @@ export const SECTIONS = {
     text: ['The vault door is twenty feet tall, with the keyhole at the top.'],
     choices: [
       { text: 'Unlock it from your stilts', test: { stat: 'Dex', dd: 4, save: true }, pass: 'vault', fail: 'stilt_fall', if: { item: 'vaultkey' }, show: STILTS },
-      { text: 'Climb up and unlock it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole'] }, dd: 4 }] }, pass: 'vault', fail: 'door_fall', if: { item: 'vaultkey' } },
+      { text: 'Climb up and unlock it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole', 'spikes'] }, dd: 4 }] }, pass: 'vault', fail: 'door_fall', if: { item: 'vaultkey' } },
       { text: 'Climb up and pick the lock', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'vault', fail: 'door_fall', if: { item: 'tools' } },
       { text: 'Go back down to the gallery', to: 'gallery' },
     ],
@@ -309,9 +321,15 @@ export const SECTIONS = {
       { text: 'Take the hat while he pretends to be a wardrobe', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'hat', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Tell him the Lord says he can go home', test: { stat: 'Cha', dd: 8, skill: ['lying'] }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' }, if: { notFlag: 'truthful', notFlagText: 'being able to lie (you’re telling the truth tonight)' } },
       { text: 'Ask him whether he’s happy here', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you listen to people' }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
+      { text: 'Manacle him to the mannequin while he’s being furniture', to: 'ned_chained', if: { anyItem: ['manacles', 'chain'] }, show: { notFlag: 'nedGone' } },
       { text: 'Fight him', to: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Take the hat', to: 'hat', show: { flag: 'nedGone' } },
     ],
+  },
+  ned_chained: {
+    on: [{ flag: 'nedGone' }],
+    text: ['You fasten Big Ned’s wrist to the mannequin. He watches you do it. He has been told to stand very still, and he is a professional. “I’m furniture,” he whispers. “Furniture doesn’t stop thieves.” He sounds relieved.'],
+    choices: [{ text: 'Take the hat', to: 'hat' }],
   },
   ned_home: {
     on: [{ flag: 'nedGone' }],
@@ -356,7 +374,14 @@ export const SECTIONS = {
   },
   roof_escape: {
     text: ['You climb out onto the scaffolding at the top of the Spire. Far below, the town square glitters. A builders’ rope runs all the way down to it.'],
-    choices: [{ text: 'Slide down the rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'grubb', fail: 'rope_burn' }],
+    choices: [
+      { text: 'Slide down the rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'grubb', fail: 'rope_burn' },
+      { text: 'Hook something iron over the rope and ride it down', to: 'zipline', if: { anyItem: ['prybar', 'pick', 'chain'] } },
+    ],
+  },
+  zipline: {
+    text: ['You hook it over the rope and step off the scaffolding. The town square comes up to meet you at a brisk but civilised pace, and you land neatly, holding a nine-foot hat, in front of a man selling chestnuts. He doesn’t say anything. He’s seen worse.'],
+    choices: [{ text: 'Stroll to Mother Grubb’s', to: 'grubb' }],
   },
   rope_burn: {
     on: [{ damage: '2d6', from: 'The landing' }],

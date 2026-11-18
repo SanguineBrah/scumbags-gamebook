@@ -14,7 +14,7 @@ export function makeMonster(rng, def) {
   return {
     uid: uid++, name: def.name, lvl, dd: MONSTER_DD(lvl), range: def.range || 'engaged', feats: [...(def.feats || [])],
     hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, onHit: def.onHit || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
-    unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0,
+    unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0, revealed: !!(def.revealed),
   };
 }
 const has = (m, f) => m.feats.includes(f);
@@ -76,6 +76,7 @@ function playerAttack(g, f, m, opts = {}) {
     f.fired = true;
   }
   const label = opts.label || `Attack the ${m.name}${w ? ` (${w.name.toLowerCase()})` : ' (unarmed)'}`;
+  if (has(m, 'invisible') && !m.revealed) { dd = 20; note(f, `You can’t see the ${m.name}. You swing at where you think it is (d20).`); }
   const t = test(g, f, {
     stat: ranged ? 'Dex' : 'Str', dd, skill: opts.unskilled ? null : ranged ? 'attack:ranged' : 'attack:melee', label,
     modifier: has(m, 'tiny') ? 2 : 0, critRange: hasFeature(c, 'wideCrit') ? 3 : 1, reroll: 'rerollAttack', weaponTest: true, weapon: w,
@@ -101,6 +102,7 @@ function playerAttack(g, f, m, opts = {}) {
 
 export function hurtMonster(g, f, m, dmg, o = {}) {
   if (o.magic && has(m, 'magicImmune')) { note(f, `The ${m.name} is immune to magic.`); return; }
+  if (has(m, 'ghostly') && !o.magic && !o.holy && !g.c.flags.blessedWeapon) { note(f, `It passes straight through the ${m.name}. It ignores non-magical damage.`); return; }
   if (has(m, 'takeD6') && !o.noBonus) { const x = g.rng.die(6); dmg += x; note(f, `The ${m.name} receives +${x} damage.`); }
   if (m.ap > 0) { const a = Math.min(m.ap, dmg); m.ap -= a; dmg -= a; note(f, `Its armour soaks up ${a}${m.ap ? ` (${m.ap} AP left)` : ' — the armour is wrecked'}.`); }
   m.hp -= dmg;
@@ -168,6 +170,12 @@ function monsterAttack(g, f, m) {
       if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
       if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
       if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), o.label);
+      if (o.effect === 'disintegrate') {
+        if (c.armour) { note(f, `Your ${c.armour.name.toLowerCase()} turns to dust.`, 'bad'); c.armour = null; c.ap = 0; }
+        else if (c.shield) { note(f, `Your ${c.shield.name.toLowerCase()} turns to dust.`, 'bad'); c.shield = null; }
+        else if (c.weapon && !['dagger', 'sling', 'bow'].includes(c.weapon.id)) { note(f, `Your ${c.weapon.name.toLowerCase()} turns to dust. You draw your dagger.`, 'bad'); c.weapon = { id: 'dagger', name: 'Dagger', weight: 1, ranged: false }; }
+        else note(f, 'Everything you’re carrying that could turn to dust already has. The ray tickles.');
+      }
     }
   }
   if (has(m, 'contract') && c.hp > 0) {
@@ -197,6 +205,12 @@ function monstersTurn(g, f) {
       f.distance -= 1;
       if (f.distance > 0) { note(f, `The ${m.name} advances (${BANDS[f.distance].toLowerCase()} range).`); continue; }
       note(f, `The ${m.name} closes in.`);
+    }
+    if (has(m, 'breath') && g.rng.chance(1, 3)) {
+      const s = test(g, f, { stat: 'Dex', dd: m.dd, skill: 'save:Dex', label: `Dex save: the ${m.name} breathes fire`, reroll: 'rerollSave' });
+      const d = rollExpr(g.rng, `${Math.ceil(m.lvl / 2)}d6`);
+      hurtPlayer(g, f, s.success ? Math.floor(d / 2) : d, 'fire');
+      continue;
     }
     for (let i = 0; i < attacksOf(m) && !f.over; i++) monsterAttack(g, f, m);
     if (has(m, 'topple')) { m.prone = true; note(f, `The ${m.name} falls over.`); }
@@ -230,6 +244,7 @@ export function actions(g, f) {
   }
   if (magicType(c) === 'divine') for (const m of targets) if (has(m, 'undead') && alive(m)) out.push({ id: 'turn', target: m.uid, label: `Turn the ${m.name}` });
   if (hasItem(c, 'potion') && c.hp < c.maxHp) out.push({ id: 'potion', label: 'Drink a healing potion' });
+  if (hasItem(c, 'caltrops')) out.push({ id: 'caltrops', label: 'Scatter caltrops' });
   for (const [id, verb] of [['fire', 'Throw alchemist’s fire at'], ['acid', 'Throw acid at'], ['holywater', 'Splash holy water on'], ['pocketsand', 'Throw pocket sand at']]) {
     if (hasItem(c, id)) for (const m of targets) if (alive(m) || (id === 'fire' && m.dormant)) out.push({ id, target: m.uid, label: `${verb} the ${m.name}` });
   }
@@ -303,9 +318,17 @@ export function act(g, f, a) {
     case 'fire': useUp(c, 'fire'); note(f, 'You throw the alchemist’s fire.'); hurtMonster(g, f, m, rollExpr(rng, '2d8'), { fire: true, pulp: m.dormant > 0 }); break;
     case 'acid': useUp(c, 'acid'); note(f, 'You throw the vial of acid.'); hurtMonster(g, f, m, rollExpr(rng, '2d4')); break;
     case 'holywater': useUp(c, 'holywater');
-      if (has(m, 'undead')) hurtMonster(g, f, m, rollExpr(rng, '2d8'), { magic: false }); else note(f, `The ${m.name} is now slightly damp and blessed.`);
+      if (has(m, 'undead') || has(m, 'ghostly')) hurtMonster(g, f, m, rollExpr(rng, '2d8'), { holy: true }); else note(f, `The ${m.name} is now slightly damp and blessed.`);
       break;
-    case 'pocketsand': useUp(c, 'pocketsand'); m.stunned = 1; note(f, `Pocket sand! The ${m.name} can’t act until after its next turn.`, 'good'); break;
+    case 'caltrops': {
+      useUp(c, 'caltrops'); note(f, 'You scatter caltrops.');
+      for (const x of f.monsters) if (alive(x) && x.range === 'engaged' && !has(x, 'flies')) {
+        hurtMonster(g, f, x, rng.die(4), { noBonus: true });
+        if (alive(x) && f.distance > 0) { x.stunned = 1; note(f, `The ${x.name} stops to pick spikes out of its feet.`); }
+      }
+      break;
+    }
+    case 'pocketsand': useUp(c, 'pocketsand'); m.stunned = 1; if (has(m, 'invisible')) { m.revealed = true; note(f, `The sand sticks to the ${m.name}, and now you can see its outline.`, 'good'); } note(f, `Pocket sand! The ${m.name} can’t act until after its next turn.`, 'good'); break;
     case 'special': {
       const sp = a.sp;
       if (sp.test) {
@@ -316,6 +339,8 @@ export function act(g, f, a) {
       note(f, sp.text, 'good');
       if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }
       if (sp.win) { for (const x of f.monsters) if (alive(x)) x.fled = true; }
+      if (sp.reveal) { for (const x of f.monsters) x.revealed = true; }
+      if (sp.stun) { for (const x of f.monsters) if (alive(x)) x.stunned = sp.stun; }
       break;
     }
     case 'block': c.blocking = true; note(f, `You raise your ${c.shield.name.toLowerCase()}.`); break;

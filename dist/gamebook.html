@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scumbags! Five Bad Ideas</title>
+<title>Scumbags! Ten Bad Ideas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
@@ -158,10 +158,12 @@ return {  };
 };
 __defs["src/ui/app.js"] = function(){
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-const { buildAdventure, ADVENTURES } = __req("src/adventure/index.js");
+const { buildAdventure, ADVENTURES, availableFor, revealedFor } = __req("src/adventure/index.js");
+const { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield } = __req("src/engine/town.js");
+const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
 const { Game } = __req("src/engine/game.js");
 const { Rng } = __req("src/rules/dice.js");
-const { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS } = __req("src/rules/data.js");
+const { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } = __req("src/rules/data.js");
 const { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS } = __req("src/rules/character.js");
 const { alive } = __req("src/engine/combat.js");
 const SAVE_KEY = 'scumbags-gamebook-v2';
@@ -170,7 +172,7 @@ let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, pickFor: null };
+const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -211,7 +213,7 @@ function render() {
     ui.screen === 'title' ? titleScreen()
       : ui.screen === 'howto' ? howToScreen()
         : ui.screen === 'create' ? createScreen()
-          : ui.screen === 'pick' ? pickScreen()
+          : ui.screen === 'town' ? townScreen()
           : playScreen(),
   );
   save();
@@ -232,41 +234,78 @@ function topbar(extra) {
 function titleScreen() {
   const saved = loadSave();
   const savedAdv = saved && ADVENTURES.find((x) => x.id === saved.adv);
+  const list = roster();
   return h('div', null,
     h('main', { class: 'page title-page' },
       h('h1', { class: 'logo', 'aria-label': 'Scumbags!' }, 'Scumbags!'),
-      h('div', { class: 'titlebar' }, 'Five Bad Ideas'),
+      h('div', { class: 'titlebar' }, 'Ten Bad Ideas'),
       h('div', { class: 'strap' }, 'GAMEBOOKS'),
-      h('p', { class: 'blurb' }, 'Five short adventures for one contemptible opportunist. Survive one, squander the takings, and take your scumbag on to the next.'),
+      h('p', { class: 'blurb' }, 'Ten short adventures for one contemptible opportunist. Survive one, squander the takings, and see what else turns up. Most of them you’ll have to find first.'),
       h('div', { class: 'row' },
         saved && savedAdv && h('button', { class: 'btn', onclick: () => resume(saved) }, `Continue ${savedAdv.title}`),
+        h('button', { class: saved ? 'btn ghost' : 'btn', onclick: newScumbag }, 'New scumbag'),
         h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play')),
     ),
-    h('main', { class: 'page' }, ADVENTURES.map((a) => h('div', { class: 'card adv' },
-      h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`),
-      h('p', null, a.blurb),
-      h('button', { class: 'btn', onclick: () => chooseAdventure(a.id) }, 'Play')))));
+    list.length > 0 && h('main', { class: 'page' }, h('h2', null, 'Survivors'),
+      h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => { ui.char = c; ui.townMsg = ''; go('town'); } },
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${ADVENTURES.length} adventures done`)))))));
 }
 
-function chooseAdventure(id) { adv = buildAdventure(id); go('pick'); }
-
-function pickScreen() {
-  const list = roster();
-  return h('div', null,
-    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), adv.title)),
-    h('main', { class: 'page' },
-      h('h2', null, 'Who’s going?'),
-      h('p', { class: 'muted' }, `${adv.title} is for a level ${adv.levels} scumbag.`),
-      h('button', { class: 'btn', onclick: newScumbag }, 'A new scumbag'),
-      list.length > 0 && [h('h3', null, 'Survivors'), h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => takeScumbag(c) },
-        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${c.maxHp} HP`)))))],
-      h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
-    ));
+function charBar(c) {
+  return h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), 'Scumbag Town'),
+    h('span', { class: `chip hp${c.hp <= c.maxHp / 3 ? ' low' : ''}` }, 'HP ', h('b', null, `${c.hp}/${c.maxHp}`)),
+    h('span', { class: 'chip' }, 'GP ', h('b', null, c.gold)));
 }
 
-function takeScumbag(saved) {
-  const c = JSON.parse(JSON.stringify(saved));
-  c.flags = {}; c.hp = c.maxHp; c.ap = maxAp(c); resetDay(c);
+// ---------- Scumbag Town: the inn, the market, the fence, and the notice board
+function townScreen() {
+  const c = ui.char;
+  const act = (msg) => { if (msg) { ui.townMsg = msg; keepScumbag(c); } render(); };
+  const left = MUNDANE_LIMIT - c.mundane.length;
+  const avail = availableFor(c);
+  return h('div', null, charBar(c), h('main', { class: 'page' },
+    h('h2', null, `${c.name} in Scumbag Town`),
+    h('p', { class: 'muted' }, `Level ${c.level} ${c.profession.toLowerCase()}. ${c.hp}/${c.maxHp} HP, ${c.gold}GP, ${(c.done || []).length} adventure${(c.done || []).length === 1 ? '' : 's'} behind you.`),
+    ui.townMsg && h('div', { class: 'msg good' }, ui.townMsg),
+    h('div', { class: 'card' }, h('h3', null, 'The Drowned Rat'),
+      h('p', { class: 'small' }, 'Adventures don’t heal you. Beds do.'),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', disabled: c.gold < town.INN_PRICE || c.hp >= c.maxHp, onclick: () => act(town.restAtInn(c)) }, `Rent a bed (${town.INN_PRICE}GP): full HP`),
+        h('button', { class: 'btn ghost', disabled: c.hp >= c.maxHp, onclick: () => act(town.sleepRough(c, rng)) }, 'Sleep in a ditch (free)'))),
+    h('div', { class: 'card' }, h('h3', null, 'The market'),
+      h('p', { class: 'small' }, 'Mundane items cost next to nothing in town. Restock, or swap what you carry.'),
+      h('button', { class: 'btn ghost', onclick: () => { town.restock(c); act('You top up your torches, oil, ammunition and everything else that runs out.'); } }, 'Restock everything'),
+      h('h3', null, `Your mundane items (${c.mundane.length}/${MUNDANE_LIMIT})`),
+      h('div', { class: 'opts' }, c.mundane.map((i) => h('button', { class: 'opt', onclick: () => { town.dropMundane(c, i.id); act(`You leave the ${i.name.toLowerCase()} at home.`); } },
+        h('span', null, i.name, i.tokens !== undefined ? ` (${i.tokens})` : '', h('span', { class: 'note' }, 'Tap to leave it at home'))))),
+      left > 0 && [h('h3', null, `Pick up (${left} free)`), h('div', { class: 'opts' }, Object.entries(MUNDANE).filter(([id, m]) => !m.hidden && !c.mundane.some((i) => i.id === id)).map(([id, m]) =>
+        h('button', { class: 'opt', onclick: () => { town.addMundane(c, id); act(`You pick up ${m.name.toLowerCase()}.`); } }, h('span', null, m.name, m.note && h('span', { class: 'note' }, m.note)))))]),
+    h('div', { class: 'card' }, h('h3', null, 'The apothecary'),
+      h('div', { class: 'opts' }, town.SHOP.map((id) => { const d = SIGNIFICANT[id]; return h('button', { class: 'opt', disabled: c.gold < d.cost, onclick: () => act(town.buy(c, id)) }, h('span', null, `${d.name} — ${d.cost}GP`, h('span', { class: 'note' }, d.note))); }))),
+    h('div', { class: 'card' }, h('h3', null, 'The armourer'),
+      h('p', { class: 'small' }, `You have: ${c.weapon.name}${c.armour ? `, ${c.armour.name}` : ''}${c.shield ? `, ${c.shield.name}` : ''}. Buying replaces what you have.`),
+      h('div', { class: 'opts' },
+        town.weaponsFor(c).filter((w) => w.id !== c.weapon.id).map((w) => h('button', { class: 'opt', disabled: c.gold < town.weaponPrice(w), onclick: () => act(town.buyWeapon(c, w.id)) }, h('span', null, `${w.name} — ${town.weaponPrice(w)}GP`, h('span', { class: 'note' }, `d${WEAPON_DIE[w.weight]}${w.ranged ? ', ranged' : ''}`)))),
+        ARMOURS.filter((a) => a.weight <= profOf(c).prof && (!c.armour || a.id !== c.armour.id)).map((a) => h('button', { class: 'opt', disabled: c.gold < town.armourPrice(a), onclick: () => act(town.buyArmour(c, a.id)) }, h('span', null, `${a.name} — ${town.armourPrice(a)}GP`, h('span', { class: 'note' }, `${a.ap} AP; replaces a shield`)))),
+        SHIELDS.filter((x) => x.weight <= profOf(c).prof && (!c.shield || x.id !== c.shield.id)).map((x) => h('button', { class: 'opt', disabled: c.gold < town.shieldPrice(x), onclick: () => act(town.buyShield(c, x.id)) }, h('span', null, `${x.name} — ${town.shieldPrice(x)}GP`, h('span', { class: 'note' }, `blocks ${x.block.join('d')}; replaces armour`)))))),
+    c.significant.some((i) => town.sellPrice(i.id)) && h('div', { class: 'card' }, h('h3', null, 'The fence'),
+      h('div', { class: 'opts' }, c.significant.map((i, n) => town.sellPrice(i.id) ? h('button', { class: 'opt', onclick: () => act(town.sell(c, n)) }, h('span', null, `Sell ${i.name.toLowerCase()} — ${town.sellPrice(i.id)}GP`)) : null))),
+    c.gold >= LEVEL_COST && h('div', { class: 'card' }, h('h3', null, 'Squander your gold'),
+      h('p', { class: 'small' }, `Every ${LEVEL_COST}GP you waste on a pointless endeavour gains you a level.`),
+      h('button', { class: 'btn', onclick: () => { const roll = rng.die(20); const r = wasteForLevel(rng, c); const up = Object.entries(r.statRolls).filter(([, x]) => x.up).map(([k]) => k); act(`${ENDEAVOURS[roll - 1]} Level ${r.level}! +${r.hpRoll} max HP${up.length ? `, +1 ${up.join(', ')}` : ''}.`); } }, `Waste ${LEVEL_COST}GP`)),
+    h('div', { class: 'card' }, h('h3', null, 'The notice board'),
+      avail.length ? h('p', { class: 'small' }, 'Jobs for people with no scruples:') : h('p', { class: 'small' }, 'There’s nothing on the board for you. You’ve done it all. Retire, or find something worse to do.'),
+      avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`), h('p', null, a.blurb),
+        h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
+      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
+    h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title screen')),
+  ));
+}
+
+function startAdventure(id) {
+  adv = buildAdventure(id);
+  const c = JSON.parse(JSON.stringify(ui.char));
+  c.flags = {}; c.ap = maxAp(c); resetDay(c);   // HP carries over: rest in town first
   const g = new Game(adv, rng.int(1, 2 ** 31));
   g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
   go('play');
@@ -289,6 +328,9 @@ function howToScreen() {
     h('p', null, 'Dark places use up a torch, a flask of oil for a lantern, or some other light. Without one, every test uses at least a d12.'),
     h('h3', null, 'Treasure'),
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level.'),
+    h('h3', null, 'Between adventures'),
+    h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Each job you finish reveals new ones, and you can’t do the same job twice. There are ten, if you live.'),
+    h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
     h('button', { class: 'btn', onclick: () => go('title') }, 'Back'),
   ));
@@ -356,7 +398,7 @@ function createScreen() {
       ),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: mundaneCount !== MUNDANE_LIMIT, onclick: begin }, mundaneCount === MUNDANE_LIMIT ? 'Begin your adventure' : `Choose ${MUNDANE_LIMIT - mundaneCount} more item${MUNDANE_LIMIT - mundaneCount === 1 ? '' : 's'}`),
-        h('button', { class: 'btn ghost', onclick: () => go('pick') }, 'Back')),
+        h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
     ));
 }
 
@@ -365,8 +407,8 @@ function begin() {
   const g = new Game(adv, rng.int(1, 2 ** 31));
   const c = createCharacter(g.rng, k.origins, { name: (k.name || '').trim() || randomName(rng), weapon: k.weapon, protection: k.protection, alignment: k.alignment, mundane: [...k.mundane], extra: k.extra });
   c.id = `${Date.now().toString(36)}${rng.int(0, 1e6).toString(36)}`;
-  g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
-  go('play');
+  keepScumbag(c); ui.char = c; ui.townMsg = 'You arrive in Scumbag Town with nothing but your kit and your lack of scruples. Check the notice board.';
+  go('town');
 }
 
 // ---------- playing
@@ -401,7 +443,12 @@ function sectionView() {
     const btn = h('button', { class: `choice${ch.kind === 'test' || ch.kind === 'cast' ? ' test' : ''}`, disabled: !ch.ok, onclick: () => pick(ch.i) },
       h('span', null, ch.label, (ch.detail || ch.reason) && h('span', { class: 'sub' }, [ch.detail && `Test: ${ch.detail}`, !ch.ok && ch.reason].filter(Boolean).join(' — '))),
       h('span', { class: 'turn' }, ch.num ? `Turn to ${ch.num}` : 'Roll'));
-    return versatile ? h('div', null, btn, h('button', { class: 'btn ghost small', style: 'margin-top:.3rem', onclick: () => pick(ch.i, { versatile: true }) }, 'Roll as though skilled (Versatile, once per day)')) : btn;
+    const insight = ch.kind === 'test' && ch.ok && ch.detail && /^(Wis|Int) /.test(ch.detail) && !/, skilled|automatic/.test(ch.detail) && c.significant.some((i) => i.id === 'insight');
+    const extras = [
+      versatile && h('button', { class: 'btn ghost small', style: 'margin:.3rem .3rem 0 0', onclick: () => pick(ch.i, { versatile: true }) }, 'Roll as though skilled (Versatile, once per day)'),
+      insight && h('button', { class: 'btn ghost small', style: 'margin:.3rem .3rem 0 0', onclick: () => pick(ch.i, { insight: true }) }, 'Drink your elixir of insight first'),
+    ].filter(Boolean);
+    return extras.length ? h('div', null, btn, extras) : btn;
   })));
   return out;
 }
@@ -446,12 +493,12 @@ function endingView() {
       h('div', { class: 'banner dead' }, 'Your adventure ends here'),
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
     clearSaveSoon();
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });
@@ -467,25 +514,21 @@ function endingView() {
     out.push(h('p', null, `You have ${c.gold}GP.`),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: c.gold < LEVEL_COST, onclick: () => { const roll = g.rng.die(20); const report = wasteForLevel(g.rng, c); e.wasted.push({ roll, report }); render(); } }, `Waste ${LEVEL_COST}GP`),
-        h('button', { class: 'btn ghost', onclick: () => { e.done = true; keepScumbag(c); render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
-  } else {
-    out.push(h('div', { class: 'banner' }, 'The End'),
-      h('p', null, `${c.name} the level ${c.level} ${c.profession.toLowerCase()} has squandered ${c.wasted}GP in total, and has ${c.gold}GP left over.`),
-      h('p', { class: 'muted small' }, `${c.name} is waiting among the survivors for the next adventure.`),
-      h('div', { class: 'row' },
-        h('button', { class: 'btn', onclick: () => { clearSave(); go('title'); } }, 'Choose the next adventure'),
-        h('button', { class: 'btn ghost', onclick: again }, 'Play this one again')));
+        h('button', { class: 'btn ghost', onclick: () => finishAdventure(c) }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
   }
   return out;
 }
 let clearTimer = null;
 function clearSaveSoon() { clearTimeout(clearTimer); clearTimer = setTimeout(clearSave, 0); }
 
-function again() {
-  const old = ui.game.c;
-  const g = new Game(adv, rng.int(1, 2 ** 31));
-  old.flags = {}; old.hp = old.maxHp; old.ap = maxAp(old); resetDay(old);
-  g.begin(old); ui.game = g; ui.ending = null; go('play');
+function finishAdventure(c) {
+  c.done = [...new Set([...(c.done || []), adv.id])];
+  c.flags = {}; c.prone = false; c.blocking = false;
+  keepScumbag(c); clearSave();
+  const before = new Set(revealedFor({ ...c, done: (c.done || []).filter((x) => x !== adv.id) }).map((a) => a.id));
+  const fresh = availableFor(c).filter((a) => !before.has(a.id)).map((a) => a.title);
+  ui.char = c; ui.townMsg = `${adv.title}: done.${fresh.length ? ` Word gets round, and new work turns up on the notice board: ${fresh.join(' and ')}.` : ''}`;
+  go('town');
 }
 
 // ---------- adventure sheet
@@ -540,8 +583,24 @@ const { META: M2, SECTIONS: S2, DEATH_TEXT: D2 } = __req("src/adventure/the-tall
 const { META: M3, SECTIONS: S3, DEATH_TEXT: D3 } = __req("src/adventure/fortunes-fang.js");
 const { META: M4, SECTIONS: S4, DEATH_TEXT: D4 } = __req("src/adventure/mothers-kitchen.js");
 const { META: M5, SECTIONS: S5, DEATH_TEXT: D5 } = __req("src/adventure/eviction-notice.js");
-const SOURCES = [[M1, S1, D1], [M2, S2, D2], [M3, S3, D3], [M4, S4, D4], [M5, S5, D5]];
+const { META: M6, SECTIONS: S6, DEATH_TEXT: D6 } = __req("src/adventure/last-ride.js");
+const { META: M7, SECTIONS: S7, DEATH_TEXT: D7 } = __req("src/adventure/invisible-menagerie.js");
+const { META: M8, SECTIONS: S8, DEATH_TEXT: D8 } = __req("src/adventure/unsolved.js");
+const { META: M9, SECTIONS: S9, DEATH_TEXT: D9 } = __req("src/adventure/torches-and-pitchforks.js");
+const { META: M10, SECTIONS: S10, DEATH_TEXT: D10 } = __req("src/adventure/standard-dragon.js");
+const SOURCES = [[M1, S1, D1], [M2, S2, D2], [M3, S3, D3], [M4, S4, D4], [M5, S5, D5], [M6, S6, D6], [M7, S7, D7], [M8, S8, D8], [M9, S9, D9], [M10, S10, D10]];
 const ADVENTURES = SOURCES.map(([m]) => m);
+
+/** Adventures a scumbag can take on now: not done yet, and unlocked by one they have done. */
+function availableFor(c) {
+  const done = c.done || [];
+  return ADVENTURES.filter((a) => !done.includes(a.id) && (!a.after || !a.after.length || a.after.some((x) => done.includes(x))));
+}
+/** Adventures this scumbag has revealed (done or available); the rest are hidden. */
+function revealedFor(c) {
+  const avail = availableFor(c).map((a) => a.id);
+  return ADVENTURES.filter((a) => (c.done || []).includes(a.id) || avail.includes(a.id));
+}
 
 const cache = {};
 function buildAdventure(id = ADVENTURES[0].id) {
@@ -557,7 +616,7 @@ function buildAdventure(id = ADVENTURES[0].id) {
   return (cache[id] = { ...meta, deathText, start: 'start', sections, numbers, count: order.length });
 }
 
-return { ADVENTURES, buildAdventure };
+return { ADVENTURES, availableFor, revealedFor, buildAdventure };
 };
 __defs["src/rules/dice.js"] = function(){
 // Dice and random numbers. All randomness goes through an Rng so games can be seeded and replayed.
@@ -1222,7 +1281,7 @@ __defs["src/adventure/the-tall-order.js"] = function(){
 // Section format: see docs/WRITING.md.
 
 const META = {
-  id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
+  after: ['death-and-taxes'], id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
   blurb: 'Lord Altimus Longshanks believes greatness is measured vertically. Tonight, at the top of the tallest house in the county, he unveils the Lofty Hat: nine feet of velvet and rubies. Mother Grubb will pay 400 gold for it, if you can get it home.',
 };
 
@@ -1287,9 +1346,15 @@ const SECTIONS = {
       { text: 'Go round to the kitchen door', to: 'kitchen_door' },
     ],
   },
+  glued: {
+    on: [{ lose: 'glue' }],
+    text: ['You dab glue on your soles and plant your feet. The wind blows. You don’t. The doorman measures you, finds nothing to object to, and waves you in. You will be getting off these stilts with a chisel.'],
+    choices: [{ text: 'Go inside', to: 'long_hall' }],
+  },
   wobble: {
     text: ['As the stick comes up, so does a gust of wind. You sway. You sway the other way. The doorman narrows his eyes.'],
     choices: [
+      { text: 'Glue your feet to your stilts', to: 'glued', if: { item: 'glue' } },
       { text: 'Compliment his height, quickly', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry' },
       { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }] },
     ],
@@ -1467,6 +1532,7 @@ const SECTIONS = {
       : ['On the landing outside the vault, four stilt-hounds look up from their bowls. They are bred for length, have legs like a heron’s, and cannot lie down. Nobody knows how they got up here, as they hate stairs. They hate strangers more.'],
     choices: [
       { text: 'Throw them your rations', to: 'hounds_fed', if: { item: 'rations' }, show: { notFlag: 'houndsGone' } },
+      { text: 'Let your rat go', to: 'hounds_rat', if: { item: 'rat' }, show: { notFlag: 'houndsGone' } },
       { text: 'Calm them the way you calm any animal', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'hounds_calm', fail: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Fight your way through', to: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Go on to the vault door', to: 'vault_door', show: { flag: 'houndsGone' } },
@@ -1476,6 +1542,11 @@ const SECTIONS = {
   hounds_fed: {
     on: [{ flag: 'houndsGone' }, { lose: 'rations' }],
     text: ['The hounds fall on your rations. A stilt-hound eating from the floor has to do the splits to reach it, so they’ll be busy for a while.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  hounds_rat: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['You set your rat down on the landing. It looks at four stilt-hounds, and they look at it, and then it goes down the stairs very fast and so do they, all knees, howling. You hear them all the way to the cellar. Your rat will find its own way back. Rats do.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   hounds_calm: {
@@ -1506,7 +1577,7 @@ const SECTIONS = {
     text: ['The vault door is twenty feet tall, with the keyhole at the top.'],
     choices: [
       { text: 'Unlock it from your stilts', test: { stat: 'Dex', dd: 4, save: true }, pass: 'vault', fail: 'stilt_fall', if: { item: 'vaultkey' }, show: STILTS },
-      { text: 'Climb up and unlock it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole'] }, dd: 4 }] }, pass: 'vault', fail: 'door_fall', if: { item: 'vaultkey' } },
+      { text: 'Climb up and unlock it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole', 'spikes'] }, dd: 4 }] }, pass: 'vault', fail: 'door_fall', if: { item: 'vaultkey' } },
       { text: 'Climb up and pick the lock', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'vault', fail: 'door_fall', if: { item: 'tools' } },
       { text: 'Go back down to the gallery', to: 'gallery' },
     ],
@@ -1529,9 +1600,15 @@ const SECTIONS = {
       { text: 'Take the hat while he pretends to be a wardrobe', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'hat', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Tell him the Lord says he can go home', test: { stat: 'Cha', dd: 8, skill: ['lying'] }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' }, if: { notFlag: 'truthful', notFlagText: 'being able to lie (you’re telling the truth tonight)' } },
       { text: 'Ask him whether he’s happy here', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you listen to people' }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
+      { text: 'Manacle him to the mannequin while he’s being furniture', to: 'ned_chained', if: { anyItem: ['manacles', 'chain'] }, show: { notFlag: 'nedGone' } },
       { text: 'Fight him', to: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Take the hat', to: 'hat', show: { flag: 'nedGone' } },
     ],
+  },
+  ned_chained: {
+    on: [{ flag: 'nedGone' }],
+    text: ['You fasten Big Ned’s wrist to the mannequin. He watches you do it. He has been told to stand very still, and he is a professional. “I’m furniture,” he whispers. “Furniture doesn’t stop thieves.” He sounds relieved.'],
+    choices: [{ text: 'Take the hat', to: 'hat' }],
   },
   ned_home: {
     on: [{ flag: 'nedGone' }],
@@ -1576,7 +1653,14 @@ const SECTIONS = {
   },
   roof_escape: {
     text: ['You climb out onto the scaffolding at the top of the Spire. Far below, the town square glitters. A builders’ rope runs all the way down to it.'],
-    choices: [{ text: 'Slide down the rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'grubb', fail: 'rope_burn' }],
+    choices: [
+      { text: 'Slide down the rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'grubb', fail: 'rope_burn' },
+      { text: 'Hook something iron over the rope and ride it down', to: 'zipline', if: { anyItem: ['prybar', 'pick', 'chain'] } },
+    ],
+  },
+  zipline: {
+    text: ['You hook it over the rope and step off the scaffolding. The town square comes up to meet you at a brisk but civilised pace, and you land neatly, holding a nine-foot hat, in front of a man selling chestnuts. He doesn’t say anything. He’s seen worse.'],
+    choices: [{ text: 'Stroll to Mother Grubb’s', to: 'grubb' }],
   },
   rope_burn: {
     on: [{ damage: '2d6', from: 'The landing' }],
@@ -1619,7 +1703,7 @@ __defs["src/adventure/fortunes-fang.js"] = function(){
 // The `hour` counter moves on with every game you play; at 4, dawn sends the Count to his coffin.
 
 const META = {
-  id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
+  after: ['death-and-taxes'], id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
   blurb: 'Under the town of Lesser Wager, in a crypt full of candles and card tables, Count Fortunato runs the only casino where the house always wins. He is a luck vampire: he feeds on yours. Tonight, you’re going to take his bank.',
 };
 
@@ -1685,6 +1769,7 @@ const SECTIONS = {
     text: ['At the Bones, you bet on two dice made from the knucklebones of the Count’s previous accountant. The croupier is a skeleton. The minimum stake is 20GP.'],
     choices: [
       { text: 'Bet 20GP and trust your luck', test: { stat: 'Cha', dd: 8, save: true }, pass: 'bones_win', fail: 'bones_lose', if: { gold: 20 }, effects: [GAME] },
+      { text: 'Study the dice through your jeweller’s loupe, then bet 20GP on the heavy side', test: { stat: 'Int', dd: 4, skill: ['analysis'] }, pass: 'bones_win', fail: 'bones_lose', if: { gold: 20, item: 'loupe' }, effects: [GAME] },
       { text: 'Bet 20GP and palm a loaded die', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'bones_cheat', fail: 'caught', if: { gold: 20 }, effects: [GAME] },
       { text: 'Back to the floor', to: 'floor' },
     ],
@@ -1749,6 +1834,7 @@ const SECTIONS = {
       : ['The Liar’s Dice table is run by Mr Pinch, a croupier-crab the size of an armchair, in a bow tie. He deals with one claw and takes your money with the other. You each roll under a cup and bid on what’s underneath. The trick is lying, and not blinking.'],
     choices: [
       { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { notFlag: 'pinchDown' } },
+      { text: 'Play a hand with your hand mirror propped against the candlestick, angled under his cup (20GP)', test: { stat: 'Dex', dd: 4, skill: ['skulduggery'] }, pass: 'crab_win', fail: 'pinch_fight', if: { gold: 20, item: 'mirror' }, effects: [GAME], show: { notFlag: 'pinchDown' } },
       { text: 'Accuse him of cheating', to: 'pinch_fight', show: { notFlag: 'pinchDown' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
@@ -1796,6 +1882,8 @@ const SECTIONS = {
     choices: [
       { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' } },
       { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { notFlag: 'cageRobbed' } },
+      { text: 'Melt the cage lock with acid while it counts', to: 'cage_robbed', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { notFlag: 'cageRobbed' } },
+      { text: 'Lever the bars apart while it counts', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { anyItem: ['prybar', 'pick'] }, show: { notFlag: 'cageRobbed' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
   },
@@ -1806,7 +1894,7 @@ const SECTIONS = {
   },
   cage_robbed: {
     on: [{ flag: 'cageRobbed' }, { gold: 120 }],
-    text: ['The lock clicks. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
+    text: ['The cage opens. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   cashier_fight: {
@@ -1837,10 +1925,14 @@ const SECTIONS = {
       : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
     choices: [
       { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4] } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4] } },
       { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4] } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
+      { text: 'Cast Divine light on the table: the nearest thing to dawn he’s seen in three hundred years', cast: 'light', pass: 'count_dazzled', fail: 'count_fight', show: { below: ['hour', 4] } },
       { text: 'Attack him', to: 'count_fight', show: { below: ['hour', 4] } },
       { text: 'Go back upstairs', to: 'floor' },
     ],
@@ -1868,6 +1960,15 @@ const SECTIONS = {
   },
   mirror: {
     text: ['You hold up the mirror. Count Fortunato looks into it and sees the room, the candles, the table, and no Count Fortunato at all. “No,” he whispers. “I’m… I’m not even here.” He sits down on the floor with his head in his hands and refuses to talk to anyone about anything. He’ll be like that for days.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  coffin_sealed: {
+    on: [{ flag: 'countLocked' }],
+    text: ['Inside the coffin, the snoring stops, then starts again, slightly worried. The lid isn’t opening before dusk, and possibly not after.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_dazzled: {
+    text: ['The deck of cards begins to glow, then the table, then the whole crypt, warm and gold as a summer morning. Count Fortunato throws his cloak over his face, screams something about the time, and dives into his coffin. The lid slams. He won’t be out till dusk.'],
     choices: [{ text: 'Open the bank', to: 'bank' }],
   },
   count_flees: {
@@ -1942,7 +2043,7 @@ __defs["src/adventure/mothers-kitchen.js"] = function(){
 // The `noise` counter rises with every clumsy act; at 3, Mother comes back (see `redirect` on the kitchen).
 
 const META = {
-  id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
+  after: ['tall-order', 'fortunes-fang'], id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
   blurb: 'Farmer Turnbull lost the last oversized turnip at market to a stranger. Then a hill giant grew a bigger one, had it gilded, and won every prize in the county. Turnbull will pay 300 gold to see it gone. It sits on her mantelpiece, forty feet up.',
 };
 
@@ -1967,7 +2068,7 @@ const SECTIONS = {
     choices: [
       { text: 'Crawl under the front door', to: 'kitchen' },
       { text: 'Go through the cat flap', to: 'cat_flap' },
-      { text: 'Climb the ivy to the open window', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Hunter'], why: 'you know how to climb' }, pass: 'bedroom', fail: 'ivy_fall' },
+      { text: 'Climb the ivy to the open window', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Hunter'], why: 'you know how to climb', mods: [{ if: { anyItem: ['climbing', 'rope'] }, dd: 4 }] }, pass: 'bedroom', fail: 'ivy_fall' },
     ],
   },
   ivy_fall: {
@@ -1981,12 +2082,18 @@ const SECTIONS = {
     choices: [
       { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight' },
       { text: 'Let your rat go as a distraction', to: 'tiddles_rat', if: { item: 'rat' } },
+      { text: 'Offer it your rations', to: 'tiddles_fed', if: { item: 'rations' } },
       { text: 'Fight it', to: 'tiddles_fight' },
     ],
   },
   tiddles_rat: {
     on: [{ lose: 'rat' }],
     text: ['Your rat takes one look at Tiddles and makes the decision any rat would. Tiddles follows it at high speed. You will miss that rat. You won’t miss it much.'],
+    choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
+  },
+  tiddles_fed: {
+    on: [{ lose: 'rations' }],
+    text: ['Tiddles sniffs your rations, eats all five days of them in one go, including the wrapping, and goes back to sleep. To a cat that size, it was a biscuit.'],
     choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
   },
   tiddles_fight: {
@@ -2009,9 +2116,9 @@ const SECTIONS = {
       'A doorway leads to the nursery.',
     ],
     choices: [
-      { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
+      { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
       { text: 'Raid the larder', to: 'larder' },
-      { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
+      { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
       { text: 'Climb up to the mantelpiece', to: 'mantel_climb' },
       { text: 'Go into the nursery', to: 'nursery' },
       { text: 'Leave', to: 'turnbull' },
@@ -2043,7 +2150,11 @@ const SECTIONS = {
   needle: {
     on: [{ flag: 'needle' }],
     text: ['A knitting needle is too big to use as a weapon, but just right as a bridge. You haul it to the edge of the table and swing the far end across to the mantelpiece. It’ll hold, probably.'],
-    choices: [{ text: 'Cross the needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall' }, { text: 'Back across the table', to: 'table' }],
+    choices: [
+      { text: 'Cross the needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall' },
+      { text: 'Tie your rope to the teacup handle as a safety line, then cross', to: 'mantel', if: { item: 'rope' } },
+      { text: 'Back across the table', to: 'table' },
+    ],
   },
   needle_fall: {
     on: [{ damage: '2d6', from: 'The fall' }, NOISE()],
@@ -2055,6 +2166,8 @@ const SECTIONS = {
     choices: [
       { text: 'Eat some ham', to: 'ham', show: { notFlag: 'ham' } },
       { text: 'Take the cheese off the mousetrap', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], why: 'disarming traps' }, pass: 'trap_cheese', fail: 'trap_snap', show: { notFlag: 'trap' } },
+      { text: 'Set the trap off from a safe distance with your pole, then take the cheese', to: 'trap_poked', if: { anyItem: ['pole', 'prybar'] }, show: { notFlag: 'trap' } },
+      { text: 'Jam the trap with an iron spike, then take the cheese', to: 'trap_cheese', if: { item: 'spikes' }, show: { notFlag: 'trap' } },
       { text: 'Back to the kitchen', to: 'kitchen' },
     ],
   },
@@ -2072,6 +2185,11 @@ const SECTIONS = {
     on: [{ gold: 60, msg: 'The ruby is worth 60GP.' }],
     text: ['It glows like a coal in your pocket.'],
     choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  trap_poked: {
+    on: [{ flag: 'trap' }, NOISE()],
+    text: ['You poke the trigger plate from ten feet away. SNAP. The bar comes down like a portcullis on nothing at all, loud enough to rattle the crockery. Under the cheese, wedged in the trap, is a silver ring, lost by Mother years ago, with a ruby the size of an egg.'],
+    choices: [{ text: 'Prise out the ruby', to: 'ruby' }],
   },
   trap_snap: {
     on: [{ flag: 'trap' }, { damage: '2d6', from: 'The mousetrap' }, NOISE()],
@@ -2184,10 +2302,15 @@ const SECTIONS = {
     on: [{ flag: 'motherHome' }],
     text: ['The front door swings open with a noise like a ship coming into harbour. Mother ducks in, puts down her bucket, and looks round her kitchen with an expression of infinite patience. She has heard something. She is going to find it.'],
     choices: [
+      { text: 'Throw your voice out of the window, like a lost lamb', cast: 'voice', pass: 'mother_out', fail: 'mother_finds' },
       { text: 'Hide under the dresser', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'you know how to lie still' }, pass: 'mother_sits', fail: 'mother_finds' },
       { text: 'Cast Shroud and hide in the darkness', cast: 'shroud', pass: 'mother_sits', fail: 'mother_finds' },
       { text: 'Run for the gap under the door', test: { stat: 'Dex', dd: 12, save: true }, pass: 'turnbull', fail: 'mother_finds' },
     ],
+  },
+  mother_out: {
+    text: ['“Baa,” says the garden, plaintively. Mother sighs, picks up her bucket again, and goes back outside to look for a lamb. She will be some time. Hill-giant lambs are very easy to find, and this one isn’t there.'],
+    choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },
   mother_sits: {
     on: [{ flag: 'motherAsleep' }],
@@ -2198,6 +2321,7 @@ const SECTIONS = {
     text: ['A hand the size of a cart closes round you. Mother holds you up to her face. Her eyes are kind and enormous. “What’s this, then?” she says. She doesn’t squash you. She does something worse: she pops you in an empty jam jar, screws the lid on, and puts you on the windowsill to show the vicar.'],
     choices: [
       { text: 'Unscrew the lid from the inside', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },
+      { text: 'Lever the lid off with your pry bar', test: { stat: 'Str', dd: 6, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'prybar' } },
       { text: 'Pick the jar’s lid open', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'tools' } },
       { text: 'Wait for the vicar', to: 'vicar' },
     ],
@@ -2245,7 +2369,7 @@ __defs["src/adventure/eviction-notice.js"] = function(){
 // EVICTION NOTICE — evict a kobold siege-pyramid from the town square. For a level 4–5 scumbag.
 
 const META = {
-  id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
+  after: ['mothers-kitchen'], id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
   blurb: 'A kobold siege-pyramid has parked itself in the square at Middle Whelping and refuses to move. Lord Grimsby, who owns the square, owns the town and has never once bathed, will pay 300 gold to have it evicted. Nobody has asked the kobolds why they’re there.',
 };
 
@@ -2286,6 +2410,7 @@ const SECTIONS = {
   town_hall: {
     text: ['The town hall is one room, one clerk and one enormous dog asleep on the records. The clerk confirms that the deed to the square was “borrowed for framing” by Lord Grimsby twelve years ago. “I’ve got a copy,” he says. “Somewhere. Under the dog.”'],
     choices: [
+      { text: 'Tempt the dog off the records with your rations', to: 'dog_moved', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Move the dog', test: { stat: 'Str', dd: 8, skill: ['bruteforce', 'survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'dog_moved', fail: 'dog_bite' },
       { text: 'Forge a new copy with your quill', test: { stat: 'Int', dd: 8, skill: ['skulduggery', 'analysis'], why: 'forgery is a kind of skulduggery' }, pass: 'deed_forged', fail: 'forge_smudge', if: { item: 'quill' } },
       { text: 'Back to the square', to: 'square' },
@@ -2340,7 +2465,7 @@ const SECTIONS = {
     ],
     choices: [
       { text: 'Knock on the door', to: 'door' },
-      { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living' }, pass: 'apex', fail: 'slingers' },
+      { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
       { text: 'Set fire to it', to: 'burn', if: { fire: true } },
       { text: 'Take your bow to the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
@@ -2362,7 +2487,7 @@ const SECTIONS = {
     choices: [
       { text: 'Tell it you’re here to help', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'inside', fail: 'sapper_fight' },
       { text: 'Show it the deed to the square', to: 'deed_shown', if: { item: 'deed' } },
-      { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'sapper_fight', fail: 'door_ouch' },
+      { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 4 }] }, pass: 'sapper_fight', fail: 'door_ouch' },
     ],
   },
   door_ouch: {
@@ -2377,7 +2502,10 @@ const SECTIONS = {
   },
   sapper_fight: {
     text: ['The door swings open on a kobold sapper with a barrel of black powder on its back and a lit fuse in its teeth. It charges.'],
-    fight: { monsters: [sapper], win: 'inside', flee: { to: 'pyramid', label: 'Back away from the fuse' } },
+    fight: {
+      monsters: [sapper], win: 'inside', flee: { to: 'pyramid', label: 'Back away from the fuse' },
+      special: [{ label: 'Throw your bucket of water over its fuse', if: { item: 'bucket' }, flag: 'fuseOut', text: 'Fssst. The sapper looks at its soggy fuse, then at you, and runs upstairs to tell somebody.', win: true }],
+    },
   },
   inside: {
     text: (c) => [
@@ -2386,6 +2514,7 @@ const SECTIONS = {
       'A ladder leads up to the middle floor, where you can hear arguing.',
     ],
     choices: [
+      { text: 'Share your rations with Gnasher', to: 'troll_fed', if: { item: 'rations' }, show: { notFlag: 'trollGone' } },
       { text: 'Ask Gnasher what he gets paid', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'] }, pass: 'troll_strike', fail: 'troll_fight', show: { notFlag: 'trollGone' } },
       { text: 'Jam the treadmill with your iron spikes', to: 'troll_jam', if: { item: 'spikes' }, show: { notFlag: 'trollGone' } },
       { text: 'Climb the ladder', to: 'council' },
@@ -2409,6 +2538,11 @@ const SECTIONS = {
     on: [{ flag: 'storyTold' }],
     text: ['Your story has a moral, which kobold children can smell a mile off. They boo you out of the nursery.'],
     choices: [{ text: 'Back to the engine room', to: 'inside' }],
+  },
+  troll_fed: {
+    on: [{ flag: 'trollGone' }, { flag: 'trollFriend' }, { lose: 'rations' }],
+    text: ['Gnasher stops walking to eat. It’s the first time he’s stopped walking in a month. He eats five days of rations in one bite, and then sits down in his wheel to think about how nice that was, and doesn’t get up again.'],
+    choices: [{ text: 'Climb the ladder', to: 'council' }],
   },
   troll_strike: {
     on: [{ flag: 'trollGone' }, { flag: 'trollFriend' }],
@@ -2525,6 +2659,1590 @@ const DEATH_TEXT = [
 
 return { META, SECTIONS, DEATH_TEXT };
 };
+__defs["src/adventure/last-ride.js"] = function(){
+// THE LAST RIDE OF SIR GRISTLE — escort an aged hero on his final quest, or don't. For a level 5–6 scumbag.
+// Every time Sir Gristle exerts himself there is a 1 in 10 chance his heart gives out (the rulebook's aged hero).
+
+const META = {
+  after: ['eviction-notice'], id: 'last-ride', title: 'The Last Ride of Sir Gristle', levels: '5–6', final: 'pension_office',
+  blurb: 'Sir Bertram Gristle is ninety-one and wants one last quest: to slay Old Croaker, the toad farmer of Muckle Fen. His nephew will pay you to make sure he dies gloriously. Sir Gristle will pay you to make sure he doesn’t. You could, in theory, take both jobs.',
+};
+
+// Exertion: 1 in 10 chance of a heart attack. `heart` is set when it happens.
+const EXERT = { chance: [1, 10], then: [{ flag: 'heart', msg: 'Sir Gristle clutches his chest and topples off his horse.' }] };
+const ALIVE = { notFlag: 'heart', notFlagText: 'Sir Gristle on his feet' };
+const toad = { name: 'Burst toad', lvl: 1, range: 'engaged', feats: ['burst'], note: 'Swollen with marsh gas; explodes when slain (d6 Dex save or 2d6 damage)' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'Sir Bertram Gristle receives you in the parlour of his crumbling manor, in full armour, which takes him most of the morning to put on. “Old Croaker,” he wheezes. “Toad farmer. Menace. Fires toads at the village from a cannon. Exploding toads. I shall slay him. One last quest. You shall be my squire.”',
+      'On your way out, his nephew Percival catches your sleeve. “The Royal Pension Office pays five hundred gold to the family of any knight who dies in glorious battle,” he murmurs. “Dies of old age, we get nothing. See that he dies gloriously, and three hundred of it is yours.” Then Sir Gristle calls you back. “And squire,” he says, “if I come home alive, I shall pay you three hundred gold just to see Percival’s face.”',
+    ],
+    choices: [
+      { text: 'Agree to keep Sir Gristle alive', to: 'set_out', effects: [{ flag: 'keepAlive' }] },
+      { text: 'Agree to see he dies gloriously', to: 'set_out', effects: [{ flag: 'glory' }] },
+      { text: 'Agree to both, and decide later', to: 'set_out', effects: [{ flag: 'keepAlive' }, { flag: 'glory' }] },
+    ],
+  },
+  set_out: {
+    text: ['Sir Gristle mounts his horse, Thunder, who is thirty years old and mostly asleep. It takes three of you to get him into the saddle. You set out for Muckle Fen at the pace of a funeral, which, depending on who is paying, may be appropriate.'],
+    choices: [
+      { text: 'Take the King’s Road (longer, but safer)', to: 'road' },
+      { text: 'Take the short cut across the fen', to: 'fen_edge' },
+    ],
+  },
+  road: {
+    text: ['On the King’s Road you meet a party of young adventurers coming the other way. They recognise Sir Gristle at once. “It’s HIM,” breathes one. “The Hero of the Stinking Ford!” They want autographs. They want stories. They want to see him do his famous running leap onto a horse.'],
+    choices: [
+      { text: 'Let him show them the leap', to: 'leap', effects: [EXERT] },
+      { text: 'Tell them he’s resting', test: { stat: 'Cha', dd: 6, skill: ['social', 'lying'], profs: ['Bodyguard'], why: 'keeping fans away is your job' }, pass: 'fans_gone', fail: 'leap' },
+      { text: 'Sell them his autograph (forged)', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'autographs', fail: 'fans_gone', if: { item: 'quill' } },
+    ],
+  },
+  leap: {
+    text: (c) => c.flags.heart
+      ? ['He runs, he leaps, he misses the horse completely and lies on the road, purple, with his eyes shut. The young adventurers back away slowly.']
+      : ['He runs, he leaps, he lands in the saddle facing backwards. The young adventurers cheer. Sir Gristle waves, wheezing, and has to be helped to turn round.'],
+    choices: [
+      { text: 'Revive him with smelling salts', to: 'revived', if: { item: 'salts' }, show: { flag: 'heart' } },
+      { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'revived', fail: 'dead_on_road', show: { flag: 'heart' } },
+      { text: 'Let nature take its course', to: 'dead_on_road', show: { flag: 'heart' } },
+      { text: 'Ride on', to: 'fen_edge', show: ALIVE },
+    ],
+  },
+  revived: {
+    on: [{ unflag: 'heart' }],
+    text: ['Sir Gristle sits bolt upright. “Where’s the toad?” he demands. You tell him it’s further on. He seems pleased. He has no idea anything happened, and you decide not to tell him.'],
+    choices: [{ text: 'Ride on', to: 'fen_edge' }],
+  },
+  dead_on_road: {
+    on: [{ flag: 'dead' }, { flag: 'inglorious' }],
+    text: ['Sir Bertram Gristle, Hero of the Stinking Ford, has died of a heart attack showing off on the King’s Road. It is not, by any definition the Pension Office would accept, glorious.'],
+    choices: [
+      { text: 'Make it look glorious', to: 'staging' },
+      { text: 'Take him home', to: 'pension_office' },
+    ],
+  },
+  staging: {
+    text: ['You could, if you were the kind of person who would, prop him up on Thunder, carry him into Muckle Fen, and make sure he was seen to fall in battle. You are exactly that kind of person.'],
+    choices: [
+      { text: 'Tie him into the saddle', to: 'fen_edge', if: { anyItem: ['rope', 'chain', 'manacles'] }, effects: [{ flag: 'propped' }, { unflag: 'inglorious' }] },
+      { text: 'Glue him into the saddle', to: 'fen_edge', if: { item: 'glue' }, effects: [{ lose: 'glue' }, { flag: 'propped' }, { unflag: 'inglorious' }] },
+      { text: 'Give up and take him home', to: 'pension_office' },
+    ],
+  },
+  fans_gone: {
+    text: ['The young adventurers trail away, disappointed. One of them looks back and salutes. Sir Gristle salutes back and nearly falls off.'],
+    choices: [{ text: 'Ride on', to: 'fen_edge' }],
+  },
+  autographs: {
+    on: [{ gold: 40, msg: 'Eight forged autographs at 5GP each.' }], onceOnly: true,
+    text: ['“Sir Gristle’s hands aren’t what they were,” you explain, signing on his behalf with a flourish. The young adventurers pay five gold each and treasure them forever.'],
+    choices: [{ text: 'Ride on', to: 'fen_edge' }],
+  },
+  fen_edge: {
+    text: (c) => [
+      'Muckle Fen is a grey-green nothing of reeds, mud and standing water. Somewhere out there, a cannon goes WHUMP, and a toad sails overhead, croaking, and explodes in a field. On a hummock in the middle of the fen stands a farmhouse with a cannon on the roof.',
+      c.flags.propped ? 'Sir Gristle sways in the saddle beside you, looking more alive than he did yesterday.' : 'Sir Gristle draws his sword with a noise like a kettle. “Charge!” he says, and nobody moves, including the horse.',
+      'There’s a causeway, half sunk; a flat-bottomed punt tied to a stake; and a lot of mud.',
+    ],
+    choices: [
+      { text: 'Lead the horse along the sunken causeway', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you can read the ground', mods: [{ if: { item: 'pole' }, dd: 4 }] }, pass: 'causeway', fail: 'bog' },
+      { text: 'Take the punt', to: 'punt' },
+      { text: 'Let Sir Gristle charge straight across the mud', to: 'charge', show: { notFlag: 'propped' } },
+    ],
+  },
+  charge: {
+    on: [EXERT],
+    text: (c) => c.flags.heart
+      ? ['Sir Gristle digs in his spurs. Thunder wakes, considers, and sets off at a stately trot into the mud. Twenty yards out, Sir Gristle gives a great cry, clutches his chest and slides gently into the fen.']
+      : ['Sir Gristle digs in his spurs. Thunder wakes, considers, and sets off at a stately trot into the mud, where he sinks to the knees and stops. Sir Gristle waves his sword at the farmhouse. It is too far away to notice.'],
+    choices: [
+      { text: 'Haul them both out', test: { stat: 'Str', dd: 8, skill: ['athletics', 'bruteforce'], mods: [{ if: { anyItem: ['rope', 'chain'] }, dd: 4 }] }, pass: 'hauled', fail: 'bog' },
+    ],
+  },
+  hauled: {
+    text: ['You get a rope round Thunder and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
+    choices: [
+      { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Push on along the causeway', to: 'causeway', show: { notFlag: 'heart' } },
+    ],
+  },
+  bog: {
+    on: [{ damage: 'd6', from: 'The bog' }],
+    text: ['The mud takes you up to the waist, and something in it takes a bite. By the time you’ve dragged everyone out you’re wet, filthy and missing a boot.'],
+    choices: [
+      { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Push on along the causeway', to: 'causeway', show: { notFlag: 'heart' } },
+      { text: 'Push on along the causeway', to: 'causeway', show: { flag: 'propped' } },
+    ],
+  },
+  fen_revived: {
+    on: [{ unflag: 'heart' }],
+    text: ['Sir Gristle comes round spluttering. “Did I get him?” he asks. Not yet, you say. “Good,” he says. “Saving the best for last.”'],
+    choices: [{ text: 'Push on along the causeway', to: 'causeway' }],
+  },
+  fen_dead: {
+    on: [{ flag: 'dead' }, { flag: 'inglorious' }],
+    text: ['Sir Bertram Gristle has died in a bog, a quarter of a mile from the enemy, of natural causes. You close his eyes, and think about money.'],
+    choices: [{ text: 'Make it look glorious', to: 'staging_fen' }, { text: 'Take him home', to: 'pension_office' }],
+  },
+  staging_fen: {
+    text: ['The farmhouse is right there. If somebody were seen to fall storming it…'],
+    choices: [
+      { text: 'Tie him onto Thunder', to: 'causeway', if: { anyItem: ['rope', 'chain', 'manacles'] }, effects: [{ flag: 'propped' }, { unflag: 'inglorious' }] },
+      { text: 'Glue him onto Thunder', to: 'causeway', if: { item: 'glue' }, effects: [{ lose: 'glue' }, { flag: 'propped' }, { unflag: 'inglorious' }] },
+      { text: 'Take him home', to: 'pension_office' },
+    ],
+  },
+  punt: {
+    text: ['The punt leaks. Thunder refuses to get in, so Sir Gristle rides round by the bank, “guarding the rear”, and promises to meet you at the farm. Halfway across, the water around you starts to bubble, and a dozen swollen toads surface, glowing faintly and ticking.'],
+    choices: [
+      { text: 'Bail with your bucket and pole on through', test: { stat: 'Str', dd: 6, skill: ['athletics'] }, pass: 'farm_yard', fail: 'toads', if: { item: 'bucket' } },
+      { text: 'Pole through as fast as you can', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { item: 'pole' }, dd: 4 }] }, pass: 'farm_yard', fail: 'toads' },
+      { text: 'Cast Ward on the punt and let them come', cast: 'ward', pass: 'toads_warned', fail: 'toads' },
+    ],
+  },
+  toads_warned: {
+    text: ['Every time a toad touches the punt, an alarm goes off like a cathedral bell. The toads, deeply startled, explode harmlessly in the water. You arrive at the farm soaked, deafened and alive.'],
+    choices: [{ text: 'Climb out at the farm', to: 'farm_yard' }],
+  },
+  toads: {
+    text: ['The toads swarm over the side of the punt, ticking.'],
+    fight: { monsters: [toad, toad, toad], win: 'farm_yard', flee: { to: 'fen_edge', label: 'Jump overboard and wade back' } },
+  },
+  causeway: {
+    text: (c) => [
+      'The causeway brings you, muddy and squelching, to the farmyard. Hundreds of toads sit in cages along the walls, swelling gently. On the roof, an iron cannon swings round to point at you.',
+      c.flags.dead && c.flags.propped ? 'Sir Gristle, tied upright on Thunder, rides proudly into the yard. From a distance, he looks magnificent.' : c.flags.dead ? '' : 'Sir Gristle, still mounted, raises his sword. “CROAKER!” he bellows. “COME OUT AND FACE ME!”',
+    ].filter(Boolean),
+    choices: [{ text: 'Into the farmyard', to: 'farm_yard' }],
+  },
+  farm_yard: {
+    text: (c) => [
+      'Old Croaker comes out onto the roof beside his cannon: a long, thin man in waders with a pipe and a face like a sad frog. “Go away,” he says. “I’m busy. The toads have to go somewhere.”',
+      c.flags.dead || c.flags.propped ? '' : 'Sir Gristle draws himself up. “You have been firing exploding toads at the village of Lower Muckle for a month,” he says. “Prepare to die.”',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Ask him why he fires toads at the village', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'croaker_story', fail: 'cannon_fight' },
+      { text: 'Climb up and spike his cannon with an iron spike', test: { stat: 'Dex', dd: 8, skill: ['athletics', 'skulduggery'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'spikes' } },
+      { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' } },
+      { text: 'Dazzle him with your hand mirror', to: 'dazzled', if: { item: 'mirror' } },
+      { text: 'Let Sir Gristle challenge him to single combat', to: 'duel', show: { notFlag: 'dead' } },
+      { text: 'Send Sir Gristle, tied to Thunder, charging at the farmhouse', to: 'glory_charge', show: { flag: 'propped' } },
+      { text: 'Attack', to: 'cannon_fight' },
+    ],
+  },
+  croaker_story: {
+    on: [{ flag: 'story' }],
+    text: ['Old Croaker sighs. “The toads breed in the fen. Thousands of ’em. If I don’t get rid of them, they go off on their own, in the night, in people’s cellars. So I fire them at the village pond, where they go off harmlessly. Mostly. That’s my job. Nobody thanks me.” He looks at Sir Gristle. “Least of all him. He’s the one who hired me, forty years ago.”'],
+    choices: [
+      { text: 'Tell Sir Gristle the truth', to: 'truth', show: { notFlag: 'dead' } },
+      { text: 'Offer to help him aim them somewhere better', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Alchemist', 'Hunter'], why: 'you understand trajectories, or toads' }, pass: 'better_aim', fail: 'cannon_fight' },
+      { text: 'Attack him anyway', to: 'cannon_fight' },
+    ],
+  },
+  truth: {
+    text: ['Sir Gristle listens, frowning, to Croaker’s story. Then he laughs until he wheezes. “By God, I did hire him. Forgot all about it.” He sheathes his sword. “Well, Croaker. I shan’t kill you, then. I shall shake your hand.” He climbs down from Thunder to do it, which is, in its way, the bravest thing he does all day.'],
+    on: [EXERT],
+    choices: [
+      { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
+      { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'peace_revived', fail: 'peace_dead', show: { flag: 'heart' } },
+      { text: 'Take him home', to: 'pension_office', show: { notFlag: 'heart' } },
+    ],
+  },
+  peace_revived: {
+    on: [{ unflag: 'heart' }],
+    text: ['He comes round on the ground with his hand still in Croaker’s. “Firm grip,” he says. “Good man.”'],
+    choices: [{ text: 'Take him home', to: 'pension_office' }],
+  },
+  peace_dead: {
+    on: [{ flag: 'dead' }, { flag: 'inglorious' }],
+    text: ['Sir Bertram Gristle dies shaking hands with the man he came to kill, which is a better death than most, if not a glorious one.'],
+    choices: [{ text: 'Take him home', to: 'pension_office' }],
+  },
+  better_aim: {
+    on: [{ gold: 60, msg: 'Croaker pays you 60GP from a jar, delighted.' }, { flag: 'aimed' }],
+    text: ['You spend an hour with Croaker, a map and a lot of wet string, and work out that if he moves the cannon six feet to the left, the toads will land in the middle of the fen, where nobody lives except other toads. He is so happy he cries a little.'],
+    choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
+  },
+  spiked: {
+    on: [{ flag: 'spiked' }, { lose: 'spikes' }],
+    text: ['You hammer home the spike and the cannon is useless. Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
+    choices: [
+      { text: 'Ask him what he means', to: 'croaker_story' },
+      { text: 'Take Sir Gristle home in triumph', to: 'pension_office' },
+    ],
+  },
+  dazzled: {
+    text: ['You catch the sun in your mirror and flash it into Croaker’s eyes. He reels back, fires the cannon blind, and blows a hole in his own barn. Toads pour out of it in every direction, croaking and ticking. Croaker climbs down the ladder to chase them, swearing.'],
+    choices: [{ text: 'Take the chance to grab his cash box', to: 'cashbox' }, { text: 'Follow him and talk', to: 'croaker_story' }],
+  },
+  cashbox: {
+    on: [{ gold: 120, msg: 'Forty years of toad-disposal fees: 120GP.' }], onceOnly: true,
+    text: ['Croaker keeps his cash box in the oven. Everybody keeps their cash box in the oven.'],
+    choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
+  },
+  duel: {
+    on: [EXERT],
+    text: (c) => c.flags.heart
+      ? ['Sir Gristle advances on the farmhouse with his sword raised, roaring a war cry from the Stinking Ford. Croaker swings the cannon round. Before it can fire, Sir Gristle’s heart does, in a manner of speaking, and he falls face-first in the yard, sword pointing at the enemy. A toad lands on his back and croaks.', 'From the village, people have been watching. It looked very, very glorious.']
+      : ['Sir Gristle advances, roaring. Croaker fires. The toad hits Sir Gristle’s shield and explodes, throwing him flat on his back in the yard, where he lies laughing. “Ha! Missed!” he cries, which isn’t true, but nobody has the heart to tell him. Croaker is so impressed that he comes down to shake his hand.'],
+    choices: [
+      { text: 'Hear what Croaker has to say', to: 'croaker_story', show: { notFlag: 'heart' } },
+      { text: 'Make sure he isn’t revived', to: 'glorious', show: { flag: 'heart' } },
+      { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
+    ],
+  },
+  glory_charge: {
+    text: ['You slap Thunder’s rump. The old horse sets off at a canter, a dead knight swaying magnificently in the saddle, sword lashed to his hand. Croaker sees him coming and fires in panic. Toad, knight and horse meet in a tremendous green explosion. Thunder trots out of the smoke unhurt. Sir Gristle does not, being already dead, but the village saw everything.'],
+    on: [{ flag: 'gloriousDeath' }],
+    choices: [{ text: 'Take him home', to: 'pension_office' }],
+  },
+  glorious: {
+    on: [{ flag: 'dead' }, { flag: 'gloriousDeath' }],
+    text: ['You kneel beside Sir Gristle, take off your hat, and wait until you’re sure.'],
+    choices: [{ text: 'Take him home', to: 'pension_office' }],
+  },
+  cannon_fight: {
+    text: ['Croaker swings the cannon round and lights the fuse. A toad the size of a cat comes whistling down at you, glowing and ticking.'],
+    fight: {
+      monsters: [{ name: 'Old Croaker', lvl: 4, range: 'long', onHit: { stat: 'Dex', dd: 6, label: 'dodge the blast', text: 'The toad goes off at your feet.', effect: 'damage', amount: '2d6' }, note: 'Eccentric; launches burst toads from a cannon (on hit, d6 Dex save or 2d6 more)' }, toad],
+      distance: 3, win: 'croaker_beaten', flee: { to: 'fen_edge', label: 'Retreat into the reeds' },
+      special: [{ label: 'Douse his fuse with your bucket', if: { item: 'bucket' }, flag: 'doused', text: 'You hurl a bucket of fen water at the roof. The fuse goes out with a hiss, and so does Croaker’s will to fight.', win: true }],
+    },
+  },
+  croaker_beaten: {
+    on: [{ gold: 120, msg: 'In his oven: a cash box with 120GP of toad-disposal fees.' }], onceOnly: true,
+    text: (c) => [
+      'Croaker surrenders, sitting on his roof with his pipe out. “Fine,” he says. “Take the cannon. See how you like the toads.”',
+      c.flags.dead ? '' : 'Sir Gristle claims the victory, loudly, and is carried home a hero, which mostly involves being helped back onto Thunder.',
+    ].filter(Boolean),
+    choices: [{ text: 'Go home', to: 'pension_office' }],
+  },
+  pension_office: {
+    end: 'victory',
+    on: [
+      { if: { notFlag: 'dead', flag: 'keepAlive' }, gold: 300, uncapped: true, msg: 'Sir Gristle pays you 300GP, just to see Percival’s face.' },
+      { if: { flag: 'gloriousDeath' }, gold: 300, uncapped: true, msg: 'Percival pays you 300GP out of the pension.' },
+      { if: { flag: 'propped', notFlag: 'gloriousDeath' }, gold: 300, uncapped: true, msg: 'The village swears he fell storming the farm. Percival pays you 300GP out of the pension.' },
+    ],
+    text: (c) => [
+      c.flags.gloriousDeath || (c.flags.dead && c.flags.propped)
+        ? 'Sir Bertram Gristle is buried with full honours. The Pension Office pays out, Percival weeps for nearly a minute, and the toads keep on coming.'
+        : c.flags.dead
+          ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “showing off” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
+          : 'Sir Bertram Gristle rides home on Thunder, at the pace of a funeral, and lives another nine years out of spite. Percival’s face is everything he hoped.',
+      c.flags.aimed ? 'In Lower Muckle, the exploding toads stop landing in the village pond. Nobody ever finds out why.' : '',
+      `You come home with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
+    ].filter(Boolean),
+  },
+};
+
+const DEATH_TEXT = [
+  'You die in Muckle Fen. Nobody pays a pension for squires.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/invisible-menagerie.js"] = function(){
+// THE INVISIBLE MENAGERIE — steal an invisible egg from a travelling show of invisible animals. For a level 6–7 scumbag.
+// Invisible monsters are hard to hit (d20) until something shows their outline: sand, flour, water, a ward, a sharp nose.
+
+const META = {
+  after: ['last-ride'], id: 'invisible-menagerie', title: 'The Invisible Menagerie', levels: '6–7', final: 'collector',
+  blurb: 'Professor Peculius’s Invisible Menagerie charges five gold to look at empty cages. Everyone assumes it’s a swindle. Lady Vellum, a collector of rare and impossible things, knows better, and will pay 400 gold for the egg of the invisible ostrich. Someone else is after the animals too. Someone from a very long way away.',
+};
+
+const porcupine = { name: 'Invisible porcupine', lvl: 3, range: 'engaged', feats: ['invisible'], note: 'Invisible (attacks against it use a d20 until you can see it); very, very spiky' };
+const ape = { name: 'Invisible ape', lvl: 6, hp: 20, range: 'short', feats: ['invisible'], onHit: { stat: 'Con', dd: 8, label: 'keep your lunch down', text: 'Invisible faeces. You fall to your knees, retching.', effect: 'prone' }, note: 'Invisible; detected by smell; throws invisible faeces (on hit, d8 Con save or retch on the floor)' };
+const visitor = { name: 'The Visitor', lvl: 6, range: 'medium', onHit: { stat: 'Dex', dd: 8, label: 'dodge the ray', text: 'The ray clips you.', effect: 'disintegrate' }, note: 'Ray gun: on hit, d8 Dex save or something non-magical and non-organic you’re wearing turns to dust' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'Professor Peculius’s Invisible Menagerie has pitched its tent on the common outside Upper Gloaming. Posters show a lot of empty space, beautifully drawn. SEE THE INVISIBLE APE! SEE THE INVISIBLE OSTRICH! SEE NOTHING AT ALL, FOR FIVE GOLD!',
+      'Lady Vellum meets you at the gate in a veil and a great many furs. “The ostrich is real,” she says. “It has laid an egg. Invisible, naturally. Four hundred gold, and I shan’t ask how.” As she leaves, something whooshes overhead with no noise at all and lands in the field behind the tent with a soft green glow.',
+    ],
+    choices: [
+      { text: 'Pay 5GP and go in like everyone else', to: 'big_top', if: { gold: 5 }, effects: [{ gold: -5 }] },
+      { text: 'Slip under the canvas', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'big_top', fail: 'strongman' },
+      { text: 'Go and see what landed in the field', to: 'saucer' },
+    ],
+  },
+  strongman: {
+    text: ['A hand like a ham lifts you out from under the canvas by your collar. It belongs to Bruno, the menagerie’s strongman, who is also its ticket inspector, cook and vet. “Five gold,” he says, “or I fold you.”'],
+    choices: [
+      { text: 'Pay up (5GP)', to: 'big_top', if: { gold: 5 }, effects: [{ gold: -5 }] },
+      { text: 'Challenge him to arm-wrestle for free entry', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Pit fighter', 'Sellsword'], why: 'you’ve done this in taverns' }, pass: 'bruno_beaten', fail: 'bruno_fight' },
+      { text: 'Fight him', to: 'bruno_fight' },
+    ],
+  },
+  bruno_beaten: {
+    on: [{ flag: 'bruno' }],
+    text: ['Bruno’s arm goes down with a crash that shakes the tent. He looks at it, then at you, with deep respect. “Free entry,” he says. “And a tip. The ape hates the smell of onions. Never stand downwind of the ape.”'],
+    choices: [{ text: 'Go into the big top', to: 'big_top' }],
+  },
+  bruno_fight: {
+    text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
+    fight: { monsters: [{ name: 'Bruno', lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'start', label: 'Run for the gate' } },
+  },
+  bruno_down: {
+    text: ['Bruno sits down in the sawdust and decides you can go in for free.'],
+    choices: [{ text: 'Go into the big top', to: 'big_top' }],
+  },
+  saucer: {
+    text: (c) => [
+      'In the field behind the tent sits a silver disc the size of a haystack, humming. Beside it stands a small grey person in a silver suit, holding a pistol shaped like a hairdryer. It is studying the menagerie tent through a tube. It turns its enormous black eyes on you.',
+      '“GREETINGS,” it says, in a voice like a wet finger on glass. “I AM COLLECTING SPECIMENS. YOUR PLANET’S INVISIBLE APE IS VERY RARE. ARE YOU RARE?”',
+    ],
+    choices: [
+      { text: 'Show it the glowing slate', to: 'visitor_trade', if: { item: 'ipad' } },
+      { text: 'Hand it the time-traveller’s business card', to: 'visitor_card', if: { item: 'card' } },
+      { text: 'Say you’re very common, and offer to help it catch the ape', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages', 'lying'], profs: ['Envoy'], why: 'diplomacy is your trade' }, pass: 'visitor_deal', fail: 'visitor_fight' },
+      { text: 'Attack it', to: 'visitor_fight' },
+      { text: 'Back away to the tent', to: 'start' },
+    ],
+  },
+  visitor_trade: {
+    on: [{ lose: 'ipad' }, { gold: 150, msg: 'It pays you in small heavy coins with no faces. A fence will take them as 150GP.' }, { flag: 'visitorFriend' }], onceOnly: true,
+    text: ['The Visitor takes the slate in both hands and makes a sound like a kettle. “PRIMITIVE,” it says reverently. “WONDERFULLY PRIMITIVE. IT IS AT ONE PER CENT.” It pays you handsomely and promises not to disintegrate you.'],
+    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'start' }],
+  },
+  visitor_card: {
+    on: [{ lose: 'card' }, { flag: 'visitorFriend' }],
+    text: ['The Visitor reads the card. “DISRUPTOR,” it says. “THOUGHT LEADER.” It looks at you with something like fear. “YOU ARE FROM THE SAME SPECIES AS THAT ONE. HE TRIED TO SELL ME A TIMESHARE.” It decides you are too dangerous to disintegrate.'],
+    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'start' }],
+  },
+  visitor_deal: {
+    on: [{ flag: 'visitorDeal' }],
+    text: ['“ACCEPTABLE,” says the Visitor. “BRING THE APE TO MY CRAFT. I SHALL PAY YOU IN ANY QUANTITY OF YOUR YELLOW METAL. I HAVE A GREAT DEAL OF IT. IT IS USELESS.”'],
+    choices: [{ text: 'Go back to the tent', to: 'start' }],
+  },
+  visitor_fight: {
+    text: ['The Visitor raises its hairdryer. “HOSTILE,” it says sadly. “AS PREDICTED.”'],
+    fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'start', label: 'Dive behind the tent' } },
+  },
+  visitor_down: {
+    on: [{ flag: 'visitorGone' }, { gold: 100, msg: 'Inside the craft: a sack of useless yellow metal. 100GP.' }], onceOnly: true,
+    text: ['The Visitor retreats into its craft, which takes off silently and vanishes into the clouds. It leaves behind a sack of gold and a very bad review of your planet.'],
+    choices: [{ text: 'Go back to the tent', to: 'start' }],
+  },
+  big_top: {
+    text: (c) => [
+      'Inside the big top, a crowd of villagers stares at a ring of empty cages while Professor Peculius, in a top hat and a cape covered in eyes, describes what they can’t see. “And here,” he cries, “the INVISIBLE APE!” A cage door rattles. The crowd laughs. Something in the cage grunts, and the smell reaches the back row.',
+      'There’s a food stall selling flour cakes, the professor’s caravan behind a curtain, an aviary roped off at the back, and a pen of straw marked DO NOT TOUCH.',
+      c.flags.flour ? 'Your pockets are full of flour.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Buy a sack of flour from the food stall (2GP)', to: 'flour', if: { gold: 2 }, show: { notFlag: 'flour' } },
+      { text: 'Go to the aviary', to: 'aviary', show: { notFlag: 'egg' } },
+      { text: 'Step into the pen marked DO NOT TOUCH', to: 'porcupine', show: { notFlag: 'keys' } },
+      { text: 'Get a closer look at the ape', to: 'ape_cage', show: { none: [{ flag: 'apeSold' }, { flag: 'apeDown' }] } },
+      { text: 'Walk into the professor’s caravan', to: 'caravan', show: { flag: 'profDown' } },
+      { text: 'Slip behind the curtain to the professor’s caravan', show: { notFlag: 'profDown' }, test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'caravan', fail: 'professor' },
+      { text: 'Leave', to: 'collector' },
+    ],
+  },
+  flour: {
+    on: [{ flag: 'flour' }, { gold: -2 }],
+    text: ['The woman at the stall sells you a sack of flour and a knowing look. “For the porcupine?” she says. “Throw it before you step, love, not after.”'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  porcupine: {
+    text: ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
+    choices: [
+      { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' } },
+      { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }] },
+      { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' } },
+      { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight' },
+      { text: 'Back to the ring', to: 'big_top' },
+    ],
+  },
+  porcupine_seen: {
+    on: [{ flag: 'porcupineSeen' }],
+    text: ['A white, dusty, extremely annoyed porcupine appears in the straw, every quill outlined. It is the size of a pig. Now you can see it, you can walk round it. Underneath it, where it was sitting, is a ring of keys.'],
+    choices: [
+      { text: 'Hook the keys out from under it with your pole', to: 'keys', if: { item: 'pole' } },
+      { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' } },
+      { text: 'Shoo it off the keys', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'keys', fail: 'porcupine_fight' },
+      { text: 'Back to the ring', to: 'big_top' },
+    ],
+  },
+  porcupine_past: {
+    text: ['You cross the pen without touching anything you can’t see. Under a pile of straw by the far fence, something jingles: a ring of keys, dropped by someone less careful.'],
+    choices: [{ text: 'Take the keys', to: 'keys' }],
+  },
+  porcupine_fight: {
+    text: ['Your foot finds the porcupine. The porcupine finds your foot.'],
+    fight: { monsters: [porcupine], win: 'keys', flee: { to: 'big_top', label: 'Hop back into the ring' }, special: [{ label: 'Throw flour over it', if: { flag: 'flour' }, flag: 'porcFloured', text: 'A cloud of flour, and there it is, every quill outlined.', reveal: true }] },
+  },
+  keys: {
+    on: [{ flag: 'keys' }],
+    text: ['The keys are labelled APE, OSTRICH, CARAVAN and DO NOT LOSE.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  aviary: {
+    text: ['Behind a rope at the back of the tent, a tall cage stands empty. On a platform twelve feet up sits a large, invisible bird. You know it’s there because the platform creaks and every so often an invisible beak snaps at a passing fly. Below it, the straw is churned by enormous invisible feet.'],
+    choices: [
+      { text: 'Unlock the cage with the keys', to: 'aviary_in', if: { flag: 'keys', flagText: 'the keys' } },
+      { text: 'Pick the lock', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'aviary_in', fail: 'aviary_noise', if: { item: 'tools' } },
+      { text: 'Burn through the lock with acid', to: 'aviary_in', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Back to the ring', to: 'big_top' },
+    ],
+  },
+  aviary_noise: {
+    text: ['Your pick snaps with a ping. On its platform, the invisible ostrich stands up, which you can tell because the platform sighs with relief.'],
+    choices: [{ text: 'Back to the ring before anyone comes', to: 'big_top' }],
+  },
+  aviary_in: {
+    text: ['Inside the cage, the ostrich is up on its platform, and it is not happy to see you. The egg must be up there with it. Somewhere. Invisible.'],
+    choices: [
+      { text: 'Feel around the platform for the egg', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'], mods: [{ if: { anyItem: ['pocketsand'] }, dd: 8 }, { if: { flag: 'flour' }, dd: 8 }] }, pass: 'egg', fail: 'ostrich_fight' },
+      { text: 'Cast Throw voice to call it down, like a lady ostrich', cast: 'voice', pass: 'ostrich_lured', fail: 'ostrich_fight' },
+      { text: 'Cast Ward on the platform, so it rings when the ostrich moves', cast: 'ward', pass: 'ostrich_lured', fail: 'ostrich_fight' },
+      { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' } },
+      { text: 'Sweep the platform with your pole until something egg-shaped rolls off into your arms', test: { stat: 'Dex', dd: 6, save: true }, pass: 'egg', fail: 'ostrich_fight', if: { item: 'pole' } },
+      { text: 'Climb up and take the egg by force', to: 'ostrich_fight' },
+    ],
+  },
+  ostrich_lured: {
+    text: ['The ostrich comes down off its platform with a thump and stalks off to the far end of the cage, where it pecks at nothing. You climb up and pat the platform until your hand finds something smooth, warm and the size of your head.'],
+    choices: [{ text: 'Take the egg', to: 'egg' }],
+  },
+  ostrich_fight: {
+    text: ['Something invisible and seven feet tall comes down off the platform at you, kicking.'],
+    fight: {
+      monsters: [{ name: 'Invisible ostrich', lvl: 4, range: 'engaged', feats: ['invisible'], note: 'Invisible; kicks like a horse; very protective of its egg' }],
+      win: 'egg', flee: { to: 'big_top', label: 'Run for it' },
+      special: [
+        { label: 'Throw flour at the noise', if: { flag: 'flour' }, flag: 'ostFloured', text: 'A white ostrich appears, coughing.', reveal: true },
+        { label: 'Splash it with a bucket of water', if: { item: 'bucket' }, flag: 'ostWet', text: 'Water runs off an ostrich-shaped nothing, and for a moment, you can see its outline.', reveal: true },
+      ],
+    },
+  },
+  egg: {
+    on: [{ flag: 'egg' }, { msg: 'The egg weighs as much as a small dog and is perfectly invisible. You keep it under your arm, where you can feel it.' }],
+    text: ['You tuck the egg into your coat. Your coat now has a large, egg-shaped bulge that nobody can see the cause of.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  ape_cage: {
+    text: (c) => [
+      'The ape’s cage is the size of a cottage and seems to be empty, apart from the smell. The bars are bent outwards in two places. Invisible bananas lie peeled on the floor.',
+      c.flags.bruno ? 'You make sure you’re standing upwind.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Open the cage with the keys and lead it out to the Visitor', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals', mods: [{ if: { any: [{ flag: 'bruno' }, { item: 'rations' }, { item: 'rope' }, { item: 'chain' }] }, dd: 4 }] }, pass: 'ape_led', fail: 'ape_fight', if: { flag: 'keys', flagText: 'the keys' }, show: { flag: 'visitorDeal' } },
+      { text: 'Rattle the bars', to: 'ape_fight' },
+      { text: 'Back away', to: 'big_top' },
+    ],
+  },
+  ape_led: {
+    on: [{ flag: 'apeSold' }, { gold: 250, msg: 'The Visitor pays in useless yellow metal: 250GP.' }], onceOnly: true,
+    text: ['You walk an invisible ape out of the back of the tent on the end of a rope, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  ape_fight: {
+    text: ['Something huge and invisible hits the bars from the inside, and the cage door bursts open. You smell it before anything else.'],
+    fight: {
+      monsters: [ape], distance: 1, win: 'ape_down', flee: { to: 'big_top', label: 'Run into the crowd' },
+      special: [
+        { label: 'Throw flour at the smell', if: { flag: 'flour' }, flag: 'apeFloured', text: 'A white, ape-shaped cloud appears, roaring. Now you can see what you’re hitting.', reveal: true },
+        { label: 'Follow it by smell', if: { any: [{ skill: 'survival' }, { feature: 'hunter' }] }, flag: 'apeSniffed', text: 'You close your eyes and track it by its stink. There.', reveal: true },
+      ],
+    },
+  },
+  ape_down: {
+    on: [{ flag: 'apeDown' }],
+    text: ['The invisible ape lies down in the sawdust and sulks, invisibly. The crowd, who saw a scumbag fighting nothing for five minutes, give you a round of applause.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  caravan: {
+    text: ['The professor’s caravan is a cramped wooden box full of velvet, posters and a small iron safe. On the desk lies an open ledger of takings: SEE NOTHING, five gold, a thousand times over.'],
+    choices: [
+      { text: 'Open the safe with the keys', to: 'safe', if: { flag: 'keys', flagText: 'the keys' }, show: { notFlag: 'safe' } },
+      { text: 'Pick the safe', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'safe', fail: 'professor', if: { item: 'tools' }, show: { notFlag: 'safe' } },
+      { text: 'Back to the ring', to: 'big_top' },
+    ],
+  },
+  safe: {
+    on: [{ flag: 'safe' }, { gold: 180 }],
+    text: ['The safe holds a season’s takings from people paying to see nothing. You leave him the nothing.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  professor: {
+    redirect: [{ if: { flag: 'profDown' }, to: 'safe_jam' }],
+    text: ['Professor Peculius catches you in the act. He doesn’t shout. He sweeps back his cape, and his hands start to glow. “My animals,” he says, “are invisible. I am merely very hard to see coming.”'],
+    fight: {
+      monsters: [{ name: 'Professor Peculius', lvl: 5, range: 'medium', dmg: '10', note: 'Delinquent wizard; casts arcane bolt (10 damage)' }],
+      distance: 1, win: 'professor_down', flee: { to: 'big_top', label: 'Lose yourself in the crowd' },
+    },
+  },
+  safe_jam: {
+    text: ['Your pick snaps off in the lock. The safe stays shut. The professor’s empty cape watches you from the floor.'],
+    choices: [{ text: 'Back to the ring', to: 'big_top' }],
+  },
+  professor_down: {
+    on: [{ flag: 'profDown' }],
+    text: ['The professor collapses into his cape. When you look again, the cape is empty. He was never very easy to see.'],
+    choices: [{ text: 'Search the caravan', to: 'caravan' }],
+  },
+  collector: {
+    end: 'victory',
+    on: [{ if: { flag: 'egg' }, gold: 400, uncapped: true, msg: 'Lady Vellum pays 400GP for the invisible egg.' }],
+    text: (c) => [
+      c.flags.egg
+        ? 'Lady Vellum takes the invisible egg with trembling hands and puts it in a glass case, where it sits in pride of place, looking exactly like an empty glass case.'
+        : 'Lady Vellum is not pleased to see you empty-handed. “Next time,” she says, “bring me nothing I can’t see.”',
+      c.flags.apeSold ? 'Far overhead, a silent green light crosses the stars. Somewhere up there, an invisible ape is having the time of its life.' : '',
+      `You leave Upper Gloaming with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
+    ].filter(Boolean),
+  },
+};
+
+const DEATH_TEXT = [
+  'They put you in an empty cage with a sign that says SCUMBAG. Everybody pays five gold to see it.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/unsolved.js"] = function(){
+// UNSOLVED — solve the transdimensional murdercube haunting a university. For a level 7–8 scumbag.
+// Each clue you gather (the `clues` counter) makes the final puzzle easier: d20, d12, d8, then d4.
+
+const META = {
+  after: ['invisible-menagerie'], id: 'unsolved', title: 'Unsolved', levels: '7–8', final: 'dean',
+  blurb: 'Six weeks ago, a professor at the University of Lesser Wisdom summoned something from the fourth dimension to settle an argument. It is a cube. It hovers. It asks a question, and it murders anyone who gets it wrong. The Dean will pay 500 gold to whoever solves it, and nobody has been to a lecture since.',
+};
+
+const CLUE = { add: ['clues', 1] };
+const cube = { name: 'Transdimensional murdercube', lvl: 8, hp: 40, range: 'short', note: 'Unsolved puzzle; hovers; folds space at you' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'The Dean of the University of Lesser Wisdom is a tiny, frightened man who hasn’t slept in six weeks. “It’s in the Great Hall,” he whispers. “It hovers. It asks. Nobody understands the question. Twelve students, two porters and the professor of logic, who should have known better.” He presses a purse into your hand. “Fifty now. Five hundred if you solve it.”',
+      'The campus is deserted. A tower with a telescope, an alchemy laboratory, a library chained shut, and the Bursar’s office all stand around a quad, and in the middle of it all, the Great Hall hums.',
+    ],
+    on: [{ gold: 50 }], onceOnly: true,
+    choices: [{ text: 'Into the quad', to: 'quad' }],
+  },
+  quad: {
+    text: (c) => [
+      'The quad is silent except for the hum. The university’s doors stand around you.',
+      ['You don’t know anything about the cube yet.', 'You’ve found one clue to the cube.', 'You’ve found two clues to the cube.', 'You’ve found three clues to the cube. That should be enough.'][Math.min(3, c.flags.clues || 0)],
+    ],
+    choices: [
+      { text: 'Climb the observatory tower', to: 'tower', show: { notFlag: 'starClue' } },
+      { text: 'Go into the alchemy laboratory', to: 'lab', show: { notFlag: 'labClue' } },
+      { text: 'Try the library', to: 'library', show: { notFlag: 'bookClue' } },
+      { text: 'Visit the Bursar’s office', to: 'bursar', show: { notFlag: 'bursar' } },
+      { text: 'Enter the Great Hall', to: 'hall' },
+      { text: 'Give up and leave', to: 'dean' },
+    ],
+  },
+  tower: {
+    text: ['At the top of two hundred steps, the astronomer is asleep across his telescope, as he has been since the cube arrived. On his desk, a chart of the stars is covered in sums, and in the margin, in tiny writing, are notes about the cube.'],
+    choices: [
+      { text: 'Wake him with smelling salts', to: 'astronomer', if: { item: 'salts' } },
+      { text: 'Shake him awake', test: { stat: 'Cha', dd: 8, skill: ['social', 'medicine'] }, pass: 'astronomer', fail: 'astro_asleep' },
+      { text: 'Read the tiny writing with your jeweller’s loupe', to: 'loupe_clue', if: { item: 'loupe' } },
+      { text: 'Try to read the tiny writing anyway', test: { stat: 'Int', dd: 12, skill: ['analysis', 'languages'] }, pass: 'loupe_clue', fail: 'astro_asleep' },
+      { text: 'Back down to the quad', to: 'quad' },
+    ],
+  },
+  astro_asleep: {
+    text: ['The astronomer snores. The writing stays tiny.'],
+    choices: [{ text: 'Back down to the quad', to: 'quad' }],
+  },
+  astronomer: {
+    on: [{ flag: 'starClue' }, CLUE],
+    text: ['The astronomer sits up with a snort. “The cube!” he says. “It’s not a cube. It’s the shadow of something with more sides than we have. Turn it the right way and it folds up into nothing. Look at it from above. Always from above.” Then he falls asleep again, satisfied.'],
+    choices: [{ text: 'Back down to the quad', to: 'quad' }],
+  },
+  loupe_clue: {
+    on: [{ flag: 'starClue' }, CLUE],
+    text: ['Magnified, the tiny writing reads: “NOT A CUBE. A SHADOW. VIEW FROM ABOVE AND IT WILL FOLD.” And underneath, in much bigger writing: “I AM SO TIRED.”'],
+    choices: [{ text: 'Back down to the quad', to: 'quad' }],
+  },
+  lab: {
+    text: (c) => [
+      'The alchemy laboratory is cold. The great furnace has gone out, and without it the professor’s experiments have curdled. Three lab homunculi, each about a foot high and in tiny goggles, sit on the bench looking miserable. A notebook lies open beside the furnace, its pages stuck together with something green.',
+    ],
+    choices: [
+      { text: 'Get the furnace going with your bellows', to: 'furnace', if: { item: 'bellows' } },
+      { text: 'Light the furnace', test: { stat: 'Int', dd: 8, skill: ['analysis', 'arcana'], profs: ['Alchemist'], why: 'this is your trade' }, pass: 'furnace', fail: 'lab_bang', if: { fire: true } },
+      { text: 'Dissolve the green stuff with acid and read the notebook', to: 'notebook', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Prise the pages apart', test: { stat: 'Dex', dd: 12, skill: ['skulduggery', 'medicine'], why: 'delicate work' }, pass: 'notebook', fail: 'homunculi' },
+      { text: 'Back to the quad', to: 'quad' },
+    ],
+  },
+  lab_bang: {
+    on: [{ damage: '2d6', from: 'The furnace' }],
+    text: ['The furnace catches with a WHUMP that takes your eyebrows and puts the homunculi on the ceiling. They come down angry.'],
+    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'furnace', flee: { to: 'quad', label: 'Back to the quad' } },
+  },
+  homunculi: {
+    text: ['The pages tear. The homunculi gasp in horror. That was the professor’s notebook. They pick up test tubes.'],
+    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
+  },
+  lab_after: {
+    text: ['The homunculi retreat into a cupboard and slam the door. The notebook is in pieces on the floor, but one piece is legible.'],
+    choices: [{ text: 'Read it', to: 'notebook' }],
+  },
+  furnace: {
+    on: [{ flag: 'labClue' }, CLUE, { item: 'potion', msg: 'The grateful homunculi give you a fresh healing potion from the warm vats.' }],
+    text: ['The furnace roars into life, the vats begin to bubble, and the homunculi cheer and dance on the bench. When the green stuff on the notebook melts, it opens on the professor’s last entry: “It asks the same question every time. The answer is a movement, not a word. It must be turned. Turned by hand. It will try to kill you while you do it.”'],
+    choices: [{ text: 'Back to the quad', to: 'quad' }],
+  },
+  notebook: {
+    on: [{ flag: 'labClue' }, CLUE],
+    text: ['The professor’s last entry: “It asks the same question every time. The answer is a movement, not a word. It must be turned. Turned by hand. It will try to kill you while you do it.” Below it, a smear of something, and nothing else.'],
+    choices: [{ text: 'Back to the quad', to: 'quad' }],
+  },
+  library: {
+    text: ['The library doors are chained and padlocked, and a notice reads CLOSED FOR EXAMS. Through the keyhole you can see the invigilator: a tall, grey woman in a gown, standing perfectly still in the middle of the reading room, watching nothing. Exams have been suspended for six weeks. She hasn’t been told.'],
+    choices: [
+      { text: 'Pick the padlock', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'reading_room', fail: 'invigilator', if: { item: 'tools' } },
+      { text: 'Melt the padlock with acid', to: 'reading_room', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Break the chain', test: { stat: 'Str', dd: 12, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 8 }] }, pass: 'invigilator', fail: 'quad' },
+      { text: 'Blow your watchman’s whistle: it sounds exactly like the end of an exam', to: 'whistle', if: { item: 'whistle' } },
+      { text: 'Back to the quad', to: 'quad' },
+    ],
+  },
+  whistle: {
+    text: ['You blow the whistle through the keyhole. The invigilator straightens, looks at a clock that stopped six weeks ago, says “PENS DOWN,” unlocks the door from the inside, and walks out of the library and across the quad and away, very fast. She has been waiting for that sound for a long time.'],
+    choices: [{ text: 'Into the library', to: 'reading_room' }],
+  },
+  invigilator: {
+    text: ['The invigilator turns, slowly. She puts a finger to her lips. “Silence,” she says, “in the examination room.” She comes at you without a sound.'],
+    fight: { monsters: [{ name: 'The invigilator', lvl: 6, range: 'engaged', onHit: { stat: 'Wis', dd: 8, label: 'keep your nerve', text: 'Her stare makes you forget everything you ever knew.', effect: 'prone' }, note: 'Total silence; on hit, d8 Wis save or freeze, as in every exam you ever sat' }], win: 'reading_room', flee: { to: 'quad', label: 'Leave the examination room' } },
+  },
+  reading_room: {
+    text: ['The reading room is full of chained books. One shelf is labelled GEOMETRY (FORBIDDEN). On it, a slim volume with a cube on the spine: ON SHAPES WITH TOO MANY SIDES. It is written in a language nobody has spoken for a thousand years.'],
+    choices: [
+      { text: 'Read it', test: { stat: 'Int', dd: 8, skill: ['languages', 'arcana', 'analysis'], profs: ['Missionary', 'Envoy'], why: 'you read difficult things for a living' }, pass: 'book_clue', fail: 'book_copy' },
+      { text: 'Copy out the diagrams with your quill to puzzle over later', to: 'book_clue', if: { item: 'quill' } },
+      { text: 'Back to the quad', to: 'quad' },
+    ],
+  },
+  book_copy: {
+    text: ['The words swim. You get the gist, which is: there are diagrams, and they are important, and you don’t understand them.'],
+    choices: [{ text: 'Try again', to: 'reading_room' }, { text: 'Back to the quad', to: 'quad' }],
+  },
+  book_clue: {
+    on: [{ flag: 'bookClue' }, CLUE],
+    text: ['Between the impossible words are diagrams, and the diagrams are simple: a cube, viewed from above, with an arrow. Turn it like this, they say, and the corners go somewhere else. The last diagram shows a hand doing it. The hand has four fingers missing.'],
+    choices: [{ text: 'Back to the quad', to: 'quad' }],
+  },
+  bursar: {
+    text: ['The Bursar is still at his desk, because the Bursar is always at his desk. He is counting the university’s money, which is in a locked iron chest beside him. He looks up. “The cube,” he says, “has cost us a great deal in lost fees. Its removal would be… financially advisable.”'],
+    choices: [
+      { text: 'Ask for an advance on the fee', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'advance', fail: 'bursar_no' },
+      { text: 'Ask him what he knows about the cube', to: 'bursar_clue', show: { notFlag: 'bursarClue' } },
+      { text: 'Back to the quad', to: 'quad' },
+    ],
+  },
+  advance: {
+    on: [{ flag: 'bursar' }, { gold: 100 }],
+    text: ['The Bursar counts out a hundred gold with the face of a man pulling his own teeth, and writes it down twice.'],
+    choices: [{ text: 'Back to the quad', to: 'quad' }],
+  },
+  bursar_no: {
+    on: [{ flag: 'bursar' }],
+    text: ['“No,” says the Bursar, and writes that down as well.'],
+    choices: [{ text: 'Back to the quad', to: 'quad' }],
+  },
+  bursar_clue: {
+    on: [{ flag: 'bursarClue' }],
+    text: ['“It has a price,” says the Bursar. “Everything has a price. The professor of logic paid it in full.” He shows you a receipt, written in a hand that isn’t human, for one professor of logic, received with thanks. It says nothing useful, but you can’t stop looking at it.'],
+    choices: [{ text: 'Back to the bursar', to: 'bursar' }],
+  },
+  hall: {
+    text: (c) => [
+      'In the middle of the Great Hall, six feet off the floor, hangs the murdercube: a block of something that isn’t quite black, about the size of a wardrobe. It turns slowly. When you look at it, its edges don’t meet where they should. It notices you, and the hum becomes a voice that you hear in your teeth.',
+      '“A QUESTION,” it says, and then asks one. It is not in words. It is a shape. You feel your brain trying to fold itself to answer it.',
+      ['You know nothing that could help.', 'You know one thing that could help.', 'You know two things that could help.', 'You know everything you need.'][Math.min(3, c.flags.clues || 0)],
+    ],
+    choices: [
+      { text: 'Look at it in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrorClue' } },
+      { text: 'Climb up and look at it from above, as the astronomer said', to: 'above', if: { flag: 'starClue', flagText: 'the astronomer’s clue' }, show: { notFlag: 'above' } },
+      { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight' },
+      { text: 'Back out of the hall', to: 'quad' },
+    ],
+  },
+  mirror: {
+    on: [{ flag: 'mirrorClue' }, CLUE],
+    text: ['In your mirror, the cube is the wrong way round, and the wrong way round it makes sense: you can see, for just a moment, that it isn’t a cube at all but a shadow of something else, and which way it would fold if someone turned it.'],
+    choices: [{ text: 'Back', to: 'hall' }],
+  },
+  above: {
+    on: [{ flag: 'above' }, CLUE],
+    text: ['You climb the gallery stairs and look down on the cube from above. From up here, for a moment, it isn’t a cube at all, but something with a great many corners, all of them pointing slightly away from you. You see, now, which way it wants to turn.'],
+    choices: [{ text: 'Back down', to: 'hall' }],
+  },
+  cube_fight: {
+    text: ['You get it wrong. The cube stops turning. Space around you creases like paper, and a corner that isn’t there comes at you very fast.'],
+    fight: {
+      monsters: [cube], distance: 1, win: 'cube_broken', flee: { to: 'quad', label: 'Run out of the hall' },
+      special: [{ label: 'Try to turn it again, mid-fight', test: { stat: 'Int', dd: 8, skill: 'analysis' }, flag: 'midTurn', text: 'Your hand finds the edge that isn’t there, and turns. The cube folds up into a point and vanishes.', failText: 'It slips through your fingers, laughing in your teeth.', win: true }],
+    },
+  },
+  cube_broken: {
+    redirect: [{ if: { flag: 'midTurn' }, to: 'turned' }],
+    text: ['The cube cracks, and every crack goes somewhere else. Then it falls to the floor, a block of dull grey stone, quite dead. Nobody will ever know what the question was.'],
+    choices: [{ text: 'Go and tell the Dean', to: 'dean' }],
+  },
+  turned: {
+    on: [{ item: 'tesseract', msg: 'Where the cube was, a small, heavy, impossible object hangs in the air: the cube’s shadow, folded. You put it in your pocket. It is also in your other pocket.' }],
+    text: ['The hum stops. Somewhere very far away, something says “CORRECT,” a little grudgingly.'],
+    choices: [{ text: 'Go and tell the Dean', to: 'dean' }],
+  },
+  solved: {
+    on: [{ flag: 'solved' }, { item: 'tesseract', msg: 'Where the cube was, a small, heavy, impossible object hangs in the air: the cube’s shadow, folded. You put it in your pocket. It is also in your other pocket.' }],
+    text: ['You reach up, take hold of a corner that isn’t there, and turn. The cube folds up into itself, smaller and smaller, until it is the size of a die, and then smaller, and then gone. The hum stops. Somewhere, very far away, something says “CORRECT.”'],
+    choices: [{ text: 'Go and tell the Dean', to: 'dean' }],
+  },
+  dean: {
+    end: 'victory',
+    on: [
+      { if: { any: [{ flag: 'solved' }, { flag: 'midTurn' }] }, gold: 500, uncapped: true, msg: 'The Dean pays the full 500GP, weeping with relief.' },
+      { sell: { item: 'tesseract', gold: 200, text: 'The university’s professor of geometry buys the folded tesseract' } },
+    ],
+    text: (c) => [
+      c.flags.solved || c.flags.midTurn
+        ? 'The University of Lesser Wisdom reopens the next day. Lectures resume. Nobody attends them, because it’s a university, but at least nobody is murdered by a shape.'
+        : 'The cube still hums in the Great Hall. The Dean thanks you for trying, and starts sleeping in the Bursar’s office.',
+      `You leave the university with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'The cube folds you up and puts you somewhere else. The Bursar writes you a receipt.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/torches-and-pitchforks.js"] = function(){
+// TORCHES AND PITCHFORKS — escort Lord Grimsby across Blackmire Moor, through a mob of ghostly tenants. For a level 8–9 scumbag.
+// The mob is ghostly: ordinary weapons pass through it. Holy water, magic, a blessed weapon, turning or paperwork all work.
+
+const META = {
+  after: ['unsolved'], id: 'torches-and-pitchforks', title: 'Torches and Pitchforks', levels: '8–9', final: 'grimsby_hall',
+  blurb: 'Lord Grimsby has inherited Grimsby Hall, on the far side of Blackmire Moor. So have three hundred years of Grimsbys’ evicted tenants, who rise every night with torches and pitchforks and are, technically, still owed their deposits. He’ll pay 400 gold for an escort. He has asked everyone else.',
+};
+
+const ghostTraits = { feats: ['ghostly', 'undead'], note: 'Ghostly (ordinary weapons pass through it; magic, holy water and blessed weapons don’t); undead' };
+const mob = { name: 'Spectral mob', lvl: 7, hp: 28, range: 'short', ...ghostTraits, note: 'Three hundred years of evicted tenants. ' + ghostTraits.note };
+const blob = { name: 'Bog blob', lvl: 6, hp: 36, range: 'engaged', onHit: { stat: 'Str', dd: 8, label: 'pull free', text: 'It closes over your legs and starts to digest your boots.', effect: 'damage', amount: 'd6' }, note: 'A great wobbling heap of moor; on hit, d8 Str save or take d6 more; full of marsh gas' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'The Tumbledown Inn is the last building before Blackmire Moor, and Lord Grimsby is its only guest. He’s wrapped in three coats and a scarf with his family crest on it. “Four hundred gold,” he says, “to see me to Grimsby Hall by midnight. After midnight, the hall is legally mine, and the tenants can’t touch me. Before midnight, they can.”',
+      'The innkeeper, polishing a glass, adds: “Sword goes straight through ’em. Chaplain does blessings in the back, mind. Twenty gold.”',
+    ],
+    choices: [
+      { text: 'Have the chaplain bless your weapon (20GP)', to: 'blessed', if: { gold: 20 }, show: { notFlag: 'blessedWeapon' } },
+      { text: 'Fill your bucket at the trough and bless the water', cast: 'bless', pass: 'bucket_blessed', fail: 'bucket_oil', if: { item: 'bucket' }, show: { notFlag: 'holyBucket' } },
+      { text: 'Ask Grimsby exactly what the tenants want', to: 'grimsby_talk', show: { notFlag: 'knowsDeposits' } },
+      { text: 'Set out across the moor', to: 'moor' },
+    ],
+  },
+  blessed: {
+    on: [{ gold: -20 }, { flag: 'blessedWeapon' }],
+    text: ['The chaplain blesses your weapon, then charges you for the holy water, then blesses the receipt. Your weapon hums faintly. Ghosts won’t like it.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  bucket_blessed: {
+    on: [{ flag: 'holyBucket' }],
+    text: ['The water in your bucket goes clear and still and very slightly smug. A whole bucket of holy water. That’s a lot of ghost.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  bucket_oil: {
+    text: ['The water in your bucket goes thick and black and starts to smell of lamps. It’s oil, now. Your god is in a mood.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  grimsby_talk: {
+    on: [{ flag: 'knowsDeposits' }],
+    text: ['“Their deposits,” says Grimsby, as if it’s a disease. “My family kept every tenant’s deposit for three hundred years. Damp, wear and tear, that sort of thing. Now they want it back. All of it. With an apology. In writing.” He shudders. “A Grimsby has never written an apology. We don’t own the right sort of ink.”'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  moor: {
+    text: (c) => [
+      'Blackmire Moor is flat, black and soaked. The road wanders off to the left around the bog, past a crossroads with a gibbet on it. The old causeway goes straight across the bog, half sunk, and would save an hour. Grimsby looks at the causeway, then at his shoes.',
+      c.flags.lit ? '' : 'It is very dark.',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Take the causeway across the bog', to: 'bog' },
+      { text: 'Take the road, past the crossroads', to: 'gibbet' },
+    ],
+  },
+  bog: {
+    text: ['Halfway across, the causeway disappears under black water. Somewhere ahead it comes back. Somewhere around you, the bog belches.'],
+    choices: [
+      { text: 'Feel ahead for the stones with your pole', to: 'bog_far', if: { item: 'pole' } },
+      { text: 'Rope yourself to Grimsby and go first, so whoever sinks gets pulled out', to: 'bog_far', if: { item: 'rope' } },
+      { text: 'Find the way across by eye', test: { stat: 'Wis', dd: 10, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know wet ground', mods: [{ if: { light: true }, dd: 6 }] }, pass: 'bog_far', fail: 'blob' },
+      { text: 'Turn back and take the road', to: 'gibbet' },
+    ],
+  },
+  blob: {
+    text: ['The bog in front of you stands up. It is the size of a haycart, it wobbles, and it has a boot inside it that isn’t yours. Grimsby screams in a very aristocratic register.'],
+    fight: {
+      monsters: [blob], win: 'bog_far', flee: { to: 'moor', label: 'Drag Grimsby back the way you came' },
+      special: [{ label: 'Set light to the marsh gas', if: { fire: true }, flag: 'gasLit', text: 'WHUMP. A ball of blue fire rolls up off the blob, and it boils and shrinks.', dmg: '3d6' }],
+    },
+  },
+  bog_far: {
+    on: [{ flag: 'shortcut' }],
+    text: ['You come out of the bog on the far side, wet to the waist. Grimsby has lost a shoe. You’ve saved an hour, and the mob is still out on the road, looking for you. Far behind, a long line of ghostly torches turns towards you.'],
+    choices: [{ text: 'Hurry on to the hall', to: 'gates' }],
+  },
+  gibbet: {
+    text: (c) => [
+      'At the crossroads, a skeleton sways in the gibbet. As you pass, it turns its head. All around you, the fog lights up: torches, a hundred of them, carried by grey, see-through villagers in the clothes of three centuries, every one of them holding a pitchfork. “GRIIIMSBYYYY,” they moan. “DEPOOOSIT.”',
+      c.flags.knowsDeposits ? 'They want their deposits back, with an apology. In writing.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Write out an apology and three hundred years of receipts, and make Grimsby sign it', to: 'apology', if: { item: 'quill' }, show: { flag: 'knowsDeposits' } },
+      { text: 'Talk to them', test: { stat: 'Cha', dd: 10, skill: ['social', 'languages'], profs: ['Envoy', 'Missionary'], why: 'you know how to talk to a crowd' }, pass: 'demands', fail: 'mob_fight' },
+      { text: 'Turn them', turn: { dd: 10 }, pass: 'mob_flees', chaos: 'mob_obeys', fail: 'mob_fight', if: { magic: 'divine' } },
+      { text: 'Cast Shroud over yourself and Grimsby and sneak past', cast: 'shroud', pass: 'sneak', fail: 'mob_fight' },
+      { text: 'Hand Grimsby over', to: 'betrayal' },
+      { text: 'Pick up Grimsby and run', test: { stat: 'Str', dd: 10, skill: ['athletics'], profs: ['Bodyguard'], why: 'carrying clients out of trouble is your job' }, pass: 'gates', fail: 'mob_fight' },
+      { text: 'Fight', to: 'mob_fight' },
+    ],
+  },
+  demands: {
+    on: [{ flag: 'knowsDeposits' }],
+    text: ['The mob stops. The skeleton in the gibbet clears what’s left of its throat. “We want,” it says, “our deposits back. And an apology. In writing.” Grimsby, behind you, makes a noise like a cat being sat on.'],
+    choices: [
+      { text: 'Write out the apology and receipts, and make Grimsby sign', to: 'apology', if: { item: 'quill' } },
+      { text: 'Persuade Grimsby to apologise out loud', test: { stat: 'Cha', dd: 12, skill: ['social', 'lying'] }, pass: 'spoken', fail: 'mob_fight' },
+      { text: 'Hand Grimsby over', to: 'betrayal' },
+      { text: 'Fight', to: 'mob_fight' },
+    ],
+  },
+  apology: {
+    on: [{ flag: 'peace' }],
+    text: ['By torchlight, on your knee, you write it all out: I, the undersigned Grimsby, am sorry. Then three hundred years of receipts, one for every tenant, all marked PAID IN FULL. Grimsby signs it with his eyes shut. The skeleton reads it, nods, and the torches go out one by one, until there’s only fog and a very quiet moor.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  spoken: {
+    on: [{ flag: 'peace' }],
+    text: ['Grimsby says sorry. It takes him four goes, and on the third he gets as far as “sor-” before he has to sit down. The ghosts are not entirely satisfied, it not being in writing, but they’ve never heard a Grimsby say it before. They drift off into the fog to talk about it.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  sneak: {
+    text: ['A patch of darkness settles over you both, and you creep through the mob with Grimsby holding his breath. A ghost bumps into you, apologises, and moves on. Tenants are like that.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_flees: {
+    on: [{ flag: 'turned' }],
+    text: ['You raise your holy symbol, and the mob falls back, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_obeys: {
+    on: [{ flag: 'turned' }, { flag: 'ghostArmy' }],
+    text: ['The mob kneels. A hundred ghosts with torches and pitchforks now take their orders from you. You march Grimsby to his own front door at the head of a spectral army, which he does not enjoy at all.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  betrayal: {
+    on: [{ flag: 'betrayed' }, { item: 'strongkey' }],
+    text: ['You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear. The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  mob_fight: {
+    text: (c) => [
+      'The mob surges. Pitchforks you can see through still go into you.',
+      c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
+    ],
+    fight: {
+      monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
+      special: [
+        { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },
+        { label: 'Use your mirror to show the ghosts what they look like', if: { item: 'mirror' }, flag: 'mirrored', text: 'The front rank sees itself in your mirror and stops, horrified. Three hundred years without a mirror. Some of them are wearing the same shirt.', stun: 1 },
+        { label: 'Throw Grimsby to them', flag: 'thrown', text: 'You shove Lord Grimsby into the mob. They forget all about you.', win: true },
+      ],
+    },
+  },
+  mob_gone: {
+    redirect: [{ if: { flag: 'thrown' }, to: 'betrayal' }],
+    text: ['The last ghost dissolves into the fog, dropping its pitchfork, which dissolves too. The skeleton in the gibbet shakes its head at you and goes back to swaying.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  gates: {
+    text: (c) => [
+      'Grimsby Hall stands on a rise at the end of the moor: tall, black and in need of a roof. The gates are locked, and the bell rope has rotted through. It is a quarter to midnight.',
+      c.flags.betrayed ? 'You have the key to the strongroom, but not the gates.' : '“I lost the key,” says Grimsby, “in 1704.”',
+    ],
+    choices: [
+      { text: 'Pick the lock', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'inside', fail: 'late', if: { item: 'tools' } },
+      { text: 'Climb the wall and open it from inside', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'climbing' } },
+      { text: 'Melt the lock with acid', to: 'inside', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Lever the gate off its hinges', to: 'inside', if: { anyItem: ['prybar', 'pick'] } },
+      { text: 'Throw your rope over the gatepost and climb', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'rope' } },
+      { text: 'Have your ghost army open it for you', to: 'inside', if: { flag: 'ghostArmy' } },
+      { text: 'Break it down', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'inside', fail: 'late' },
+    ],
+  },
+  late: {
+    redirect: [{ if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'shortcut' }] }, to: 'late_safe' }],
+    text: ['Midnight strikes while you’re still struggling with the gate. Behind you, the torches come over the rise.'],
+    choices: [{ text: 'Get through the gate however you can', to: 'last_stand' }],
+  },
+  late_safe: {
+    text: ['It takes far too long, but nothing comes out of the fog to stop you. Eventually, the gate groans open.'],
+    choices: [{ text: 'Inside', to: 'inside' }],
+  },
+  last_stand: {
+    text: ['The mob catches you at the gate. There’s no talking now.'],
+    fight: {
+      monsters: [{ ...mob, hp: 24 }], distance: 1, win: 'inside', flee: { to: 'grimsby_hall', label: 'Leave Grimsby to them and run' },
+      special: [{ label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' }],
+    },
+  },
+  inside: {
+    on: [{ if: { notFlag: 'betrayed' }, flag: 'delivered' }],
+    text: (c) => [
+      c.flags.betrayed
+        ? 'Grimsby Hall is cold and empty, and nobody will ever live in it again. The strongroom is under the stairs.'
+        : 'The clock in the hall strikes midnight as Grimsby crosses the threshold. “Mine,” he says, and kisses the floor, which is a mistake. The strongroom is under the stairs.',
+    ],
+    choices: [
+      { text: 'Open the strongroom with the skeleton’s key', to: 'strongroom', if: { item: 'strongkey' } },
+      { text: 'Pick the strongroom lock while Grimsby is busy kissing the floor', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'strongroom', fail: 'grimsby_hall', if: { item: 'tools' }, show: { notItem: 'strongkey' } },
+      { text: 'Collect your fee and leave', to: 'grimsby_hall' },
+    ],
+  },
+  strongroom: {
+    on: [{ lose: 'strongkey' }, { flag: 'deposits' }, { gold: 300, uncapped: true, msg: 'Three hundred years of deposits: 300GP in old coin.' }], onceOnly: true,
+    text: ['The strongroom holds three hundred years of other people’s deposits, in labelled bags, with notes about the damp.'],
+    choices: [{ text: 'Leave', to: 'grimsby_hall' }],
+  },
+  grimsby_hall: {
+    end: 'victory',
+    on: [{ if: { flag: 'delivered' }, gold: 400, uncapped: true, msg: 'Lord Grimsby pays your fee, minus a deduction for wear and tear. Then he puts the deduction back.' }],
+    text: (c) => [
+      c.flags.delivered
+        ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.' : 'Grimsby locks every door in the hall and sits up all night with a candle. The torches circle the hall till dawn. He’ll be fine. Probably.')
+        : c.flags.betrayed ? 'Out on the moor, the torches have gone out. Somewhere in the fog, a lord is still explaining about wear and tear.'
+          : 'You leave Grimsby to the mob. He has three hundred years of explaining to do.',
+      c.flags.deposits && !c.flags.betrayed ? 'You may not have mentioned the strongroom.' : '',
+      `You leave Blackmire Moor with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
+    ].filter(Boolean),
+  },
+};
+
+const DEATH_TEXT = [
+  'You join the mob. Every night, you rise with a torch and a pitchfork and a grievance, and every night, you want your deposit back.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/standard-dragon.js"] = function(){
+// A PERFECTLY STANDARD DRAGON — the last bad idea. For a level 9–10 scumbag.
+// The dragon is old, lame and following procedure; the real problem is the slug eating its hoard.
+
+const META = {
+  after: ['torches-and-pitchforks'], id: 'standard-dragon', title: 'A Perfectly Standard Dragon', levels: '9–10', final: 'epilogue',
+  blurb: 'A dragon has moved into the mountain above Much Smallness and filed all the right paperwork. It has demanded a maiden, a sheep a week and the usual tribute. The village has offered the standard dragon bounty of one thousand gold. It is the sort of job a scumbag only gets once. It is probably the sort of job a scumbag only gets once.',
+};
+
+const dragon = { name: 'Old Scorchwell', lvl: 9, hp: 34, dmg: '2d6+3', range: 'short', feats: ['breath'], note: 'A perfectly standard dragon, but old (bites for 2d6+3; few teeth left); breathes fire (sometimes, instead of attacking, d12 Dex save or 5d6 fire damage, half on a success); lame, so it can’t fly' };
+const slug = { name: 'Thirty-foot slug', lvl: 8, hp: 44, range: 'engaged', onHit: { stat: 'Dex', dd: 10, label: 'keep your feet', text: 'You slip on the slime.', effect: 'prone' }, note: 'Thirty feet of slug; on hit, d10 Dex save or fall over in its slime; salt is very bad for it' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'The mayor of Much Smallness reads you the form. “A dragon,” he says, “has been sighted. It has demanded, tick one, a maiden. Reward, one thousand gold, payable on proof of removal. Proof of removal,” he adds, “is usually the head.”',
+      'Outside the town hall, the village’s maiden waits on a bench with a packed lunch. Her name is Agnes, she is seventy-four, and she volunteered. Above the village, smoke curls out of a cave near the top of the mountain, in a very standard way.',
+    ],
+    choices: [
+      { text: 'Talk to Agnes', to: 'agnes', show: { notFlag: 'agnes' } },
+      { text: 'Buy a sack of salt from the general store (5GP)', to: 'salt', if: { gold: 5 }, show: { notFlag: 'salt' } },
+      { text: 'Climb the mountain', to: 'path' },
+    ],
+  },
+  agnes: {
+    on: [{ flag: 'agnes' }],
+    text: ['“I took it some soup,” says Agnes. “He’s ever so polite. Bad leg. Can’t get about. He says he doesn’t even want a maiden, it’s just on the form.” She lowers her voice. “And there’s something down in the bottom of his cave that’s eating his gold. Leaves a trail. You should’ve seen my shoes.”'],
+    choices: [{ text: 'Back to the village', to: 'start' }],
+  },
+  salt: {
+    on: [{ flag: 'salt' }, { gold: -5 }],
+    text: ['The shopkeeper sells you a sack of salt, and asks what it’s for. You say “slugs,” to see what happens. He nods slowly, and gives you a second sack for free.'],
+    choices: [{ text: 'Back to the village', to: 'start' }],
+  },
+  path: {
+    text: ['Halfway up the mountain, the path stops at a gorge. There used to be a bridge. There are now two posts and a scorch mark. The cave mouth is just on the other side, forty feet across and a long way down.'],
+    choices: [
+      { text: 'Climb down and up the other side', test: { stat: 'Str', dd: 6, skill: ['athletics'] }, pass: 'cave', fail: 'fall', if: { item: 'climbing' } },
+      { text: 'Lasso the far post with your rope and swing across', test: { stat: 'Dex', dd: 10, skill: ['athletics'], profs: ['Hunter'], why: 'you can hit what you aim at' }, pass: 'cave', fail: 'fall', if: { item: 'rope' } },
+      { text: 'Lay your pole across the narrowest part and shuffle over', test: { stat: 'Dex', dd: 8, skill: ['athletics'] }, pass: 'cave', fail: 'fall', if: { item: 'pole' } },
+      { text: 'Climb down and up without any gear', test: { stat: 'Str', dd: 12, skill: ['athletics'] }, pass: 'cave', fail: 'fall' },
+      { text: 'Take the long way round, through the lower caves', to: 'lower' },
+    ],
+  },
+  fall: {
+    on: [{ damage: '3d6', from: 'The gorge' }],
+    text: ['You fall into the gorge, bouncing off most of it. At the bottom, a slimy trail leads into a tunnel in the mountain. It smells of slug and money.'],
+    choices: [{ text: 'Follow the trail', to: 'lower' }],
+  },
+  lower: {
+    redirect: [{ if: { flag: 'slugDead' }, to: 'lair' }],
+    text: (c) => [
+      'The lower caves are wet, low and coated in slime. Gold coins lie scattered in the trail, all of them chewed. Ahead, something huge is moving in the dark, slowly, with a noise like a bath being emptied.',
+      c.flags.salt ? 'You have a sack of salt.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Pour a ring of salt across the tunnel and wait for it', to: 'salt_trap', if: { flag: 'salt', flagText: 'a sack of salt' } },
+      { text: 'Dig a pit in the soft floor with your shovel, and lure it in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'pit', fail: 'slug_fight', if: { anyItem: ['shovel', 'pick'] } },
+      { text: 'Pour your oil down the trail and set it alight', to: 'slug_burn', if: { item: 'oil', fire: true } },
+      { text: 'Sneak past it to the upper cave', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'], mods: [{ if: { light: true }, dd: 8 }] }, pass: 'lair', fail: 'slug_fight' },
+      { text: 'Attack it', to: 'slug_fight' },
+    ],
+  },
+  salt_trap: {
+    on: [{ flag: 'slugDead' }],
+    text: ['The slug comes round the corner, touches the salt, and stops. It considers the salt for a long time. Then it shrinks, slowly, steaming, to the size of a man, then a dog, then a sad wet sock. In the slime where it was lies everything it ate: a heap of chewed gold.'],
+    choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
+  },
+  pit: {
+    on: [{ flag: 'slugDead' }],
+    text: ['The slug slides straight into your pit and can’t get out, because slugs don’t climb so much as smear, and the sides are sand. It lies at the bottom, looking up at you. Under it, glinting, is a heap of chewed gold.'],
+    choices: [{ text: 'Fish out the gold with your shovel', to: 'slug_gold' }],
+  },
+  slug_burn: {
+    on: [{ lose: 'oil' }],
+    text: ['The oil catches with a WHOOMPH and races up the slime trail, which turns out to be very flammable. Somewhere ahead, the slug screams, which you didn’t know slugs could do. It comes round the corner on fire.'],
+    fight: {
+      monsters: [{ ...slug, hp: 26 }], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
+      special: [{ label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' }],
+    },
+  },
+  slug_fight: {
+    text: ['Thirty feet of slug comes round the corner at a surprising speed, which is to say a walking pace.'],
+    fight: {
+      monsters: [slug], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
+      special: [
+        { label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' },
+        { label: 'Wave your smelling salts at it', if: { item: 'salts' }, flag: 'smelled', text: 'It is not that kind of salt. The slug is now extremely alert.' },
+      ],
+    },
+  },
+  slug_down: {
+    on: [{ flag: 'slugDead' }],
+    text: ['The slug collapses, which for a slug is mostly a change of attitude. Under where it lay, in the slime, is a heap of chewed gold.'],
+    choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
+  },
+  slug_gold: {
+    on: [{ gold: 200, uncapped: true, msg: 'Chewed gold spends the same: 200GP.' }], onceOnly: true,
+    text: ['You fill your pockets with gold that has been inside a slug. Above, through a crack in the cave roof, you can hear somebody reading out loud.'],
+    choices: [{ text: 'Climb up to the lair', to: 'lair' }],
+  },
+  cave: {
+    text: ['The cave mouth is wide and scorched. Inside, the tunnel climbs towards firelight. Down a side passage, a slimy trail leads into the dark.'],
+    choices: [{ text: 'Go up into the lair', to: 'lair' }, { text: 'Follow the slimy trail down', to: 'lower', show: { notFlag: 'slugDead' } }],
+  },
+  lair: {
+    text: (c) => [
+      'The lair is enormous, and mostly empty. There’s a hoard, but it’s smaller than it should be, and there’s a trail of slime around it. On top of the hoard lies a dragon: old, red, the size of a barn, with one hind leg in a sling and a pair of reading glasses on its nose. It is filling in a form.',
+      '“Ah,” it says, peering at you over its glasses. “You’ll be the adventurer. I’m afraid I have to threaten you. It’s on the form.”',
+      c.flags.slugDead ? '' : 'Below you, something huge and wet is eating its way through the floor of the hoard.',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Ask what the form says', to: 'form', show: { notFlag: 'form' } },
+      { text: 'Look at its leg with your healer’s kit', to: 'leg', if: { item: 'healerskit' }, show: { notFlag: 'legFixed' } },
+      { text: 'Tell it about the slug, and offer a deal', to: 'deal', show: { notFlag: 'slugDead' } },
+      { text: 'Tell it you’ve dealt with its slug', to: 'thanks', show: { flag: 'slugDead' } },
+      { text: 'Fight it', to: 'dragon_fight' },
+    ],
+  },
+  form: {
+    on: [{ flag: 'form' }],
+    text: ['“Form D7,” says the dragon. “Notice of Occupation. Tribute, threats, the maiden.” It sighs a little smoke. “I didn’t want a maiden. I don’t know what you’re meant to do with one. Agnes brings soup. If I don’t complete the form, I lose my licence. If I lose my licence, I’m just a lizard in a hole.” It looks at its leg. “I wanted to retire, you know. Somewhere warm. But you need a form for that, too.”'],
+    choices: [
+      { text: 'Forge a Form of Retirement with your quill', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], profs: ['Envoy'], why: 'you have filled in a great many forms' }, pass: 'retired', fail: 'forgery', if: { item: 'quill' } },
+      { text: 'Pretend to be from the Dragon Licensing Board, and grant it retirement', test: { stat: 'Cha', dd: 12, skill: ['lying'] }, pass: 'retired', fail: 'forgery' },
+      { text: 'Back', to: 'lair' },
+    ],
+  },
+  forgery: {
+    text: ['The dragon reads your form, and then reads it again, and then takes off its glasses. “This,” it says, “is a forgery. That’s a very serious matter. There’s a form for it.” It sets the form on fire, and then you.'],
+    fight: { monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
+  },
+  leg: {
+    on: [{ flag: 'legFixed' }],
+    text: ['You look at the leg. It’s a thorn. It is a very big thorn, but it is a thorn. The dragon watches you pull it out, with tears in its eyes, partly from the pain and partly from the relief. It flexes its leg. “Good heavens,” it says. “I could fly again. I could fly somewhere warm.”'],
+    choices: [{ text: 'Suggest it does exactly that', to: 'retired' }],
+  },
+  deal: {
+    text: ['“A slug?” The dragon looks hurt. “I had assumed it was inflation.” It peers down through the floor. “If you get rid of it, I’ll give you half of whatever’s left. I can’t get down there. The leg.”'],
+    choices: [{ text: 'Go down after the slug', to: 'lower' }, { text: 'Back', to: 'lair' }],
+  },
+  thanks: {
+    on: [{ flag: 'grateful' }],
+    text: ['“Gone?” The dragon is moved. It wipes its glasses. “Then please, take a share. And,” it adds, a bit shyly, “I don’t suppose you’d help with my form? I think I’m done with this. I should like to retire.”'],
+    choices: [{ text: 'Help it retire', to: 'retired' }, { text: 'Fight it anyway', to: 'dragon_fight' }],
+  },
+  retired: {
+    on: [{ flag: 'retired' }, { item: 'scale', msg: 'The dragon gives you one of its scales: proof of removal, for the mayor.' }, { gold: 300, uncapped: true, msg: 'And a share of the hoard: 300GP.' }],
+    onceOnly: true,
+    text: ['The dragon signs its retirement with a claw and a great deal of satisfaction. It gives you a scale for the mayor, and a share of the hoard for yourself. Then it limps or strides, depending on its leg, out of the cave mouth, spreads its wings, and is gone south, getting smaller, towards somewhere warm.'],
+    choices: [{ text: 'Back down to the village', to: 'village' }],
+  },
+  dragon_fight: {
+    text: (c) => [
+      'The dragon sighs, takes off its glasses, and folds them. “Very well,” it says. “It is, after all, on the form.”',
+      c.flags.legFixed ? 'It rears up, both legs working, which you are now regretting.' : 'It can’t fly. It doesn’t need to.',
+    ],
+    fight: {
+      monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for the cave mouth' },
+      special: [
+        { label: 'Hold up your mirror and let it see the state of itself', if: { item: 'mirror' }, flag: 'dragonMirror', text: 'The dragon sees its reflection: old, grey round the snout, glasses askew. It stops, stricken, for a moment.', stun: 1 },
+        { label: 'Hit its bad leg', if: { notFlag: 'legFixed' }, test: { stat: 'Dex', dd: 10, skill: 'attack:melee' }, flag: 'badLeg', text: 'You go for the bad leg. The dragon roars and goes down on its side.', failText: 'It sees you coming and tucks the leg away.', dmg: '3d8' },
+      ],
+    },
+  },
+  dragon_down: {
+    on: [{ flag: 'dragonDead' }, { item: 'scale', msg: 'You take a scale for the mayor. The head would not fit through the door.' }, { gold: 500, uncapped: true, msg: 'The whole hoard is yours: 500GP.' }],
+    onceOnly: true,
+    text: ['The dragon lies down on its hoard, puts its glasses back on, and fills in one last box on its form. Then it closes its eyes. It was, in the end, a perfectly standard dragon, and you are a perfectly standard scumbag.'],
+    choices: [{ text: 'Back down to the village', to: 'village' }],
+  },
+  village: {
+    text: ['The mayor of Much Smallness examines the scale, ticks a box, and hands you a form. “Proof of removal,” he says. “Sign here.” Agnes, on her bench, eats her packed lunch.'],
+    choices: [{ text: 'Sign, and take the bounty', to: 'epilogue' }],
+  },
+  epilogue: {
+    end: 'victory',
+    on: [{ if: { item: 'scale' }, lose: 'scale' }, { if: { any: [{ flag: 'retired' }, { flag: 'dragonDead' }] }, gold: 1000, uncapped: true, msg: 'The standard dragon bounty: 1000GP.' }],
+    text: (c) => [
+      c.flags.retired
+        ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
+        : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
+      `That’s ten bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'The dragon fills in a form about you. It doesn’t take long.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/engine/town.js"] = function(){
+// Scumbag Town, between adventures: the inn, the market and the fence (rulebook prices).
+const { MUNDANE, SIGNIFICANT, WEAPONS, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, WEAPON_DIE } = __req("src/rules/data.js");
+const { makeItem, maxAp, resetDay, prof, itemSlots, hasFeature } = __req("src/rules/character.js");
+const INN_PRICE = 5;
+const SHOP = ['potion', 'fire', 'salve', 'antidote', 'acid', 'caltrops', 'insight'];
+const weaponPrice = (w) => 10 * w.weight;
+const armourPrice = (a) => 10 * a.weight;
+const shieldPrice = (s) => 5 * s.weight;
+
+const roomFor = (c, size = 1) => itemSlots(c) + Math.ceil(c.gold / 50) + size <= SIGNIFICANT_LIMIT
+  || itemSlots(c) + size <= SIGNIFICANT_LIMIT;   // coins can always be spent first
+
+/** A paid bed at the Drowned Rat: full HP and AP, spells and once-per-day features back. */
+function restAtInn(c) {
+  if (c.gold < INN_PRICE) return null;
+  c.gold -= INN_PRICE; c.hp = c.maxHp; c.ap = maxAp(c); resetDay(c);
+  return `A bed at the Drowned Rat (${INN_PRICE}GP). You wake up rested: ${c.hp}/${c.maxHp} HP.`;
+}
+/** A free night in a ditch: the rulebook's night's rest (d4 per level). */
+function sleepRough(c, rng) {
+  const h = rng.roll(c.level, 4) + (hasFeature(c, 'favoured') ? c.level : 0);
+  c.hp = Math.min(c.maxHp, c.hp + h); c.ap = maxAp(c); resetDay(c);
+  return `A night in a ditch: +${h} HP (${c.hp}/${c.maxHp}).`;
+}
+
+/** Mundane items are trivial to acquire in town: swap them freely and top up anything running low. */
+function restock(c) {
+  for (const it of c.mundane) {
+    const def = MUNDANE[it.id];
+    if (def.tokens) it.tokens = def.tokens;
+    if (def.uses) it.uses = def.uses;
+  }
+}
+function addMundane(c, id) { if (c.mundane.length >= MUNDANE_LIMIT || c.mundane.some((i) => i.id === id)) return false; c.mundane.push(makeItem(id)); return true; }
+function dropMundane(c, id) { c.mundane = c.mundane.filter((i) => i.id !== id); }
+
+function buy(c, id) {
+  const def = SIGNIFICANT[id];
+  if (!def || !def.cost || c.gold < def.cost) return null;
+  c.gold -= def.cost;
+  if (itemSlots(c) + (def.slots || 1) > SIGNIFICANT_LIMIT) { c.gold += def.cost; return null; }
+  c.significant.push(makeItem(id));
+  return `You buy ${def.name.toLowerCase()} for ${def.cost}GP.`;
+}
+/** The fence pays the item's value; things you could buy are taken back at half price. */
+function sellPrice(id) { const d = SIGNIFICANT[id]; return d.value || (d.cost ? Math.floor(d.cost / 2) : 0); }
+function sell(c, idx) {
+  const it = c.significant[idx]; if (!it) return null;
+  const p = sellPrice(it.id); if (!p) return null;
+  c.significant.splice(idx, 1); c.gold += p;
+  return `The fence gives you ${p}GP for the ${it.name.toLowerCase()}.`;
+}
+
+function weaponsFor(c) { return WEAPONS.filter((w) => w.weight <= prof(c)); }
+function buyWeapon(c, id) {
+  const w = WEAPONS.find((x) => x.id === id); if (!w || c.gold < weaponPrice(w)) return null;
+  c.gold -= weaponPrice(w); c.weapon = { ...w };
+  c.sidearm = w.ranged ? { ...WEAPONS[0] } : null;
+  return `You buy a ${w.name.toLowerCase()} (d${WEAPON_DIE[w.weight]}) for ${weaponPrice(w)}GP.`;
+}
+function buyArmour(c, id) {
+  const a = ARMOURS.find((x) => x.id === id); if (!a || c.gold < armourPrice(a)) return null;
+  c.gold -= armourPrice(a); c.armour = { ...a }; c.shield = null; c.ap = maxAp(c);
+  return `You buy ${a.name.toLowerCase()} (${a.ap} AP) for ${armourPrice(a)}GP.`;
+}
+function buyShield(c, id) {
+  const s = SHIELDS.find((x) => x.id === id); if (!s || c.gold < shieldPrice(s)) return null;
+  c.gold -= shieldPrice(s); c.shield = { ...s }; c.armour = null; c.ap = 0;
+  return `You buy a ${s.name.toLowerCase()} for ${shieldPrice(s)}GP.`;
+}
+
+return { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
+};
+__defs["src/rules/data.js"] = function(){
+// Rulebook tables, transcribed from the Scumbags! rulebook. Gamebook-only additions are marked "(gamebook)".
+
+const STATS = ['Dex', 'Str', 'Con', 'Wis', 'Int', 'Cha'];
+const STAT_NAMES = {
+  Dex: 'Dexterity', Str: 'Strength', Con: 'Constitution', Wis: 'Wisdom', Int: 'Intelligence', Cha: 'Charisma',
+};
+
+// Ranged attack difficulty dice by distance (rulebook "Attacking"). Index = band.
+const BANDS = ['Engaged', 'Short', 'Medium', 'Long', 'Extreme'];
+const RANGED_DIE = [20, 4, 8, 12, 20];
+const MELEE_DIE = 8;      // "Most melee attacks are made with a d8 difficulty die."
+const DARK_DIE = 12;      // (gamebook) fighting or acting without light, per the rulebook's "dim lighting" example
+
+const QUALITIES = [
+  { name: 'Slippery', core: 'Dex', anc: 'Cha', feature: 'Once per day, reroll a defending test', key: 'rerollDefend' },
+  { name: 'Merciless', core: 'Dex', anc: 'Str', feature: 'Once per day, reroll an attacking test', key: 'rerollAttack' },
+  { name: 'Unyielding', core: 'Str', anc: 'Dex', feature: 'Can’t be knocked prone', key: 'noProne' },
+  { name: 'Swift', core: 'Str', anc: 'Con', feature: '+1 square of movement or 1/6 chance to move twice', key: 'swift' },
+  { name: 'Hardened', core: 'Con', anc: 'Str', feature: '+1 maximum HP per level', key: 'hardened' },
+  { name: 'Sottish', core: 'Con', anc: 'Wis', feature: 'Ignore simple poisons', key: 'noPoison' },
+  { name: 'Dogmatic', core: 'Wis', anc: 'Con', feature: 'Ignore simple curses', key: 'noCurse' },
+  { name: 'Favoured', core: 'Wis', anc: 'Int', feature: 'Restore an additional +1 HP per level when healing or being healed', key: 'favoured' },
+  { name: 'Canny', core: 'Int', anc: 'Wis', feature: 'Automatically succeed in common knowledge tests', key: 'canny' },
+  { name: 'Versatile', core: 'Int', anc: 'Cha', feature: 'Once per day, make an unskilled test as though skilled', key: 'versatile' },
+  { name: 'Inscrutable', core: 'Cha', anc: 'Int', feature: 'Perfect poker face; skilled at lying', key: 'liar' },
+  { name: 'Lucky', core: 'Cha', anc: 'Dex', feature: 'Once per day, reroll a saving throw', key: 'rerollSave' },
+];
+
+// prof = proficiency (heaviest weapon/shield/armour without penalty): 1 light, 2 medium, 3 heavy
+const PROFESSIONS = [
+  { name: 'Assassin', core: 'Dex', anc: 'Cha', prof: 3, skills: ['attack:ranged', 'skulduggery', 'social'], feature: 'Critical success does triple damage when attacking', key: 'tripleCrit' },
+  { name: 'Cutpurse', core: 'Dex', anc: 'Str', prof: 2, skills: ['attack:melee', 'attack:ranged', 'bruteforce', 'skulduggery'], feature: '1-3 on the skill die is a critical success when attacking', key: 'wideCrit' },
+  { name: 'Sellsword', core: 'Str', anc: 'Dex', prof: 3, skills: ['attack:melee', 'athletics', 'bruteforce'], feature: 'May make a free attack after slaying an opponent', key: 'cleave' },
+  { name: 'Pit fighter', core: 'Str', anc: 'Con', prof: 2, skills: ['attack:melee', 'athletics', 'bruteforce'], feature: 'May counterattack after successfully defending (melee)', key: 'counter' },
+  { name: 'Bodyguard', core: 'Con', anc: 'Str', prof: 2, skills: ['attack:melee', 'defend:melee', 'defend:ranged', 'medicine'], feature: 'May defend for another player within short range per round', key: 'guard' },
+  { name: 'Woodcutter', core: 'Con', anc: 'Wis', prof: 2, skills: ['attack:melee', 'defend:melee', 'survival'], feature: 'On hit, 1/6 chance to push opponent prone and attack again', key: 'fell' },
+  { name: 'Cleric', core: 'Wis', anc: 'Con', prof: 2, skills: ['cast:divine', 'defend:melee', 'arcana'], feature: 'May cast divine spells', key: 'divine' },
+  { name: 'Missionary', core: 'Wis', anc: 'Int', prof: 2, skills: ['cast:divine', 'attack:ranged', 'languages'], feature: 'May cast divine spells', key: 'divine' },
+  { name: 'Alchemist', core: 'Int', anc: 'Wis', prof: 1, skills: ['cast:arcane', 'analysis', 'medicine'], feature: 'May cast arcane spells', key: 'arcane' },
+  { name: 'Sorcerer', core: 'Int', anc: 'Cha', prof: 1, skills: ['cast:arcane', 'analysis', 'arcana'], feature: 'May cast arcane spells', key: 'arcane' },
+  { name: 'Envoy', core: 'Cha', anc: 'Int', prof: 2, skills: ['attack:melee', 'attack:ranged', 'languages', 'social'], feature: 'May make an additional attack per turn (unskilled)', key: 'extraAttack' },
+  { name: 'Hunter', core: 'Cha', anc: 'Dex', prof: 2, skills: ['attack:ranged', 'defend:ranged', 'survival'], feature: 'May make all ranged attacks as though short range', key: 'hunter' },
+];
+
+const SKILL_NAMES = {
+  'attack:melee': 'Attacking (melee)', 'attack:ranged': 'Attacking (ranged)',
+  'defend:melee': 'Defending (melee)', 'defend:ranged': 'Defending (ranged)',
+  'cast:divine': 'Spellcasting (divine)', 'cast:arcane': 'Spellcasting (arcane)',
+  analysis: 'Analysis', arcana: 'Arcana', athletics: 'Athletics', bruteforce: 'Brute force', languages: 'Languages',
+  medicine: 'Medicine', skulduggery: 'Skulduggery', social: 'Social', survival: 'Survival',
+};
+
+const ENDEAVOURS = [
+  'Commission a statue of yourself. The sculptor charges by the chin.',
+  'Throw a feast for the whole town. The next town hears about it and comes too.',
+  'Buy a knighthood. It comes with a horse, which costs more than the knighthood.',
+  'Bribe a magistrate to clear your name. He keeps the file, just in case.',
+  'Fund an expedition to the edge of the world. It gets as far as the edge of town, and the tavern there.',
+  'Bet on the cockroach races. Yours eats the competition and is disqualified.',
+  'Build a contraption. It works; nobody knows what it does.',
+  'Pay the temple to pray for your soul. On reflection, they’ll need a lot more.',
+  'Hire a bard to sing of your deeds. He sings them accurately, so you pay him to stop. Monthly.',
+  'Buy a bear. It is your problem now.',
+  'Gild a dung-shovel, as is tradition.',
+  'Outbid a stranger for the last oversized turnip at market. He will remember this.',
+  'Commission a portrait. It captures your soul, unflatteringly.',
+  'Buy a fashionable hat. By the time you get it home, it isn’t.',
+  'Adopt an orphan. It’s a halfling with expensive tastes.',
+  'Hire a food taster. He dies on his first day. Someone wants you dead, and you’re out of food tasters.',
+  'Buy a pardon for your sins in advance, then commit them all to get your money’s worth.',
+  'Pay an astrologer to name a comet after you. It lands on a village, which sends you the bill.',
+  'Design a coat of arms. The herald charges per beast, and you wanted all of them.',
+  'Fake your own death and pay for the wake. Everyone has a lovely time without you.',
+];
+const LEVEL_COST = 200;
+
+const WEAPON_DIE = { 1: 4, 2: 8, 3: 12 };
+const WEIGHT_NAME = { 1: 'light', 2: 'medium', 3: 'heavy' };
+const WEAPONS = [
+  { id: 'dagger', name: 'Dagger', weight: 1, ranged: false },
+  { id: 'sword', name: 'Sword', weight: 2, ranged: false },
+  { id: 'mace', name: 'Mace', weight: 2, ranged: false },
+  { id: 'maul', name: 'Maul', weight: 3, ranged: false },
+  { id: 'sling', name: 'Sling', weight: 1, ranged: true },
+  { id: 'bow', name: 'Bow', weight: 2, ranged: true },
+  { id: 'crossbow', name: 'Crossbow', weight: 3, ranged: true },
+];
+const ARMOURS = [
+  { id: 'gambeson', name: 'Gambeson', weight: 1, ap: 2 },
+  { id: 'leather', name: 'Leather armour', weight: 2, ap: 4 },
+  { id: 'chainmail', name: 'Chain mail', weight: 3, ap: 6 },
+];
+const SHIELDS = [
+  { id: 'buckler', name: 'Buckler', weight: 1, block: [1, 6] },
+  { id: 'kite', name: 'Kite shield', weight: 2, block: [2, 6] },
+  { id: 'tower', name: 'Tower shield', weight: 3, block: [3, 6] },
+];
+
+// Mundane items (rulebook list). tokens = depletion; uses = 1-use items.
+const MUNDANE = {
+  ammo: { name: 'Ammunition', tokens: 5, note: 'Depletion (5)' },
+  bellows: { name: 'Bellows' },
+  bucket: { name: 'Bucket' },
+  chain: { name: 'Chain (10ft)' },
+  climbing: { name: 'Climbing gear', note: 'Required for climbing' },
+  oil: { name: 'Flask of oil', tokens: 12, note: 'Depletion (12) when used in a lantern' },
+  flint: { name: 'Flint & steel' },
+  glue: { name: 'Glue', uses: 1, note: '1 use' },
+  mirror: { name: 'Hand mirror' },
+  healerskit: { name: 'Healer’s kit', note: 'Required for healing' },
+  holysymbol: { name: 'Holy symbol', note: 'Required for divine spellcasting' },
+  holywater: { name: 'Holy water', uses: 1, note: '1 use; 2d8 damage to undead' },
+  spikes: { name: 'Iron spikes', tokens: 3, note: 'Depletion (3)' },
+  loupe: { name: 'Jeweller’s loupe' },
+  lantern: { name: 'Lantern', note: 'Requires oil to produce light' },
+  manacles: { name: 'Manacles', note: 'With key' },
+  pick: { name: 'Mining pick' },
+  padlock: { name: 'Padlock', note: 'With key' },
+  pocketsand: { name: 'Pocket sand', uses: 1, note: '1 use; target can’t act until after their next turn' },
+  pole: { name: 'Pole (10ft)' },
+  prybar: { name: 'Pry bar' },
+  quill: { name: 'Quill, ink & parchment' },
+  rat: { name: 'Rat', note: '2/6 chance to follow a simple command' },
+  rations: { name: 'Rations (5 days)', note: 'Includes water' },
+  rope: { name: 'Rope (50ft)' },
+  shovel: { name: 'Shovel' },
+  salts: { name: 'Smelling salts' },
+  tent: { name: 'Tent & bedroll' },
+  tools: { name: 'Thieves’ tools', note: 'Required for picking locks and disarming traps' },
+  torches: { name: 'Torches', tokens: 5, note: 'Depletion (5)' },
+  whistle: { name: 'Watchman’s whistle' },
+  // (gamebook) found or bought during adventures; not offered at character creation
+  stilts: { name: 'Stilts', note: 'Makes you look six foot six', hidden: true },
+};
+const MUNDANE_LIMIT = 6;
+
+// Significant items (rulebook list, plus things found in the adventure).
+const SIGNIFICANT = {
+  fire: { name: 'Alchemist’s fire', uses: 1, note: '1 use; 2d8 damage', cost: 20 },
+  caltrops: { name: 'Caltrops', uses: 1, note: '1 use; d4 damage; stops horses (and most things with feet)', cost: 10 },
+  insight: { name: 'Elixir of insight', uses: 1, note: '1 use; drink before a Wis or Int test to roll it as though skilled', cost: 20 },
+  antidote: { name: 'Antidote', uses: 1, note: '1 use; cures poison', cost: 10 },
+  salve: { name: 'Clotting salve', uses: 1, note: '1 use; stops bleeding out', cost: 30 },
+  potion: { name: 'Healing potion', uses: 1, note: '1 use; heals 2d6 HP', cost: 10 },
+  acid: { name: 'Vial of acid', uses: 1, note: '1 use; 2d4 damage, destroys locks', cost: 15 },
+  map: { name: 'The old map', note: 'Cost you a fortune. Possibly accurate.' },
+  ipad: { name: 'Glowing slate', tokens: 3, note: 'Gives light; Depletion (3)' },
+  card: { name: 'Business card', note: '“Disruptor. Thought leader. Lost.”' },
+  vaultkey: { name: 'Iron key', note: 'Stamped VAULT. Subtle.' },
+  abacus: { name: 'Vane’s golden abacus', value: 100, note: 'Worth 100GP to a fool. Every abacus is worth 100GP to a fool.' },
+  invitation: { name: 'Invitation', note: '“No guest under six feet will be admitted.”' },
+  hat: { name: 'The Lofty Hat', slots: 4, value: 370, note: 'Nine feet of velvet and rubies; takes 4 slots. Mother Grubb pays 400GP' },
+  diary: { name: 'The Lord’s diary', value: 100, note: 'Reveals he is five foot two. Lord Shortshanks pays 100GP' },
+  candlestick: { name: 'Silver candlestick', slots: 2, value: 25, note: 'Six feet tall; takes 2 slots. Worth 25GP' },
+  chips: { name: 'Gold chip', value: 100, note: 'Fortune’s Fang casino chip. Cash it at the cage for 100GP' },
+  coffin: { name: 'Coffin key', note: 'Small, silver, and very important to someone' },
+  turnip: { name: 'The Golden Turnip', slots: 3, value: 300, note: 'Prize-winning; takes 3 slots. Worth 300GP to the right buyer' },
+  thimble: { name: 'Giant’s thimble', slots: 2, value: 60, note: 'Silver bucket; takes 2 slots. Worth 60GP' },
+  rattle: { name: 'Giant baby’s rattle', note: 'Loud. Very loud' },
+  deed: { name: 'Deed to the square', value: 50, note: 'Proof the town square belongs to Lord Grimsby. Or doesn’t' },
+  tesseract: { name: 'Folded tesseract', value: 200, note: 'The murdercube, folded. It is in two pockets at once. Worth 200GP to a geometer' },
+  strongkey: { name: 'Strongroom key', note: 'Heavy, iron, and handed to you by a skeleton' },
+  scale: { name: 'Dragon scale', note: 'Red, the size of a dinner plate. Proof of removal' },
+  savings: { name: 'Kobold savings jar', slots: 2, value: 150, note: 'The kobolds’ deposit for a new home: 150GP; takes 2 slots' },
+};
+const SIGNIFICANT_LIMIT = 12;
+const GP_PER_SLOT = 50;
+
+// Spells the gamebook uses: level 1 of each list (rulebook). dd = spell difficulty die.
+const SPELLS = {
+  light: { name: 'Divine light', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Target object glows for 1 hr' },
+  abundance: { name: 'Abundance', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Summon 1 day’s rations' },
+  bless: { name: 'Bless', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Target water becomes holy water' },
+  shroud: { name: 'Shroud', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Target object emits darkness for 1 hr' },
+  famine: { name: 'Famine', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Summon swarm of locusts' },
+  pollute: { name: 'Pollute', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Target water becomes oil' },
+  bolt: { name: 'Arcane bolt', list: 'arcane', lvl: 1, dd: 4, text: '2 per level damage to one target; long range' },
+  ward: { name: 'Ward', list: 'arcane', lvl: 1, dd: 4, text: 'Loud alarm whenever something enters target space' },
+  voice: { name: 'Throw voice', list: 'arcane', lvl: 1, dd: 4, text: 'Target object emits your voice for 10 mins' },
+};
+
+// Monster level -> difficulty die (rulebook "Monsters")
+const MONSTER_DD = (lvl) => (lvl <= 2 ? 4 : lvl <= 4 ? 6 : lvl <= 6 ? 8 : lvl <= 8 ? 10 : 12);
+
+return { STATS, STAT_NAMES, BANDS, RANGED_DIE, MELEE_DIE, DARK_DIE, QUALITIES, PROFESSIONS, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEAPON_DIE, WEIGHT_NAME, WEAPONS, ARMOURS, SHIELDS, MUNDANE, MUNDANE_LIMIT, SIGNIFICANT, SIGNIFICANT_LIMIT, GP_PER_SLOT, SPELLS, MONSTER_DD };
+};
+__defs["src/rules/character.js"] = function(){
+// Character creation and advancement, following "Creating characters" and "Experience and levelling up".
+const { STATS, QUALITIES, PROFESSIONS, WEAPONS, ARMOURS, SHIELDS, WEAPON_DIE, LEVEL_COST, MUNDANE, SIGNIFICANT, SPELLS, GP_PER_SLOT, SIGNIFICANT_LIMIT } = __req("src/rules/data.js");
+// (gamebook) The rulebook assumes a party sharing the monsters' attention. A gamebook hero fights alone,
+// so starts with extra HP. See docs/ADAPTATION.md.
+let HERO_HP_BONUS = 10;
+function setHeroBonus(n) { HERO_HP_BONUS = n; }
+
+const PROF_SHIFT = [-3, -2, -1, 0, null, 1, 2, 3]; // d8: move up 3 ... reroll ... move down 3
+
+const FIRST = ['Grisk', 'Mabel', 'Odo', 'Hilde', 'Barnaby', 'Wat', 'Agnes', 'Tobias', 'Gudrun', 'Piers', 'Nell', 'Fulk', 'Edwy', 'Maud', 'Osric', 'Bertha', 'Cuthbert', 'Joan'];
+const LAST = ['the Unwashed', 'Two-Teeth', 'of the Ditch', 'Mudd', 'the Lesser', 'Ratcliffe', 'No-Nose', 'Crumb', 'the Damp', 'Bodge', 'Grubb', 'the Unready', 'Turnip', 'Shank'];
+function randomName(rng) { return `${rng.pick(FIRST)} ${rng.pick(LAST)}`; }
+
+/** Roll quality (d12) and profession (d8 shift on the professions table). Returns indices plus the rolls, for display. */
+function rollOrigins(rng) {
+  const qRoll = rng.die(12); const qi = qRoll - 1;
+  const shifts = [];
+  for (;;) {
+    const r = rng.die(8); shifts.push(r);
+    const shift = PROF_SHIFT[r - 1];
+    if (shift === null) continue;
+    return { qi, qRoll, pi: (((qi + shift) % 12) + 12) % 12, shifts };
+  }
+}
+
+const qualityOf = (c) => QUALITIES.find((q) => q.name === c.quality);
+const profOf = (c) => PROFESSIONS.find((p) => p.name === c.profession);
+const prof = (c) => profOf(c).prof;
+const magicType = (c) => (['divine', 'arcane'].includes(profOf(c).key) ? profOf(c).key : null);
+const hasFeature = (c, key) => qualityOf(c).key === key || profOf(c).key === key;
+
+/** Build a level-1 scumbag. choices: { name, weapon, protection ('armour'|'shield'), mundane: [ids], alignment } */
+function createCharacter(rng, origins, choices) {
+  const quality = QUALITIES[origins.qi];
+  const profession = PROFESSIONS[origins.pi];
+  const stats = Object.fromEntries(STATS.map((s) => [s, 9]));
+  stats[quality.core] += 2; stats[quality.anc] += 1;
+  stats[profession.core] += 3; stats[profession.anc] += 1;
+  const c = {
+    name: choices.name || randomName(rng), level: 1, quality: quality.name, profession: profession.name, stats,
+    maxHp: 0, hp: 0, ap: 0, gold: 0, wasted: 0, wasteBank: 0,
+    alignment: profession.key === 'divine' ? (choices.alignment || 'law') : null,
+    weapon: null, sidearm: null, armour: null, shield: null, mundane: [], significant: [],
+    slots: {}, daily: {}, flags: {}, hpRoll: 0, done: [],
+  };
+  c.hpRoll = rng.die(6);
+  c.maxHp = c.hpRoll + 5 + HERO_HP_BONUS + (quality.key === 'hardened' ? 1 : 0);
+  c.hp = c.maxHp;
+  const w = WEAPONS.find((x) => x.id === choices.weapon) || startingWeapons(c)[0];
+  c.weapon = { ...w };
+  if (w.ranged) c.sidearm = { ...WEAPONS[0] };   // (gamebook) ranged scumbags keep a knife for close quarters
+  if (choices.protection === 'shield') c.shield = { ...SHIELDS[profession.prof - 1] };
+  else c.armour = { ...ARMOURS[profession.prof - 1] };
+  for (const id of choices.mundane || []) c.mundane.push(makeItem(id));
+  if (choices.extra) c.significant.push(makeItem(choices.extra));   // (gamebook) one starting significant item
+  c.ap = maxAp(c);
+  resetDay(c);
+  return c;
+}
+
+// (gamebook) Like the potion choice in a classic gamebook: one significant item to start with.
+const STARTING_EXTRAS = ['potion', 'fire', 'salve', 'acid'];
+
+function startingWeapons(c) {
+  return WEAPONS.filter((w) => w.weight <= prof(c));
+}
+
+function makeItem(id) {
+  const def = MUNDANE[id] || SIGNIFICANT[id];
+  if (!def) throw new Error(`unknown item ${id}`);
+  const it = { id, name: def.name };
+  if (def.tokens) it.tokens = def.tokens;
+  if (def.uses) it.uses = def.uses;
+  if (def.slots) it.slots = def.slots;
+  return it;
+}
+
+function maxAp(c) { return c.armour ? c.armour.ap : 0; }
+
+// Skills come from the profession; saving throws are skilled for core and ancillary stats.
+function isSkilled(c, skill) {
+  if (!skill) return false;
+  if (profOf(c).skills.includes(skill)) return true;
+  if (skill === 'lying') return hasFeature(c, 'liar') || profOf(c).skills.includes('social');
+  if (skill.startsWith('save:')) {
+    const stat = skill.slice(5); const q = qualityOf(c); const p = profOf(c);
+    return [q.core, q.anc, p.core, p.anc].includes(stat);
+  }
+  return false;
+}
+
+function armourPenalty(c) { return !!(c.armour && c.armour.weight > prof(c)); }
+function weaponPenalty(c, w = c.weapon) {
+  return !!((w && w.weight > prof(c)) || (c.shield && c.shield.weight > prof(c)));
+}
+function weaponDamageDie(w) { return w ? WEAPON_DIE[w.weight] : 4; }
+
+function knownSpells(c) {
+  const t = magicType(c); if (!t) return [];
+  return Object.entries(SPELLS).filter(([, s]) => s.list === t && (t === 'arcane' || s.align === c.alignment) && s.lvl <= c.level)
+    .map(([id, s]) => ({ id, ...s }));
+}
+
+function resetDay(c) {
+  c.daily = { reroll: true, healed: false, versatile: true };
+  c.slots = {};
+  if (magicType(c)) for (let l = 1; l <= Math.min(10, c.level); l++) c.slots[l] = true;
+}
+
+const itemSlots = (c) => c.significant.reduce((n, i) => n + (i.slots || 1), 0);
+function slotsUsed(c) { return itemSlots(c) + Math.ceil(c.gold / GP_PER_SLOT); }
+/** How much more coin fits in the remaining significant-item slots (each 50GP takes a slot). */
+function goldRoom(c) {
+  const freeSlots = SIGNIFICANT_LIMIT - itemSlots(c);
+  return Math.max(0, freeSlots * GP_PER_SLOT - c.gold);
+}
+
+/** Waste exactly LEVEL_COST on a pointless endeavour; returns the level-up report. */
+function wasteForLevel(rng, c) {
+  c.gold -= LEVEL_COST; c.wasted += LEVEL_COST;
+  return levelUp(rng, c);
+}
+
+function levelUp(rng, c) {
+  const hpRoll = rng.die(6) + (hasFeature(c, 'hardened') ? 1 : 0);
+  c.level += 1; c.maxHp += hpRoll; c.hp = c.maxHp;
+  const statRolls = {};
+  for (const s of STATS) {
+    const r = rng.die(20);
+    statRolls[s] = { roll: r, up: r > c.stats[s] };
+    if (r > c.stats[s]) c.stats[s] += 1;
+  }
+  resetDay(c);
+  return { level: c.level, hpRoll, statRolls };
+}
+
+return { HERO_HP_BONUS, setHeroBonus, randomName, rollOrigins, qualityOf, profOf, prof, magicType, hasFeature, createCharacter, STARTING_EXTRAS, startingWeapons, makeItem, maxAp, isSkilled, armourPenalty, weaponPenalty, weaponDamageDie, knownSpells, resetDay, itemSlots, slotsUsed, goldRoom, wasteForLevel, levelUp };
+};
 __defs["src/engine/game.js"] = function(){
 // The gamebook engine: numbered sections, choices, stat tests, fights and effects.
 // State is plain data so it can be saved and restored (see save()/load()).
@@ -2604,6 +4322,7 @@ class Game {
     if (once) { if (c.flags[once]) return; c.flags[once] = true; }
     for (const e of [].concat(effects)) {
       if (e.if && !check(c, e.if).ok) continue;
+      if (e.chance) { if (this.rng.chance(e.chance[0], e.chance[1])) this.apply(e.then || []); else if (e.otherwise) this.apply(e.otherwise); continue; }
       if (e.msg) this.say(e.msg, e.kind || 'info');
       if (e.sell) {
         if (!hasItem(c, e.sell.item)) continue;
@@ -2752,6 +4471,7 @@ class Game {
     const dd = this.testDie(t);
     let skilled = this.testSkilled(t);
     if (!skilled && opts.versatile && hasFeature(c, 'versatile') && c.daily.versatile) { c.daily.versatile = false; skilled = true; lines.push('Versatile: once per day, you test as though skilled.'); }
+    if (!skilled && opts.insight && ['Wis', 'Int'].includes(t.stat) && hasItem(c, 'insight')) { this.take('insight'); skilled = true; lines.push('You drink the elixir of insight, and roll as though skilled.'); }
     const roll = () => statTest(rng, { stat: c.stats[t.stat], dd, skilled, forceRoll: true });
     let r = roll();
     const show = (r) => r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ');
@@ -2886,327 +4606,6 @@ function contest(rng, instigator, defender) {
 
 return { statTest, describeTest, successChance, contest };
 };
-__defs["src/rules/data.js"] = function(){
-// Rulebook tables, transcribed from the Scumbags! rulebook. Gamebook-only additions are marked "(gamebook)".
-
-const STATS = ['Dex', 'Str', 'Con', 'Wis', 'Int', 'Cha'];
-const STAT_NAMES = {
-  Dex: 'Dexterity', Str: 'Strength', Con: 'Constitution', Wis: 'Wisdom', Int: 'Intelligence', Cha: 'Charisma',
-};
-
-// Ranged attack difficulty dice by distance (rulebook "Attacking"). Index = band.
-const BANDS = ['Engaged', 'Short', 'Medium', 'Long', 'Extreme'];
-const RANGED_DIE = [20, 4, 8, 12, 20];
-const MELEE_DIE = 8;      // "Most melee attacks are made with a d8 difficulty die."
-const DARK_DIE = 12;      // (gamebook) fighting or acting without light, per the rulebook's "dim lighting" example
-
-const QUALITIES = [
-  { name: 'Slippery', core: 'Dex', anc: 'Cha', feature: 'Once per day, reroll a defending test', key: 'rerollDefend' },
-  { name: 'Merciless', core: 'Dex', anc: 'Str', feature: 'Once per day, reroll an attacking test', key: 'rerollAttack' },
-  { name: 'Unyielding', core: 'Str', anc: 'Dex', feature: 'Can’t be knocked prone', key: 'noProne' },
-  { name: 'Swift', core: 'Str', anc: 'Con', feature: '+1 square of movement or 1/6 chance to move twice', key: 'swift' },
-  { name: 'Hardened', core: 'Con', anc: 'Str', feature: '+1 maximum HP per level', key: 'hardened' },
-  { name: 'Sottish', core: 'Con', anc: 'Wis', feature: 'Ignore simple poisons', key: 'noPoison' },
-  { name: 'Dogmatic', core: 'Wis', anc: 'Con', feature: 'Ignore simple curses', key: 'noCurse' },
-  { name: 'Favoured', core: 'Wis', anc: 'Int', feature: 'Restore an additional +1 HP per level when healing or being healed', key: 'favoured' },
-  { name: 'Canny', core: 'Int', anc: 'Wis', feature: 'Automatically succeed in common knowledge tests', key: 'canny' },
-  { name: 'Versatile', core: 'Int', anc: 'Cha', feature: 'Once per day, make an unskilled test as though skilled', key: 'versatile' },
-  { name: 'Inscrutable', core: 'Cha', anc: 'Int', feature: 'Perfect poker face; skilled at lying', key: 'liar' },
-  { name: 'Lucky', core: 'Cha', anc: 'Dex', feature: 'Once per day, reroll a saving throw', key: 'rerollSave' },
-];
-
-// prof = proficiency (heaviest weapon/shield/armour without penalty): 1 light, 2 medium, 3 heavy
-const PROFESSIONS = [
-  { name: 'Assassin', core: 'Dex', anc: 'Cha', prof: 3, skills: ['attack:ranged', 'skulduggery', 'social'], feature: 'Critical success does triple damage when attacking', key: 'tripleCrit' },
-  { name: 'Cutpurse', core: 'Dex', anc: 'Str', prof: 2, skills: ['attack:melee', 'attack:ranged', 'bruteforce', 'skulduggery'], feature: '1-3 on the skill die is a critical success when attacking', key: 'wideCrit' },
-  { name: 'Sellsword', core: 'Str', anc: 'Dex', prof: 3, skills: ['attack:melee', 'athletics', 'bruteforce'], feature: 'May make a free attack after slaying an opponent', key: 'cleave' },
-  { name: 'Pit fighter', core: 'Str', anc: 'Con', prof: 2, skills: ['attack:melee', 'athletics', 'bruteforce'], feature: 'May counterattack after successfully defending (melee)', key: 'counter' },
-  { name: 'Bodyguard', core: 'Con', anc: 'Str', prof: 2, skills: ['attack:melee', 'defend:melee', 'defend:ranged', 'medicine'], feature: 'May defend for another player within short range per round', key: 'guard' },
-  { name: 'Woodcutter', core: 'Con', anc: 'Wis', prof: 2, skills: ['attack:melee', 'defend:melee', 'survival'], feature: 'On hit, 1/6 chance to push opponent prone and attack again', key: 'fell' },
-  { name: 'Cleric', core: 'Wis', anc: 'Con', prof: 2, skills: ['cast:divine', 'defend:melee', 'arcana'], feature: 'May cast divine spells', key: 'divine' },
-  { name: 'Missionary', core: 'Wis', anc: 'Int', prof: 2, skills: ['cast:divine', 'attack:ranged', 'languages'], feature: 'May cast divine spells', key: 'divine' },
-  { name: 'Alchemist', core: 'Int', anc: 'Wis', prof: 1, skills: ['cast:arcane', 'analysis', 'medicine'], feature: 'May cast arcane spells', key: 'arcane' },
-  { name: 'Sorcerer', core: 'Int', anc: 'Cha', prof: 1, skills: ['cast:arcane', 'analysis', 'arcana'], feature: 'May cast arcane spells', key: 'arcane' },
-  { name: 'Envoy', core: 'Cha', anc: 'Int', prof: 2, skills: ['attack:melee', 'attack:ranged', 'languages', 'social'], feature: 'May make an additional attack per turn (unskilled)', key: 'extraAttack' },
-  { name: 'Hunter', core: 'Cha', anc: 'Dex', prof: 2, skills: ['attack:ranged', 'defend:ranged', 'survival'], feature: 'May make all ranged attacks as though short range', key: 'hunter' },
-];
-
-const SKILL_NAMES = {
-  'attack:melee': 'Attacking (melee)', 'attack:ranged': 'Attacking (ranged)',
-  'defend:melee': 'Defending (melee)', 'defend:ranged': 'Defending (ranged)',
-  'cast:divine': 'Spellcasting (divine)', 'cast:arcane': 'Spellcasting (arcane)',
-  analysis: 'Analysis', arcana: 'Arcana', athletics: 'Athletics', bruteforce: 'Brute force', languages: 'Languages',
-  medicine: 'Medicine', skulduggery: 'Skulduggery', social: 'Social', survival: 'Survival',
-};
-
-const ENDEAVOURS = [
-  'Commission a statue of yourself. The sculptor charges by the chin.',
-  'Throw a feast for the whole town. The next town hears about it and comes too.',
-  'Buy a knighthood. It comes with a horse, which costs more than the knighthood.',
-  'Bribe a magistrate to clear your name. He keeps the file, just in case.',
-  'Fund an expedition to the edge of the world. It gets as far as the edge of town, and the tavern there.',
-  'Bet on the cockroach races. Yours eats the competition and is disqualified.',
-  'Build a contraption. It works; nobody knows what it does.',
-  'Pay the temple to pray for your soul. On reflection, they’ll need a lot more.',
-  'Hire a bard to sing of your deeds. He sings them accurately, so you pay him to stop. Monthly.',
-  'Buy a bear. It is your problem now.',
-  'Gild a dung-shovel, as is tradition.',
-  'Outbid a stranger for the last oversized turnip at market. He will remember this.',
-  'Commission a portrait. It captures your soul, unflatteringly.',
-  'Buy a fashionable hat. By the time you get it home, it isn’t.',
-  'Adopt an orphan. It’s a halfling with expensive tastes.',
-  'Hire a food taster. He dies on his first day. Someone wants you dead, and you’re out of food tasters.',
-  'Buy a pardon for your sins in advance, then commit them all to get your money’s worth.',
-  'Pay an astrologer to name a comet after you. It lands on a village, which sends you the bill.',
-  'Design a coat of arms. The herald charges per beast, and you wanted all of them.',
-  'Fake your own death and pay for the wake. Everyone has a lovely time without you.',
-];
-const LEVEL_COST = 200;
-
-const WEAPON_DIE = { 1: 4, 2: 8, 3: 12 };
-const WEIGHT_NAME = { 1: 'light', 2: 'medium', 3: 'heavy' };
-const WEAPONS = [
-  { id: 'dagger', name: 'Dagger', weight: 1, ranged: false },
-  { id: 'sword', name: 'Sword', weight: 2, ranged: false },
-  { id: 'mace', name: 'Mace', weight: 2, ranged: false },
-  { id: 'maul', name: 'Maul', weight: 3, ranged: false },
-  { id: 'sling', name: 'Sling', weight: 1, ranged: true },
-  { id: 'bow', name: 'Bow', weight: 2, ranged: true },
-  { id: 'crossbow', name: 'Crossbow', weight: 3, ranged: true },
-];
-const ARMOURS = [
-  { id: 'gambeson', name: 'Gambeson', weight: 1, ap: 2 },
-  { id: 'leather', name: 'Leather armour', weight: 2, ap: 4 },
-  { id: 'chainmail', name: 'Chain mail', weight: 3, ap: 6 },
-];
-const SHIELDS = [
-  { id: 'buckler', name: 'Buckler', weight: 1, block: [1, 6] },
-  { id: 'kite', name: 'Kite shield', weight: 2, block: [2, 6] },
-  { id: 'tower', name: 'Tower shield', weight: 3, block: [3, 6] },
-];
-
-// Mundane items (rulebook list). tokens = depletion; uses = 1-use items.
-const MUNDANE = {
-  ammo: { name: 'Ammunition', tokens: 5, note: 'Depletion (5)' },
-  bellows: { name: 'Bellows' },
-  bucket: { name: 'Bucket' },
-  chain: { name: 'Chain (10ft)' },
-  climbing: { name: 'Climbing gear', note: 'Required for climbing' },
-  oil: { name: 'Flask of oil', tokens: 12, note: 'Depletion (12) when used in a lantern' },
-  flint: { name: 'Flint & steel' },
-  glue: { name: 'Glue', uses: 1, note: '1 use' },
-  mirror: { name: 'Hand mirror' },
-  healerskit: { name: 'Healer’s kit', note: 'Required for healing' },
-  holysymbol: { name: 'Holy symbol', note: 'Required for divine spellcasting' },
-  holywater: { name: 'Holy water', uses: 1, note: '1 use; 2d8 damage to undead' },
-  spikes: { name: 'Iron spikes', tokens: 3, note: 'Depletion (3)' },
-  loupe: { name: 'Jeweller’s loupe' },
-  lantern: { name: 'Lantern', note: 'Requires oil to produce light' },
-  manacles: { name: 'Manacles', note: 'With key' },
-  pick: { name: 'Mining pick' },
-  padlock: { name: 'Padlock', note: 'With key' },
-  pocketsand: { name: 'Pocket sand', uses: 1, note: '1 use; target can’t act until after their next turn' },
-  pole: { name: 'Pole (10ft)' },
-  prybar: { name: 'Pry bar' },
-  quill: { name: 'Quill, ink & parchment' },
-  rat: { name: 'Rat', note: '2/6 chance to follow a simple command' },
-  rations: { name: 'Rations (5 days)', note: 'Includes water' },
-  rope: { name: 'Rope (50ft)' },
-  shovel: { name: 'Shovel' },
-  salts: { name: 'Smelling salts' },
-  tent: { name: 'Tent & bedroll' },
-  tools: { name: 'Thieves’ tools', note: 'Required for picking locks and disarming traps' },
-  torches: { name: 'Torches', tokens: 5, note: 'Depletion (5)' },
-  whistle: { name: 'Watchman’s whistle' },
-  // (gamebook) found or bought during adventures; not offered at character creation
-  stilts: { name: 'Stilts', note: 'Makes you look six foot six', hidden: true },
-};
-const MUNDANE_LIMIT = 6;
-
-// Significant items (rulebook list, plus things found in the adventure).
-const SIGNIFICANT = {
-  fire: { name: 'Alchemist’s fire', uses: 1, note: '1 use; 2d8 damage', cost: 20 },
-  antidote: { name: 'Antidote', uses: 1, note: '1 use; cures poison', cost: 10 },
-  salve: { name: 'Clotting salve', uses: 1, note: '1 use; stops bleeding out', cost: 30 },
-  potion: { name: 'Healing potion', uses: 1, note: '1 use; heals 2d6 HP', cost: 10 },
-  acid: { name: 'Vial of acid', uses: 1, note: '1 use; 2d4 damage, destroys locks', cost: 15 },
-  map: { name: 'The old map', note: 'Cost you a fortune. Possibly accurate.' },
-  ipad: { name: 'Glowing slate', tokens: 3, note: 'Gives light; Depletion (3)' },
-  card: { name: 'Business card', note: '“Disruptor. Thought leader. Lost.”' },
-  vaultkey: { name: 'Iron key', note: 'Stamped VAULT. Subtle.' },
-  abacus: { name: 'Vane’s golden abacus', note: 'Worth 100GP to a fool. Every abacus is worth 100GP to a fool.' },
-  invitation: { name: 'Invitation', note: '“No guest under six feet will be admitted.”' },
-  hat: { name: 'The Lofty Hat', slots: 4, note: 'Nine feet of velvet and rubies; takes 4 slots. Mother Grubb pays 400GP' },
-  diary: { name: 'The Lord’s diary', note: 'Reveals he is five foot two. Lord Shortshanks pays 100GP' },
-  candlestick: { name: 'Silver candlestick', slots: 2, note: 'Six feet tall; takes 2 slots. Worth 25GP' },
-  chips: { name: 'Gold chip', note: 'Fortune’s Fang casino chip. Cash it at the cage for 100GP' },
-  coffin: { name: 'Coffin key', note: 'Small, silver, and very important to someone' },
-  turnip: { name: 'The Golden Turnip', slots: 3, note: 'Prize-winning; takes 3 slots. Worth 300GP to the right buyer' },
-  thimble: { name: 'Giant’s thimble', slots: 2, note: 'Silver bucket; takes 2 slots. Worth 60GP' },
-  rattle: { name: 'Giant baby’s rattle', note: 'Loud. Very loud' },
-  deed: { name: 'Deed to the square', note: 'Proof the town square belongs to Lord Grimsby. Or doesn’t' },
-  savings: { name: 'Kobold savings jar', slots: 2, note: 'The kobolds’ deposit for a new home: 150GP; takes 2 slots' },
-};
-const SIGNIFICANT_LIMIT = 12;
-const GP_PER_SLOT = 50;
-
-// Spells the gamebook uses: level 1 of each list (rulebook). dd = spell difficulty die.
-const SPELLS = {
-  light: { name: 'Divine light', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Target object glows for 1 hr' },
-  abundance: { name: 'Abundance', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Summon 1 day’s rations' },
-  bless: { name: 'Bless', list: 'divine', align: 'law', lvl: 1, dd: 4, text: 'Target water becomes holy water' },
-  shroud: { name: 'Shroud', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Target object emits darkness for 1 hr' },
-  famine: { name: 'Famine', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Summon swarm of locusts' },
-  pollute: { name: 'Pollute', list: 'divine', align: 'chaos', lvl: 1, dd: 4, text: 'Target water becomes oil' },
-  bolt: { name: 'Arcane bolt', list: 'arcane', lvl: 1, dd: 4, text: '2 per level damage to one target; long range' },
-  ward: { name: 'Ward', list: 'arcane', lvl: 1, dd: 4, text: 'Loud alarm whenever something enters target space' },
-  voice: { name: 'Throw voice', list: 'arcane', lvl: 1, dd: 4, text: 'Target object emits your voice for 10 mins' },
-};
-
-// Monster level -> difficulty die (rulebook "Monsters")
-const MONSTER_DD = (lvl) => (lvl <= 2 ? 4 : lvl <= 4 ? 6 : lvl <= 6 ? 8 : lvl <= 8 ? 10 : 12);
-
-return { STATS, STAT_NAMES, BANDS, RANGED_DIE, MELEE_DIE, DARK_DIE, QUALITIES, PROFESSIONS, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEAPON_DIE, WEIGHT_NAME, WEAPONS, ARMOURS, SHIELDS, MUNDANE, MUNDANE_LIMIT, SIGNIFICANT, SIGNIFICANT_LIMIT, GP_PER_SLOT, SPELLS, MONSTER_DD };
-};
-__defs["src/rules/character.js"] = function(){
-// Character creation and advancement, following "Creating characters" and "Experience and levelling up".
-const { STATS, QUALITIES, PROFESSIONS, WEAPONS, ARMOURS, SHIELDS, WEAPON_DIE, LEVEL_COST, MUNDANE, SIGNIFICANT, SPELLS, GP_PER_SLOT, SIGNIFICANT_LIMIT } = __req("src/rules/data.js");
-// (gamebook) The rulebook assumes a party sharing the monsters' attention. A gamebook hero fights alone,
-// so starts with extra HP. See docs/ADAPTATION.md.
-let HERO_HP_BONUS = 10;
-function setHeroBonus(n) { HERO_HP_BONUS = n; }
-
-const PROF_SHIFT = [-3, -2, -1, 0, null, 1, 2, 3]; // d8: move up 3 ... reroll ... move down 3
-
-const FIRST = ['Grisk', 'Mabel', 'Odo', 'Hilde', 'Barnaby', 'Wat', 'Agnes', 'Tobias', 'Gudrun', 'Piers', 'Nell', 'Fulk', 'Edwy', 'Maud', 'Osric', 'Bertha', 'Cuthbert', 'Joan'];
-const LAST = ['the Unwashed', 'Two-Teeth', 'of the Ditch', 'Mudd', 'the Lesser', 'Ratcliffe', 'No-Nose', 'Crumb', 'the Damp', 'Bodge', 'Grubb', 'the Unready', 'Turnip', 'Shank'];
-function randomName(rng) { return `${rng.pick(FIRST)} ${rng.pick(LAST)}`; }
-
-/** Roll quality (d12) and profession (d8 shift on the professions table). Returns indices plus the rolls, for display. */
-function rollOrigins(rng) {
-  const qRoll = rng.die(12); const qi = qRoll - 1;
-  const shifts = [];
-  for (;;) {
-    const r = rng.die(8); shifts.push(r);
-    const shift = PROF_SHIFT[r - 1];
-    if (shift === null) continue;
-    return { qi, qRoll, pi: (((qi + shift) % 12) + 12) % 12, shifts };
-  }
-}
-
-const qualityOf = (c) => QUALITIES.find((q) => q.name === c.quality);
-const profOf = (c) => PROFESSIONS.find((p) => p.name === c.profession);
-const prof = (c) => profOf(c).prof;
-const magicType = (c) => (['divine', 'arcane'].includes(profOf(c).key) ? profOf(c).key : null);
-const hasFeature = (c, key) => qualityOf(c).key === key || profOf(c).key === key;
-
-/** Build a level-1 scumbag. choices: { name, weapon, protection ('armour'|'shield'), mundane: [ids], alignment } */
-function createCharacter(rng, origins, choices) {
-  const quality = QUALITIES[origins.qi];
-  const profession = PROFESSIONS[origins.pi];
-  const stats = Object.fromEntries(STATS.map((s) => [s, 9]));
-  stats[quality.core] += 2; stats[quality.anc] += 1;
-  stats[profession.core] += 3; stats[profession.anc] += 1;
-  const c = {
-    name: choices.name || randomName(rng), level: 1, quality: quality.name, profession: profession.name, stats,
-    maxHp: 0, hp: 0, ap: 0, gold: 0, wasted: 0, wasteBank: 0,
-    alignment: profession.key === 'divine' ? (choices.alignment || 'law') : null,
-    weapon: null, sidearm: null, armour: null, shield: null, mundane: [], significant: [],
-    slots: {}, daily: {}, flags: {}, hpRoll: 0,
-  };
-  c.hpRoll = rng.die(6);
-  c.maxHp = c.hpRoll + 5 + HERO_HP_BONUS + (quality.key === 'hardened' ? 1 : 0);
-  c.hp = c.maxHp;
-  const w = WEAPONS.find((x) => x.id === choices.weapon) || startingWeapons(c)[0];
-  c.weapon = { ...w };
-  if (w.ranged) c.sidearm = { ...WEAPONS[0] };   // (gamebook) ranged scumbags keep a knife for close quarters
-  if (choices.protection === 'shield') c.shield = { ...SHIELDS[profession.prof - 1] };
-  else c.armour = { ...ARMOURS[profession.prof - 1] };
-  for (const id of choices.mundane || []) c.mundane.push(makeItem(id));
-  if (choices.extra) c.significant.push(makeItem(choices.extra));   // (gamebook) one starting significant item
-  c.ap = maxAp(c);
-  resetDay(c);
-  return c;
-}
-
-// (gamebook) Like the potion choice in a classic gamebook: one significant item to start with.
-const STARTING_EXTRAS = ['potion', 'fire', 'salve', 'acid'];
-
-function startingWeapons(c) {
-  return WEAPONS.filter((w) => w.weight <= prof(c));
-}
-
-function makeItem(id) {
-  const def = MUNDANE[id] || SIGNIFICANT[id];
-  if (!def) throw new Error(`unknown item ${id}`);
-  const it = { id, name: def.name };
-  if (def.tokens) it.tokens = def.tokens;
-  if (def.uses) it.uses = def.uses;
-  if (def.slots) it.slots = def.slots;
-  return it;
-}
-
-function maxAp(c) { return c.armour ? c.armour.ap : 0; }
-
-// Skills come from the profession; saving throws are skilled for core and ancillary stats.
-function isSkilled(c, skill) {
-  if (!skill) return false;
-  if (profOf(c).skills.includes(skill)) return true;
-  if (skill === 'lying') return hasFeature(c, 'liar') || profOf(c).skills.includes('social');
-  if (skill.startsWith('save:')) {
-    const stat = skill.slice(5); const q = qualityOf(c); const p = profOf(c);
-    return [q.core, q.anc, p.core, p.anc].includes(stat);
-  }
-  return false;
-}
-
-function armourPenalty(c) { return !!(c.armour && c.armour.weight > prof(c)); }
-function weaponPenalty(c, w = c.weapon) {
-  return !!((w && w.weight > prof(c)) || (c.shield && c.shield.weight > prof(c)));
-}
-function weaponDamageDie(w) { return w ? WEAPON_DIE[w.weight] : 4; }
-
-function knownSpells(c) {
-  const t = magicType(c); if (!t) return [];
-  return Object.entries(SPELLS).filter(([, s]) => s.list === t && (t === 'arcane' || s.align === c.alignment) && s.lvl <= c.level)
-    .map(([id, s]) => ({ id, ...s }));
-}
-
-function resetDay(c) {
-  c.daily = { reroll: true, healed: false, versatile: true };
-  c.slots = {};
-  if (magicType(c)) for (let l = 1; l <= Math.min(10, c.level); l++) c.slots[l] = true;
-}
-
-const itemSlots = (c) => c.significant.reduce((n, i) => n + (i.slots || 1), 0);
-function slotsUsed(c) { return itemSlots(c) + Math.ceil(c.gold / GP_PER_SLOT); }
-/** How much more coin fits in the remaining significant-item slots (each 50GP takes a slot). */
-function goldRoom(c) {
-  const freeSlots = SIGNIFICANT_LIMIT - itemSlots(c);
-  return Math.max(0, freeSlots * GP_PER_SLOT - c.gold);
-}
-
-/** Waste exactly LEVEL_COST on a pointless endeavour; returns the level-up report. */
-function wasteForLevel(rng, c) {
-  c.gold -= LEVEL_COST; c.wasted += LEVEL_COST;
-  return levelUp(rng, c);
-}
-
-function levelUp(rng, c) {
-  const hpRoll = rng.die(6) + (hasFeature(c, 'hardened') ? 1 : 0);
-  c.level += 1; c.maxHp += hpRoll; c.hp = c.maxHp;
-  const statRolls = {};
-  for (const s of STATS) {
-    const r = rng.die(20);
-    statRolls[s] = { roll: r, up: r > c.stats[s] };
-    if (r > c.stats[s]) c.stats[s] += 1;
-  }
-  resetDay(c);
-  return { level: c.level, hpRoll, statRolls };
-}
-
-return { HERO_HP_BONUS, setHeroBonus, randomName, rollOrigins, qualityOf, profOf, prof, magicType, hasFeature, createCharacter, STARTING_EXTRAS, startingWeapons, makeItem, maxAp, isSkilled, armourPenalty, weaponPenalty, weaponDamageDie, knownSpells, resetDay, itemSlots, slotsUsed, goldRoom, wasteForLevel, levelUp };
-};
 __defs["src/engine/conditions.js"] = function(){
 // Conditions on choices ("If you have a rope, turn to 12") and the light/fire helpers they use.
 const { isSkilled, magicType, knownSpells, hasFeature } = __req("src/rules/character.js");
@@ -3282,7 +4681,7 @@ function makeMonster(rng, def) {
   return {
     uid: uid++, name: def.name, lvl, dd: MONSTER_DD(lvl), range: def.range || 'engaged', feats: [...(def.feats || [])],
     hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, onHit: def.onHit || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
-    unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0,
+    unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0, revealed: !!(def.revealed),
   };
 }
 const has = (m, f) => m.feats.includes(f);
@@ -3344,6 +4743,7 @@ function playerAttack(g, f, m, opts = {}) {
     f.fired = true;
   }
   const label = opts.label || `Attack the ${m.name}${w ? ` (${w.name.toLowerCase()})` : ' (unarmed)'}`;
+  if (has(m, 'invisible') && !m.revealed) { dd = 20; note(f, `You can’t see the ${m.name}. You swing at where you think it is (d20).`); }
   const t = test(g, f, {
     stat: ranged ? 'Dex' : 'Str', dd, skill: opts.unskilled ? null : ranged ? 'attack:ranged' : 'attack:melee', label,
     modifier: has(m, 'tiny') ? 2 : 0, critRange: hasFeature(c, 'wideCrit') ? 3 : 1, reroll: 'rerollAttack', weaponTest: true, weapon: w,
@@ -3369,6 +4769,7 @@ function playerAttack(g, f, m, opts = {}) {
 
 function hurtMonster(g, f, m, dmg, o = {}) {
   if (o.magic && has(m, 'magicImmune')) { note(f, `The ${m.name} is immune to magic.`); return; }
+  if (has(m, 'ghostly') && !o.magic && !o.holy && !g.c.flags.blessedWeapon) { note(f, `It passes straight through the ${m.name}. It ignores non-magical damage.`); return; }
   if (has(m, 'takeD6') && !o.noBonus) { const x = g.rng.die(6); dmg += x; note(f, `The ${m.name} receives +${x} damage.`); }
   if (m.ap > 0) { const a = Math.min(m.ap, dmg); m.ap -= a; dmg -= a; note(f, `Its armour soaks up ${a}${m.ap ? ` (${m.ap} AP left)` : ' — the armour is wrecked'}.`); }
   m.hp -= dmg;
@@ -3436,6 +4837,12 @@ function monsterAttack(g, f, m) {
       if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
       if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
       if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), o.label);
+      if (o.effect === 'disintegrate') {
+        if (c.armour) { note(f, `Your ${c.armour.name.toLowerCase()} turns to dust.`, 'bad'); c.armour = null; c.ap = 0; }
+        else if (c.shield) { note(f, `Your ${c.shield.name.toLowerCase()} turns to dust.`, 'bad'); c.shield = null; }
+        else if (c.weapon && !['dagger', 'sling', 'bow'].includes(c.weapon.id)) { note(f, `Your ${c.weapon.name.toLowerCase()} turns to dust. You draw your dagger.`, 'bad'); c.weapon = { id: 'dagger', name: 'Dagger', weight: 1, ranged: false }; }
+        else note(f, 'Everything you’re carrying that could turn to dust already has. The ray tickles.');
+      }
     }
   }
   if (has(m, 'contract') && c.hp > 0) {
@@ -3465,6 +4872,12 @@ function monstersTurn(g, f) {
       f.distance -= 1;
       if (f.distance > 0) { note(f, `The ${m.name} advances (${BANDS[f.distance].toLowerCase()} range).`); continue; }
       note(f, `The ${m.name} closes in.`);
+    }
+    if (has(m, 'breath') && g.rng.chance(1, 3)) {
+      const s = test(g, f, { stat: 'Dex', dd: m.dd, skill: 'save:Dex', label: `Dex save: the ${m.name} breathes fire`, reroll: 'rerollSave' });
+      const d = rollExpr(g.rng, `${Math.ceil(m.lvl / 2)}d6`);
+      hurtPlayer(g, f, s.success ? Math.floor(d / 2) : d, 'fire');
+      continue;
     }
     for (let i = 0; i < attacksOf(m) && !f.over; i++) monsterAttack(g, f, m);
     if (has(m, 'topple')) { m.prone = true; note(f, `The ${m.name} falls over.`); }
@@ -3498,6 +4911,7 @@ function actions(g, f) {
   }
   if (magicType(c) === 'divine') for (const m of targets) if (has(m, 'undead') && alive(m)) out.push({ id: 'turn', target: m.uid, label: `Turn the ${m.name}` });
   if (hasItem(c, 'potion') && c.hp < c.maxHp) out.push({ id: 'potion', label: 'Drink a healing potion' });
+  if (hasItem(c, 'caltrops')) out.push({ id: 'caltrops', label: 'Scatter caltrops' });
   for (const [id, verb] of [['fire', 'Throw alchemist’s fire at'], ['acid', 'Throw acid at'], ['holywater', 'Splash holy water on'], ['pocketsand', 'Throw pocket sand at']]) {
     if (hasItem(c, id)) for (const m of targets) if (alive(m) || (id === 'fire' && m.dormant)) out.push({ id, target: m.uid, label: `${verb} the ${m.name}` });
   }
@@ -3571,9 +4985,17 @@ function act(g, f, a) {
     case 'fire': useUp(c, 'fire'); note(f, 'You throw the alchemist’s fire.'); hurtMonster(g, f, m, rollExpr(rng, '2d8'), { fire: true, pulp: m.dormant > 0 }); break;
     case 'acid': useUp(c, 'acid'); note(f, 'You throw the vial of acid.'); hurtMonster(g, f, m, rollExpr(rng, '2d4')); break;
     case 'holywater': useUp(c, 'holywater');
-      if (has(m, 'undead')) hurtMonster(g, f, m, rollExpr(rng, '2d8'), { magic: false }); else note(f, `The ${m.name} is now slightly damp and blessed.`);
+      if (has(m, 'undead') || has(m, 'ghostly')) hurtMonster(g, f, m, rollExpr(rng, '2d8'), { holy: true }); else note(f, `The ${m.name} is now slightly damp and blessed.`);
       break;
-    case 'pocketsand': useUp(c, 'pocketsand'); m.stunned = 1; note(f, `Pocket sand! The ${m.name} can’t act until after its next turn.`, 'good'); break;
+    case 'caltrops': {
+      useUp(c, 'caltrops'); note(f, 'You scatter caltrops.');
+      for (const x of f.monsters) if (alive(x) && x.range === 'engaged' && !has(x, 'flies')) {
+        hurtMonster(g, f, x, rng.die(4), { noBonus: true });
+        if (alive(x) && f.distance > 0) { x.stunned = 1; note(f, `The ${x.name} stops to pick spikes out of its feet.`); }
+      }
+      break;
+    }
+    case 'pocketsand': useUp(c, 'pocketsand'); m.stunned = 1; if (has(m, 'invisible')) { m.revealed = true; note(f, `The sand sticks to the ${m.name}, and now you can see its outline.`, 'good'); } note(f, `Pocket sand! The ${m.name} can’t act until after its next turn.`, 'good'); break;
     case 'special': {
       const sp = a.sp;
       if (sp.test) {
@@ -3584,6 +5006,8 @@ function act(g, f, a) {
       note(f, sp.text, 'good');
       if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }
       if (sp.win) { for (const x of f.monsters) if (alive(x)) x.fled = true; }
+      if (sp.reveal) { for (const x of f.monsters) x.revealed = true; }
+      if (sp.stun) { for (const x of f.monsters) if (alive(x)) x.stunned = sp.stun; }
       break;
     }
     case 'block': c.blocking = true; note(f, `You raise your ${c.shield.name.toLowerCase()}.`); break;

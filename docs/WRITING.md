@@ -36,10 +36,23 @@ library: {
   engaged), `noEngaged` (pikes), `burst` (explodes when slain), `topple`, `coward`, `unluckyAura`,
   `critWide`,
   `tiny`, `handgun`, `dealD6`, `takeD6`, `approval`, `relentless`, `magicImmune`, `undead`,
-  `vomit`; plus `regen` and `regenStop` (a flag that stops it).
+  `vomit`, `invisible` (attacks use a d20 until something reveals it: pocket sand, or a special with
+  `reveal: true`), `ghostly` (ignores non-magical damage unless it's holy, or the scumbag has the
+  `blessedWeapon` flag), `breath`, `flies`; plus `regen` and `regenStop` (a flag that stops it).
+  Specials can also `stun: n` the monsters.
 - **Endings:** `end: 'death' | 'quit' | 'victory'`.
 
-Run `npm run check` after editing.
+Run `npm run check` after editing. It also rejects any item, spell, profession, skill or feature
+name it doesn't recognise.
+
+## Items
+
+Before you finish a scene, go through the equipment list and ask of each item: would a player
+holding this expect it to help here? If so, give it a choice. A rope in front of a gorge, a pole
+in front of a mousetrap, rations in front of a hungry animal, a mirror in front of a vampire, glue
+in front of anything that wobbles. Items can be a choice of their own (`if: { item }`) or make a
+test easier (`mods`). The cheaper the item, the more it should be rewarded for being remembered.
+`node tools/affordances.mjs` lists what each adventure uses and never uses.
 
 ## Skills
 
@@ -57,6 +70,7 @@ Prefer features that change how you play the fight, or offer a way round it, ove
 ## Adventures
 
 Each adventure is a module in `src/adventure/` exporting `META` (`id`, `title`, `levels`, `blurb`,
-`final`: the key of the main victory section, which gets the last number), `SECTIONS` and
-`DEATH_TEXT`. Register it in `src/adventure/index.js`. Significant loot that is sold at the end can
+`final`: the key of the main victory section, which gets the last number; `after`: the adventures,
+any one of which reveals this one), `SECTIONS` and `DEATH_TEXT`. Register it in
+`src/adventure/index.js`. A scumbag can't repeat an adventure they've finished. Significant loot that is sold at the end can
 take several slots (`slots` in `SIGNIFICANT`), which makes carrying it a decision.
