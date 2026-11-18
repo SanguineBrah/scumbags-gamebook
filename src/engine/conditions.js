@@ -36,6 +36,9 @@ export function check(c, cond) {
   if (cond.flag) need(!!c.flags[cond.flag], cond.flagText || 'something you haven’t learned');
   if (cond.notFlag) need(!c.flags[cond.notFlag], cond.notFlagText || 'already done');
   if (cond.gold) need(c.gold >= cond.gold, `${cond.gold}GP`);
+  if (cond.atLeast) need((c.flags[cond.atLeast[0]] || 0) >= cond.atLeast[1], cond.atLeastText || 'more of something');
+  if (cond.below) need((c.flags[cond.below[0]] || 0) < cond.below[1], cond.belowText || 'less of something');
+  if (cond.level) need(c.level >= cond.level, `level ${cond.level}`);
   if (cond.magic) need(magicType(c) === cond.magic, cond.magic === 'divine' ? 'a divine magician' : 'an arcane magician');
   if (cond.alignment) need(c.alignment === cond.alignment, `serving ${cond.alignment}`);
   if (cond.skill) need(isSkilled(c, cond.skill), `the ${cond.skill} skill`);

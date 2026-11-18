@@ -10,8 +10,10 @@
 
 const peasant = (name, note) => ({ name, lvl: 1, range: 'engaged', note: note || 'Never bathes' });
 
-export const TITLE = 'Death and Taxes';
-export const BLURB = 'Usurer Vane died owing nobody anything. Everybody owed him. His counting house under Gallows Hill has been shut for twenty years, and the old map in your hand says the vault is still full.';
+export const META = {
+  id: 'death-and-taxes', title: 'Death and Taxes', levels: '1', final: 'town',
+  blurb: 'Usurer Vane died owing nobody anything. Everybody owed him. His counting house under Gallows Hill has been shut for twenty years, and the old map in your hand says the vault is still full.',
+};
 
 export const SECTIONS = {
   start: {

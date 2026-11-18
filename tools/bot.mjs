@@ -1,10 +1,10 @@
 // Shared bot logic for tools/simulate.mjs and tools/duels.mjs.
-import { rollOrigins, createCharacter, startingWeapons } from '../src/rules/character.js';
+import { rollOrigins, createCharacter, startingWeapons, levelUp } from '../src/rules/character.js';
 import { MUNDANE } from '../src/rules/data.js';
 
 const POOL = Object.keys(MUNDANE);
 
-export function botCharacter(r) {
+export function botCharacter(r, level = 1) {
   const o = rollOrigins(r);
   const tmp = createCharacter(r, o, { mundane: [] });
   const weapons = startingWeapons(tmp);
@@ -15,7 +15,10 @@ export function botCharacter(r) {
   if (['Cleric', 'Missionary'].includes(tmp.profession)) kit.add('holysymbol');
   while (kit.size < 6) kit.add(r.pick(POOL));
   const caster = ['Cleric', 'Missionary', 'Alchemist', 'Sorcerer'].includes(tmp.profession);
-  return createCharacter(r, o, { weapon: w.id, protection: r.chance(1, 3) ? 'shield' : 'armour', mundane: [...kit], alignment: r.pick(['law', 'chaos']), extra: caster ? 'fire' : 'potion' });
+  const c = createCharacter(r, o, { weapon: w.id, protection: r.chance(1, 3) ? 'shield' : 'armour', mundane: [...kit], alignment: r.pick(['law', 'chaos']), extra: caster ? 'fire' : 'potion' });
+  while (c.level < level) levelUp(r, c);
+  c.gold = 40 * (level - 1);
+  return c;
 }
 
 export function fightMove(g, rng) {

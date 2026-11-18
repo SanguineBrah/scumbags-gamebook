@@ -22,3 +22,7 @@ The rules are the rulebook's, with these changes for a hero who adventures alone
 Fights with no way round them were tuned with `tools/duels.mjs` so a fresh level 1 scumbag
 wins roughly 9 in 10. The boss and the vault guards are harder, and each has peaceful
 alternatives.
+- **Survivors carry on.** A scumbag who gets home keeps their level, stats, items and leftover gold
+  for the next adventure, starting it rested with full HP and fresh spell slots.
+- **Levels are recommendations.** Adventures are tuned with bots at the lowest recommended level;
+  a scumbag carried over from earlier adventures will usually be a level or two ahead.

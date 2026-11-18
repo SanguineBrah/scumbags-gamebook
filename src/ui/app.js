@@ -1,17 +1,18 @@
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-import { buildAdventure } from '../adventure/index.js';
+import { buildAdventure, ADVENTURES } from '../adventure/index.js';
 import { Game } from '../engine/game.js';
 import { Rng } from '../rules/dice.js';
 import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS } from '../rules/data.js';
 import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS } from '../rules/character.js';
 import { alive } from '../engine/combat.js';
 
-const SAVE_KEY = 'scumbags-gamebook-v1';
-const adv = buildAdventure();
+const SAVE_KEY = 'scumbags-gamebook-v2';
+const ROSTER_KEY = 'scumbags-gamebook-roster';
+let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null };
+const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, pickFor: null };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -31,13 +32,18 @@ const dice = (...ns) => h('span', { class: 'dice' }, ns.map((n) => h('span', { c
 // ---------- saving (one viewer's convenience; the game works without it)
 function save() {
   try {
-    if (ui.screen === 'play' && ui.game) localStorage.setItem(SAVE_KEY, JSON.stringify({ game: ui.game.save(), ending: ui.ending }));
+    if (ui.screen === 'play' && ui.game) localStorage.setItem(SAVE_KEY, JSON.stringify({ adv: adv.id, game: ui.game.save(), ending: ui.ending }));
   } catch { /* storage unavailable */ }
 }
 function loadSave() {
   try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ } }
+// Surviving scumbags, kept between adventures.
+function roster() { try { return JSON.parse(localStorage.getItem(ROSTER_KEY) || '[]'); } catch { return []; } }
+function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify(list.slice(0, 12))); } catch { /* ignore */ } }
+function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
+function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 
 function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); window.scrollTo(0, 0); }
 
@@ -47,6 +53,7 @@ function render() {
     ui.screen === 'title' ? titleScreen()
       : ui.screen === 'howto' ? howToScreen()
         : ui.screen === 'create' ? createScreen()
+          : ui.screen === 'pick' ? pickScreen()
           : playScreen(),
   );
   save();
@@ -66,23 +73,49 @@ function topbar(extra) {
 
 function titleScreen() {
   const saved = loadSave();
+  const savedAdv = saved && ADVENTURES.find((x) => x.id === saved.adv);
   return h('div', null,
     h('main', { class: 'page title-page' },
-      h('div', { class: 'muted small' }, 'A SCUMBAGS! GAMEBOOK'),
-      h('h1', null, adv.title),
-      h('p', { class: 'blurb' }, adv.blurb),
-      h('p', { class: 'muted small' }, `${adv.count} numbered sections. One scumbag. Many ways to die.`),
+      h('div', { class: 'muted small' }, 'SCUMBAGS! GAMEBOOKS'),
+      h('h1', null, 'Five Bad Ideas'),
+      h('p', { class: 'blurb' }, 'Five short adventures for one contemptible opportunist. Survive one, squander the takings, and take your scumbag on to the next.'),
       h('div', { class: 'row' },
-        saved && h('button', { class: 'btn', onclick: () => resume(saved) }, 'Continue'),
-        h('button', { class: saved ? 'btn ghost' : 'btn', onclick: newScumbag }, 'New scumbag'),
-        h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play'),
-      ),
+        saved && savedAdv && h('button', { class: 'btn', onclick: () => resume(saved) }, `Continue ${savedAdv.title}`),
+        h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play')),
+    ),
+    h('main', { class: 'page' }, ADVENTURES.map((a) => h('div', { class: 'card adv' },
+      h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`),
+      h('p', null, a.blurb),
+      h('button', { class: 'btn', onclick: () => chooseAdventure(a.id) }, 'Play')))));
+}
+
+function chooseAdventure(id) { adv = buildAdventure(id); go('pick'); }
+
+function pickScreen() {
+  const list = roster();
+  return h('div', null,
+    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, adv.title)),
+    h('main', { class: 'page' },
+      h('h2', null, 'Who’s going?'),
+      h('p', { class: 'muted' }, `${adv.title} is for a level ${adv.levels} scumbag.`),
+      h('button', { class: 'btn', onclick: newScumbag }, 'A new scumbag'),
+      list.length > 0 && [h('h3', null, 'Survivors'), h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => takeScumbag(c) },
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${c.maxHp} HP`)))))],
+      h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
     ));
 }
 
+function takeScumbag(saved) {
+  const c = JSON.parse(JSON.stringify(saved));
+  c.flags = {}; c.hp = c.maxHp; c.ap = maxAp(c); resetDay(c);
+  const g = new Game(adv, rng.int(1, 2 ** 31));
+  g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
+  go('play');
+}
+
 function resume(saved) {
-  try { ui.game = Game.load(adv, saved.game); ui.ending = saved.ending || null; go('play'); }
-  catch { clearSave(); newScumbag(); }
+  try { adv = buildAdventure(saved.adv); ui.game = Game.load(adv, saved.game); ui.ending = saved.ending || null; go('play'); }
+  catch { clearSave(); go('title'); }
 }
 
 function howToScreen() {
@@ -164,7 +197,7 @@ function createScreen() {
       ),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: mundaneCount !== MUNDANE_LIMIT, onclick: begin }, mundaneCount === MUNDANE_LIMIT ? 'Begin your adventure' : `Choose ${MUNDANE_LIMIT - mundaneCount} more item${MUNDANE_LIMIT - mundaneCount === 1 ? '' : 's'}`),
-        h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
+        h('button', { class: 'btn ghost', onclick: () => go('pick') }, 'Back')),
     ));
 }
 
@@ -172,6 +205,7 @@ function begin() {
   const k = ui.create;
   const g = new Game(adv, rng.int(1, 2 ** 31));
   const c = createCharacter(g.rng, k.origins, { name: (k.name || '').trim() || randomName(rng), weapon: k.weapon, protection: k.protection, alignment: k.alignment, mundane: [...k.mundane], extra: k.extra });
+  c.id = `${Date.now().toString(36)}${rng.int(0, 1e6).toString(36)}`;
   g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
   go('play');
 }
@@ -246,19 +280,19 @@ function fightView() {
 function endingView() {
   const g = ui.game; const c = g.c; const end = g.ending();
   if (end === 'death') {
-    clearSaveSoon();
+    clearSaveSoon(); dropScumbag(c);
     return [h('div', { class: 'num' }, g.number()),
       h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))), messages(g),
       g.fight && fightView(),
       h('div', { class: 'banner dead' }, 'Your adventure ends here'),
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
     clearSaveSoon();
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });
@@ -274,13 +308,14 @@ function endingView() {
     out.push(h('p', null, `You have ${c.gold}GP.`),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: c.gold < LEVEL_COST, onclick: () => { const roll = g.rng.die(20); const report = wasteForLevel(g.rng, c); e.wasted.push({ roll, report }); render(); } }, `Waste ${LEVEL_COST}GP`),
-        h('button', { class: 'btn ghost', onclick: () => { e.done = true; render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
+        h('button', { class: 'btn ghost', onclick: () => { e.done = true; keepScumbag(c); render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
   } else {
     out.push(h('div', { class: 'banner' }, 'The End'),
       h('p', null, `${c.name} the level ${c.level} ${c.profession.toLowerCase()} has squandered ${c.wasted}GP in total, and has ${c.gold}GP left over.`),
+      h('p', { class: 'muted small' }, `${c.name} is waiting among the survivors for the next adventure.`),
       h('div', { class: 'row' },
-        h('button', { class: 'btn', onclick: again }, 'Go back for more (same scumbag)'),
-        h('button', { class: 'btn ghost', onclick: newScumbag }, 'New scumbag')));
+        h('button', { class: 'btn', onclick: () => { clearSave(); go('title'); } }, 'Choose the next adventure'),
+        h('button', { class: 'btn ghost', onclick: again }, 'Play this one again')));
   }
   return out;
 }

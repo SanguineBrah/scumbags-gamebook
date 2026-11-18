@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Death and Taxes — a Scumbags! gamebook</title>
+<title>Five Bad Ideas — Scumbags! gamebooks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
@@ -118,6 +118,9 @@
   .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .4rem; }
   .opt { display: flex; gap: .5rem; align-items: flex-start; border: 1px solid var(--rule); border-radius: 8px; padding: .45rem .6rem; background: var(--paper); cursor: pointer; font-size: .92rem; }
   .opt input { margin-top: .3rem; accent-color: var(--ink); }
+  button.opt { width: 100%; text-align: left; }
+  .card.adv h2 { margin-bottom: 0; }
+  .card.adv p { margin: .5rem 0 .8rem; }
   .opt.on { border-color: var(--ink); background: #fff; }
   .opt .note { display: block; font-size: .78rem; color: var(--ink-soft); }
   input[type=text] { color: var(--ink); -webkit-text-fill-color: var(--ink); caret-color: var(--ink); font: inherit; padding: .45rem .6rem; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; width: min(100%, 22rem); }
@@ -148,18 +151,19 @@ return {  };
 };
 __defs["src/ui/app.js"] = function(){
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-const { buildAdventure } = __req("src/adventure/index.js");
+const { buildAdventure, ADVENTURES } = __req("src/adventure/index.js");
 const { Game } = __req("src/engine/game.js");
 const { Rng } = __req("src/rules/dice.js");
 const { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS } = __req("src/rules/data.js");
 const { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS } = __req("src/rules/character.js");
 const { alive } = __req("src/engine/combat.js");
-const SAVE_KEY = 'scumbags-gamebook-v1';
-const adv = buildAdventure();
+const SAVE_KEY = 'scumbags-gamebook-v2';
+const ROSTER_KEY = 'scumbags-gamebook-roster';
+let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null };
+const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, pickFor: null };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -179,13 +183,18 @@ const dice = (...ns) => h('span', { class: 'dice' }, ns.map((n) => h('span', { c
 // ---------- saving (one viewer's convenience; the game works without it)
 function save() {
   try {
-    if (ui.screen === 'play' && ui.game) localStorage.setItem(SAVE_KEY, JSON.stringify({ game: ui.game.save(), ending: ui.ending }));
+    if (ui.screen === 'play' && ui.game) localStorage.setItem(SAVE_KEY, JSON.stringify({ adv: adv.id, game: ui.game.save(), ending: ui.ending }));
   } catch { /* storage unavailable */ }
 }
 function loadSave() {
   try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ } }
+// Surviving scumbags, kept between adventures.
+function roster() { try { return JSON.parse(localStorage.getItem(ROSTER_KEY) || '[]'); } catch { return []; } }
+function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify(list.slice(0, 12))); } catch { /* ignore */ } }
+function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
+function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 
 function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); window.scrollTo(0, 0); }
 
@@ -195,6 +204,7 @@ function render() {
     ui.screen === 'title' ? titleScreen()
       : ui.screen === 'howto' ? howToScreen()
         : ui.screen === 'create' ? createScreen()
+          : ui.screen === 'pick' ? pickScreen()
           : playScreen(),
   );
   save();
@@ -214,23 +224,49 @@ function topbar(extra) {
 
 function titleScreen() {
   const saved = loadSave();
+  const savedAdv = saved && ADVENTURES.find((x) => x.id === saved.adv);
   return h('div', null,
     h('main', { class: 'page title-page' },
-      h('div', { class: 'muted small' }, 'A SCUMBAGS! GAMEBOOK'),
-      h('h1', null, adv.title),
-      h('p', { class: 'blurb' }, adv.blurb),
-      h('p', { class: 'muted small' }, `${adv.count} numbered sections. One scumbag. Many ways to die.`),
+      h('div', { class: 'muted small' }, 'SCUMBAGS! GAMEBOOKS'),
+      h('h1', null, 'Five Bad Ideas'),
+      h('p', { class: 'blurb' }, 'Five short adventures for one contemptible opportunist. Survive one, squander the takings, and take your scumbag on to the next.'),
       h('div', { class: 'row' },
-        saved && h('button', { class: 'btn', onclick: () => resume(saved) }, 'Continue'),
-        h('button', { class: saved ? 'btn ghost' : 'btn', onclick: newScumbag }, 'New scumbag'),
-        h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play'),
-      ),
+        saved && savedAdv && h('button', { class: 'btn', onclick: () => resume(saved) }, `Continue ${savedAdv.title}`),
+        h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play')),
+    ),
+    h('main', { class: 'page' }, ADVENTURES.map((a) => h('div', { class: 'card adv' },
+      h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`),
+      h('p', null, a.blurb),
+      h('button', { class: 'btn', onclick: () => chooseAdventure(a.id) }, 'Play')))));
+}
+
+function chooseAdventure(id) { adv = buildAdventure(id); go('pick'); }
+
+function pickScreen() {
+  const list = roster();
+  return h('div', null,
+    h('header', { class: 'topbar' }, h('span', { class: 'brand' }, adv.title)),
+    h('main', { class: 'page' },
+      h('h2', null, 'Who’s going?'),
+      h('p', { class: 'muted' }, `${adv.title} is for a level ${adv.levels} scumbag.`),
+      h('button', { class: 'btn', onclick: newScumbag }, 'A new scumbag'),
+      list.length > 0 && [h('h3', null, 'Survivors'), h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => takeScumbag(c) },
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${c.maxHp} HP`)))))],
+      h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
     ));
 }
 
+function takeScumbag(saved) {
+  const c = JSON.parse(JSON.stringify(saved));
+  c.flags = {}; c.hp = c.maxHp; c.ap = maxAp(c); resetDay(c);
+  const g = new Game(adv, rng.int(1, 2 ** 31));
+  g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
+  go('play');
+}
+
 function resume(saved) {
-  try { ui.game = Game.load(adv, saved.game); ui.ending = saved.ending || null; go('play'); }
-  catch { clearSave(); newScumbag(); }
+  try { adv = buildAdventure(saved.adv); ui.game = Game.load(adv, saved.game); ui.ending = saved.ending || null; go('play'); }
+  catch { clearSave(); go('title'); }
 }
 
 function howToScreen() {
@@ -312,7 +348,7 @@ function createScreen() {
       ),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: mundaneCount !== MUNDANE_LIMIT, onclick: begin }, mundaneCount === MUNDANE_LIMIT ? 'Begin your adventure' : `Choose ${MUNDANE_LIMIT - mundaneCount} more item${MUNDANE_LIMIT - mundaneCount === 1 ? '' : 's'}`),
-        h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Back')),
+        h('button', { class: 'btn ghost', onclick: () => go('pick') }, 'Back')),
     ));
 }
 
@@ -320,6 +356,7 @@ function begin() {
   const k = ui.create;
   const g = new Game(adv, rng.int(1, 2 ** 31));
   const c = createCharacter(g.rng, k.origins, { name: (k.name || '').trim() || randomName(rng), weapon: k.weapon, protection: k.protection, alignment: k.alignment, mundane: [...k.mundane], extra: k.extra });
+  c.id = `${Date.now().toString(36)}${rng.int(0, 1e6).toString(36)}`;
   g.begin(c); ui.game = g; ui.ending = null; ui.sheetMsg = '';
   go('play');
 }
@@ -394,19 +431,19 @@ function fightView() {
 function endingView() {
   const g = ui.game; const c = g.c; const end = g.ending();
   if (end === 'death') {
-    clearSaveSoon();
+    clearSaveSoon(); dropScumbag(c);
     return [h('div', { class: 'num' }, g.number()),
       h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))), messages(g),
       g.fight && fightView(),
       h('div', { class: 'banner dead' }, 'Your adventure ends here'),
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
     clearSaveSoon();
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => go('pick') }, 'Try again'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });
@@ -422,13 +459,14 @@ function endingView() {
     out.push(h('p', null, `You have ${c.gold}GP.`),
       h('div', { class: 'row' },
         h('button', { class: 'btn', disabled: c.gold < LEVEL_COST, onclick: () => { const roll = g.rng.die(20); const report = wasteForLevel(g.rng, c); e.wasted.push({ roll, report }); render(); } }, `Waste ${LEVEL_COST}GP`),
-        h('button', { class: 'btn ghost', onclick: () => { e.done = true; render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
+        h('button', { class: 'btn ghost', onclick: () => { e.done = true; keepScumbag(c); render(); } }, c.gold >= LEVEL_COST ? 'Keep the rest' : 'Finish')));
   } else {
     out.push(h('div', { class: 'banner' }, 'The End'),
       h('p', null, `${c.name} the level ${c.level} ${c.profession.toLowerCase()} has squandered ${c.wasted}GP in total, and has ${c.gold}GP left over.`),
+      h('p', { class: 'muted small' }, `${c.name} is waiting among the survivors for the next adventure.`),
       h('div', { class: 'row' },
-        h('button', { class: 'btn', onclick: again }, 'Go back for more (same scumbag)'),
-        h('button', { class: 'btn ghost', onclick: newScumbag }, 'New scumbag')));
+        h('button', { class: 'btn', onclick: () => { clearSave(); go('title'); } }, 'Choose the next adventure'),
+        h('button', { class: 'btn ghost', onclick: again }, 'Play this one again')));
   }
   return out;
 }
@@ -486,21 +524,32 @@ function start() { render(); }
 return { start };
 };
 __defs["src/adventure/index.js"] = function(){
-// Assemble the adventure: shuffle section keys into numbered paragraphs, in the traditional gamebook way.
-// The first section is always 1 and the ending in town is always the last number.
+// The adventures, and how each one is assembled: section keys are shuffled into numbered
+// paragraphs, in the traditional gamebook way, with the start as 1 and the adventure's last ending as the last number.
 const { Rng } = __req("src/rules/dice.js");
-const { SECTIONS, TITLE, BLURB, DEATH_TEXT } = __req("src/adventure/death-and-taxes.js");
-function buildAdventure(seed = 1918) {
-  const keys = Object.keys(SECTIONS);
-  const middle = keys.filter((k) => k !== 'start' && k !== 'town');
-  new Rng(seed).shuffle(middle);
-  const order = ['start', ...middle, 'town'];
-  const numbers = Object.fromEntries(order.map((k, i) => [k, i + 1]));
-  const byNumber = Object.fromEntries(order.map((k, i) => [i + 1, k]));
-  return { title: TITLE, blurb: BLURB, deathText: DEATH_TEXT, start: 'start', sections: SECTIONS, numbers, byNumber, count: order.length };
+const { META: M1, SECTIONS: S1, DEATH_TEXT: D1 } = __req("src/adventure/death-and-taxes.js");
+const { META: M2, SECTIONS: S2, DEATH_TEXT: D2 } = __req("src/adventure/the-tall-order.js");
+const { META: M3, SECTIONS: S3, DEATH_TEXT: D3 } = __req("src/adventure/fortunes-fang.js");
+const { META: M4, SECTIONS: S4, DEATH_TEXT: D4 } = __req("src/adventure/mothers-kitchen.js");
+const { META: M5, SECTIONS: S5, DEATH_TEXT: D5 } = __req("src/adventure/eviction-notice.js");
+const SOURCES = [[M1, S1, D1], [M2, S2, D2], [M3, S3, D3], [M4, S4, D4], [M5, S5, D5]];
+const ADVENTURES = SOURCES.map(([m]) => m);
+
+const cache = {};
+function buildAdventure(id = ADVENTURES[0].id) {
+  if (cache[id]) return cache[id];
+  const i = SOURCES.findIndex(([m]) => m.id === id);
+  if (i < 0) throw new Error(`No adventure "${id}"`);
+  const [meta, sections, deathText] = SOURCES[i];
+  const keys = Object.keys(sections);
+  const middle = keys.filter((k) => k !== 'start' && k !== meta.final);
+  new Rng(1918 + i).shuffle(middle);
+  const order = ['start', ...middle, meta.final];
+  const numbers = Object.fromEntries(order.map((k, n) => [k, n + 1]));
+  return (cache[id] = { ...meta, deathText, start: 'start', sections, numbers, count: order.length });
 }
 
-return { buildAdventure };
+return { ADVENTURES, buildAdventure };
 };
 __defs["src/rules/dice.js"] = function(){
 // Dice and random numbers. All randomness goes through an Rng so games can be seeded and replayed.
@@ -560,8 +609,10 @@ __defs["src/adventure/death-and-taxes.js"] = function(){
 
 const peasant = (name, note) => ({ name, lvl: 1, range: 'engaged', note: note || 'Never bathes' });
 
-const TITLE = 'Death and Taxes';
-const BLURB = 'Usurer Vane died owing nobody anything. Everybody owed him. His counting house under Gallows Hill has been shut for twenty years, and the old map in your hand says the vault is still full.';
+const META = {
+  id: 'death-and-taxes', title: 'Death and Taxes', levels: '1', final: 'town',
+  blurb: 'Usurer Vane died owing nobody anything. Everybody owed him. His counting house under Gallows Hill has been shut for twenty years, and the old map in your hand says the vault is still full.',
+};
 
 const SECTIONS = {
   start: {
@@ -1156,15 +1207,1302 @@ const DEATH_TEXT = [
   'Your adventure ends here.',
 ];
 
-return { TITLE, BLURB, SECTIONS, DEATH_TEXT };
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/the-tall-order.js"] = function(){
+// THE TALL ORDER — steal the Lofty Hat from Lord Longshanks' birthday party. For a level 1–2 scumbag.
+// Section format: see docs/WRITING.md.
+
+const META = {
+  id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
+  blurb: 'Lord Altimus Longshanks believes greatness is measured vertically. Tonight, at the top of the tallest house in the county, he unveils the Lofty Hat: nine feet of velvet and rubies. Mother Grubb will pay 400 gold for it, if you can get it home.',
+};
+
+const pikeman = { name: 'Pikeman', lvl: 2, range: 'medium', feats: ['noEngaged'], note: '20ft pike; can’t attack anyone he’s engaged with' };
+const STILTS = { item: 'stilts' };
+
+const SECTIONS = {
+  start: {
+    on: [{ gold: 30, msg: 'Mother Grubb lends you 30GP “against the hat”. You don’t ask what happens if there is no hat.' }], onceOnly: true,
+    text: [
+      'Mother Grubb is a fence of no fixed abode. Today her abode is a barrow outside the Drowned Rat, and she is selling stolen invitations to Lord Longshanks’ birthday party. They are genuine, which is more than can be said for the guests.',
+      'Printed on the back, in very tall letters: NO GUEST UNDER SIX FEET WILL BE ADMITTED. “That’s why I sell these as well,” she says, and pats a heap of stilts. “Long coat to hide ’em in. Invitation’s twenty, stilts are five.”',
+    ],
+    choices: [
+      { text: 'Buy an invitation and stilts (25GP)', to: 'bought_both', if: { gold: 25 } },
+      { text: 'Buy just the stilts (5GP)', to: 'bought_stilts', if: { gold: 5 } },
+      { text: 'Ask about another way in', to: 'grubb_tip' },
+    ],
+  },
+  bought_both: {
+    on: [{ gold: -25 }, { item: 'invitation' }, { item: 'stilts' }],
+    text: ['You practise on the stilts behind the barrow until you can walk the length of the alley without screaming. Mother Grubb applauds, once.'],
+    choices: [{ text: 'Walk to Highmore Spire', to: 'spire' }],
+  },
+  bought_stilts: {
+    on: [{ gold: -5 }, { item: 'stilts' }],
+    text: ['“Stilts but no invitation,” says Mother Grubb. “Bold. I like it. You’ll die.”'],
+    choices: [{ text: 'Walk to Highmore Spire', to: 'spire' }],
+  },
+  grubb_tip: {
+    text: ['“There’s a kitchen door round the back,” she says. “Four foot high. Only short thing on the whole estate. Mrs Stump the cook uses it, and she’s bitter about it. Very bitter. Bring her sympathy, or money. Same thing, to most people.”'],
+    choices: [
+      { text: 'Buy an invitation and stilts after all (25GP)', to: 'bought_both', if: { gold: 25 } },
+      { text: 'Walk to Highmore Spire', to: 'spire' },
+    ],
+  },
+  spire: {
+    text: [
+      'Highmore Spire is the tallest building in the county, and the Lord is still adding to it. Its front door is thirty feet high, with a knocker at the top that the doorman reaches by ladder. Torches blaze, music plays, and enormously tall guests totter up the steps on legs that bend in places legs don’t.',
+      'Round the side, a little door four feet high is propped open by a bucket of potato peelings.',
+    ],
+    choices: [
+      { text: 'Join the queue at the front door', to: 'doorman' },
+      { text: 'Try the kitchen door', to: 'kitchen_door' },
+      { text: 'Climb the builders’ scaffolding to the roof', test: { stat: 'Str', dd: 12, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 8 }] }, pass: 'roof', fail: 'scaffold_fall' },
+    ],
+  },
+  scaffold_fall: {
+    on: [{ damage: 'd6', from: 'The scaffolding' }],
+    text: ['Halfway up, a plank decides it would rather be on the ground, and takes you with it.'],
+    choices: [{ text: 'Get up and think again', to: 'spire' }],
+  },
+  doorman: {
+    text: (c) => [
+      'The doorman measures every guest with a long stick marked in feet. He is tall himself, and makes sure everybody knows it.',
+      c.mundane.some((i) => i.id === 'stilts') ? 'You totter up the steps on your stilts, coat flapping round your ankles, which are somewhere near his chest.' : 'He looks down at you. A long way down.',
+    ],
+    choices: [
+      { text: 'Hand over your invitation and stand very still', test: { stat: 'Dex', dd: 4, save: true }, pass: 'admitted', fail: 'wobble', if: { item: 'invitation' }, show: STILTS },
+      { text: 'Compliment his height', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry' },
+      { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }] },
+      { text: 'Go round to the kitchen door', to: 'kitchen_door' },
+    ],
+  },
+  wobble: {
+    text: ['As the stick comes up, so does a gust of wind. You sway. You sway the other way. The doorman narrows his eyes.'],
+    choices: [
+      { text: 'Compliment his height, quickly', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry' },
+      { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }] },
+    ],
+  },
+  doorman_angry: {
+    text: ['“Short,” he announces to the queue. “SHORT!” The guests gasp. Two pikemen turn, very slowly, because their pikes are twenty feet long.'],
+    fight: { monsters: [{ name: 'Doorman', lvl: 1, range: 'engaged', note: 'Measuring stick; very tall; very offended' }, pikeman], distance: 1, win: 'doorman_win', flee: { to: 'kitchen_door', label: 'Run round the side of the house' } },
+  },
+  doorman_win: {
+    on: [{ gold: 8, msg: 'The doorman’s tips: 8GP.' }], onceOnly: true,
+    text: ['You leave the doorman measuring the steps with his face. The guests step over him. Nobody is looking at anything below six feet.'],
+    choices: [{ text: 'Go inside', to: 'long_hall' }],
+  },
+  admitted: {
+    on: [{ flag: 'guest' }],
+    text: ['The doorman sniffs and waves you through. “Enjoy the party,” he says, “sir or madam or whatever you are up there.”'],
+    choices: [{ text: 'Go inside', to: 'long_hall' }],
+  },
+  kitchen_door: {
+    text: ['The kitchen door is exactly your height. Behind it, Mrs Stump, the cook, is beating a pudding as if it owes her money. She is four foot three and has worked here for thirty years, and in all that time nobody has once looked her in the eye without kneeling.'],
+    choices: [
+      { text: 'Sympathise with her', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'stump_friend', fail: 'stump_cross' },
+      { text: 'Offer her a cut of the takings', to: 'stump_friend', effects: [{ flag: 'stumpCut' }] },
+      { text: 'Sneak in behind her', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'kitchen', fail: 'stump_cross' },
+      { text: 'Go back round the front', to: 'doorman' },
+    ],
+  },
+  stump_friend: {
+    on: [{ flag: 'stump' }],
+    text: ['“Thirty years,” says Mrs Stump, “making nine-foot cakes.” She puts down the whisk. “The hat goes back in the vault at eleven. There’s a dumbwaiter from this kitchen straight up to it. Rope’s sound. Dumbwaiter isn’t. And watch out for Big Ned.” She doesn’t say who Big Ned is. She doesn’t have to.'],
+    choices: [{ text: 'Step into the kitchen', to: 'kitchen' }],
+  },
+  stump_cross: {
+    text: ['Mrs Stump turns round with the whisk raised. “Another one,” she says. “Out.” She is surprisingly strong for a pudding-beater, and you find yourself back in the yard with batter in your hair.'],
+    choices: [{ text: 'Go round the front', to: 'doorman' }, { text: 'Try the scaffolding', to: 'spire' }],
+  },
+  kitchen: {
+    text: ['The kitchen is the only room in Highmore Spire with a normal ceiling. In the corner, a dumbwaiter hangs in a dark shaft that runs eighty feet straight up. A narrow servants’ stair leads to the Long Hall.'],
+    choices: [
+      { text: 'Climb the dumbwaiter rope', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter'], why: 'you climb for a living', mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'vault_shaft', fail: 'shaft_fall' },
+      { text: 'Take the servants’ stair to the Long Hall', to: 'long_hall' },
+    ],
+  },
+  shaft_fall: {
+    on: [{ damage: 'd4', from: 'The dumbwaiter' }],
+    text: ['Halfway up, the dumbwaiter overtakes you on the way down. You both arrive at the bottom.'],
+    choices: [{ text: 'Try again', to: 'kitchen' }],
+  },
+  long_hall: {
+    text: (c) => [
+      'The Long Hall is ninety feet long and sixty high, and the party fills it from the floor to about nine feet up. Guests on stilts drink from three-foot glasses. Six pikemen stand along the walls, their pikes vanishing into the gloom above. Up on a balcony, a small man in an enormous coat waits to make a speech: Lord Altimus Longshanks himself.',
+      c.flags.speech ? 'The Lord’s speech is over. The guests have gone back to drinking.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Pick some pockets', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: STILTS, dd: 12 }] }, pass: 'pockets', fail: 'pocket_topple', show: { notFlag: 'pockets' } },
+      { text: 'Drink from a three-foot glass', test: { stat: 'Con', dd: 6, save: true }, pass: 'drink_good', fail: 'drink_truth', show: { notFlag: 'drank' } },
+      { text: 'Wait for the speech, when everyone looks up', to: 'speech', show: { notFlag: 'speech' } },
+      { text: 'Climb the Grand Staircase', to: 'staircase' },
+      { text: 'Slip down to the kitchen', to: 'kitchen' },
+    ],
+  },
+  pockets: {
+    on: [{ flag: 'pockets' }, { gold: 30, msg: 'Three purses, at roughly knee height: 30GP.' }],
+    text: ['Nobody up there is looking down here. You work your way along the hall, lightening purses as you go.'],
+    choices: [{ text: 'Back to the party', to: 'long_hall' }],
+  },
+  pocket_topple: {
+    on: [{ flag: 'pockets' }],
+    text: ['Your mark feels the tug, turns round in surprise and topples off her stilts, taking three other guests with her. Everyone looks. A pikeman starts turning round.'],
+    fight: { monsters: [pikeman], distance: 1, win: 'long_hall_after', flee: { to: 'staircase', label: 'Lose yourself on the staircase' } },
+  },
+  long_hall_after: {
+    text: ['The pikeman lies on the floor, his pike still upright and swaying, like a flagpole without a flag. The guests decide it is part of the entertainment and applaud.'],
+    choices: [{ text: 'Back to the party', to: 'long_hall' }],
+  },
+  drink_good: {
+    on: [{ flag: 'drank' }, { heal: 'd6' }],
+    text: ['It takes a while to drink three feet of wine. You manage it, and feel taller.'],
+    choices: [{ text: 'Back to the party', to: 'long_hall' }],
+  },
+  drink_truth: {
+    on: [{ flag: 'drank' }, { flag: 'truthful' }],
+    text: ['Halfway down the glass you turn to the guest beside you and tell her, at length, that you are here to steal the hat. She laughs. Everyone laughs. You can’t seem to stop telling the truth, which is going to make lying difficult for the rest of the night.'],
+    choices: [{ text: 'Back to the party', to: 'long_hall' }],
+  },
+  speech: {
+    on: [{ flag: 'speech' }],
+    text: ['A trumpet sounds. The Lord steps up to the balcony rail, and every guest and every guard in the hall tilts their head back to look at him. “Friends,” he says. “Tall friends.” Nobody is looking at anything else.'],
+    choices: [
+      { text: 'Slip up the Grand Staircase while nobody’s watching', to: 'staircase_quiet' },
+      { text: 'Pick pockets while nobody’s watching', to: 'pockets', show: { notFlag: 'pockets' } },
+      { text: 'Listen to the speech', to: 'speech_listen' },
+    ],
+  },
+  speech_listen: {
+    text: ['The speech is about height. It goes on for some time. The Lord announces that the Lofty Hat will be unveiled at nine, “and then returned to the vault, whose key is somewhere very high up, ha ha”. Nobody laughs, because he is the Lord, and then everybody does.'],
+    on: [{ flag: 'keyHigh' }],
+    choices: [{ text: 'Back to the party', to: 'long_hall' }],
+  },
+  staircase: {
+    text: (c) => [
+      'Each step of the Grand Staircase is three feet high. The guests are carried up in sedan chairs. You are not a guest, or not that kind.',
+      c.mundane.some((i) => i.id === 'stilts') ? 'On stilts, it’s like climbing a ladder with your legs tied together.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Climb', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: STILTS, dd: 12 }] }, pass: 'gallery', fail: 'stair_fall' },
+      { text: 'Take off your stilts first', to: 'staircase_quiet', show: STILTS, effects: [{ lose: 'stilts' }, { msg: 'You leave the stilts behind a pillar.' }] },
+      { text: 'Back to the party', to: 'long_hall' },
+    ],
+  },
+  staircase_quiet: {
+    text: ['You haul yourself up the giant steps one at a time, like a toddler climbing into bed.'],
+    choices: [{ text: 'Keep climbing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'gallery', fail: 'stair_fall' }],
+  },
+  stair_fall: {
+    on: [{ damage: 'd3', from: 'The stairs' }],
+    text: ['You miss a step and bounce down three of them. A guest above you remarks that the entertainment is very physical this year.'],
+    choices: [{ text: 'Try again', to: 'staircase' }],
+  },
+  gallery: {
+    text: (c) => [
+      'The gallery holds portraits of the Lord, each one taller than the last. The newest is forty feet high and unfinished. Halfway up a very long ladder beside it, a painter in a beret is clinging on for dear life.',
+      c.flags.painterDown ? 'Signor Vertigo has gone home to lie down on something flat.' : '“Help,” he says faintly. “I have been up here three days. I am Signor Vertigo. It is not a stage name.”',
+      'Further along, a corridor leads to the Lord’s bedroom, and a landing beyond that leads up to the vault.',
+    ],
+    choices: [
+      { text: 'Talk the painter down', test: { stat: 'Cha', dd: 6, skill: ['social', 'medicine'], why: 'calming people down' }, pass: 'painter_down', fail: 'painter_stuck', show: { notFlag: 'painterDown' } },
+      { text: 'Lower him on your rope', to: 'painter_down', if: { item: 'rope' }, show: { notFlag: 'painterDown' } },
+      { text: 'Climb to the top of the frame', test: { stat: 'Dex', dd: 12, skill: ['athletics'] }, pass: 'frame_top', fail: 'frame_fall', show: { notFlag: 'gotKey' } },
+      { text: 'Go to the Lord’s bedroom', to: 'bedroom' },
+      { text: 'Go up to the vault', to: 'hounds' },
+      { text: 'Go back down to the party', to: 'long_hall' },
+    ],
+  },
+  painter_stuck: {
+    text: ['“I can’t,” he whimpers. “Not yet. Come back later. Come back with a rope.”'],
+    choices: [{ text: 'Back to the gallery', to: 'gallery' }],
+  },
+  painter_down: {
+    on: [{ flag: 'painterDown' }, { flag: 'keyHigh' }],
+    text: ['Signor Vertigo reaches the floor and kisses it. “I owe you my life,” he says. “And a secret. The key to the vault: his Lordship hides it on top of his newest portrait. I painted around it for three days.” He leaves the ladder where it is.'],
+    choices: [{ text: 'Climb the ladder to the top of the frame', to: 'frame_top' }, { text: 'Back to the gallery', to: 'gallery' }],
+  },
+  frame_fall: {
+    on: [{ damage: 'd4', from: 'The fall' }],
+    text: ['Thirty feet up, the frame creaks, and you discover that portraits are not designed to be climbed.'],
+    choices: [{ text: 'Back to the gallery', to: 'gallery' }],
+  },
+  frame_top: {
+    on: [{ flag: 'gotKey' }, { item: 'vaultkey' }],
+    text: (c) => [c.flags.keyHigh ? 'On top of the frame, in forty years of dust, lies a long iron key.' : 'On top of the frame, to your surprise, lies a long iron key. The Lord likes to keep things high up.', 'Down below, the painted Lord stares out of the canvas, nine feet tall and smiling. In real life he is five foot two.'],
+    choices: [{ text: 'Climb down', to: 'gallery' }],
+  },
+  bedroom: {
+    text: ['The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. Under the pillow is a diary.'],
+    choices: [
+      { text: 'Take the diary', to: 'diary', show: { notFlag: 'diary' } },
+      { text: 'Steal a pair of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
+      { text: 'Back to the gallery', to: 'gallery' },
+    ],
+  },
+  diary: {
+    on: [{ flag: 'diary' }, { item: 'diary' }],
+    text: ['You read the first page. “Dear Diary. Measured myself again today. Five foot two. Still five foot two. Why?” His brother, Lord Shortshanks, would pay well for this. So, probably, would the Lord.'],
+    choices: [{ text: 'Back to the bedroom', to: 'bedroom' }],
+  },
+  candles: {
+    on: [{ flag: 'candles' }, { item: 'candlestick' }],
+    text: ['They are six feet tall and solid silver. You can carry one, if you don’t mind carrying nothing else.'],
+    choices: [{ text: 'Back to the bedroom', to: 'bedroom' }],
+  },
+  hounds: {
+    text: (c) => c.flags.houndsGone
+      ? ['The landing is empty, apart from some very long dog hair.']
+      : ['On the landing outside the vault, four stilt-hounds look up from their bowls. They are bred for length, have legs like a heron’s, and cannot lie down. Nobody knows how they got up here, as they hate stairs. They hate strangers more.'],
+    choices: [
+      { text: 'Throw them your rations', to: 'hounds_fed', if: { item: 'rations' }, show: { notFlag: 'houndsGone' } },
+      { text: 'Calm them the way you calm any animal', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'hounds_calm', fail: 'hounds_fight', show: { notFlag: 'houndsGone' } },
+      { text: 'Fight your way through', to: 'hounds_fight', show: { notFlag: 'houndsGone' } },
+      { text: 'Go on to the vault door', to: 'vault_door', show: { flag: 'houndsGone' } },
+      { text: 'Go back down', to: 'gallery' },
+    ],
+  },
+  hounds_fed: {
+    on: [{ flag: 'houndsGone' }, { lose: 'rations' }],
+    text: ['The hounds fall on your rations. A stilt-hound eating from the floor has to do the splits to reach it, so they’ll be busy for a while.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  hounds_calm: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['You crouch, hold out a hand and make the noise that animals like. One by one, four very long faces come down to sniff it. Then they go back to their bowls.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  hounds_fight: {
+    text: ['The hounds come at you all knees and teeth.'],
+    fight: {
+      monsters: [
+        { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
+        { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
+      ],
+      win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' },
+    },
+  },
+  hounds_win: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['The last two hounds take one look at their brothers and retreat to the far end of the landing, where they stand trembling on their enormous legs.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  vault_shaft: {
+    text: ['The dumbwaiter rope ends at a hatch in the floor of the vault. You lift it a crack. On a fifteen-foot mannequin sits the Lofty Hat, nine feet of velvet studded with rubies. Beside it stands a man who is either very tall furniture or Big Ned.'],
+    choices: [{ text: 'Climb in', to: 'vault' }],
+  },
+  vault_door: {
+    text: ['The vault door is twenty feet tall, with the keyhole at the top.'],
+    choices: [
+      { text: 'Unlock it from your stilts', test: { stat: 'Dex', dd: 4, save: true }, pass: 'vault', fail: 'stilt_fall', if: { item: 'vaultkey' }, show: STILTS },
+      { text: 'Climb up and unlock it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole'] }, dd: 4 }] }, pass: 'vault', fail: 'door_fall', if: { item: 'vaultkey' } },
+      { text: 'Climb up and pick the lock', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'vault', fail: 'door_fall', if: { item: 'tools' } },
+      { text: 'Go back down to the gallery', to: 'gallery' },
+    ],
+  },
+  stilt_fall: {
+    on: [{ damage: 'd4', from: 'The landing' }],
+    text: ['You reach up, wobble, and come down like a felled tree. The hounds watch with interest.'],
+    choices: [{ text: 'Try again', to: 'vault_door' }],
+  },
+  door_fall: {
+    on: [{ damage: 'd4', from: 'The landing' }],
+    text: ['Twenty feet is further than it looks, particularly on the way down.'],
+    choices: [{ text: 'Try again', to: 'vault_door' }],
+  },
+  vault: {
+    text: (c) => c.flags.nedGone
+      ? ['The vault is quiet. The mannequin stands bareheaded.']
+      : ['The Lofty Hat sits on its mannequin, glittering. Beside it stands Big Ned: the tallest man in the world, nine foot four in his socks, told to stand very still and look like furniture. He is doing very well. Only his eyes move, and they are moving towards you.'],
+    choices: [
+      { text: 'Take the hat while he pretends to be a wardrobe', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'hat', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
+      { text: 'Tell him the Lord says he can go home', test: { stat: 'Cha', dd: 8, skill: ['lying'] }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' }, if: { notFlag: 'truthful', notFlagText: 'being able to lie (you’re telling the truth tonight)' } },
+      { text: 'Ask him whether he’s happy here', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you listen to people' }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
+      { text: 'Fight him', to: 'ned_fight', show: { notFlag: 'nedGone' } },
+      { text: 'Take the hat', to: 'hat', show: { flag: 'nedGone' } },
+    ],
+  },
+  ned_home: {
+    on: [{ flag: 'nedGone' }],
+    text: ['Big Ned’s face crumples. “Home,” he says. “I haven’t been home in eleven years. I can’t get through the door.” He walks out of the vault, ducking, and you hear him banging his head all the way down the stairs.'],
+    choices: [{ text: 'Take the hat', to: 'hat' }],
+  },
+  ned_fight: {
+    text: ['Big Ned stops being furniture. He fills the vault, and he hits like a falling tree. But he’s spent his life in rooms built for ordinary people, and he flinches every time he passes a doorway.'],
+    fight: {
+      monsters: [{ name: 'Big Ned', lvl: 2, hp: 18, range: 'engaged', note: 'The tallest man in the world (18 HP); takes d6 damage whenever he runs through a doorway' }],
+      win: 'ned_win', flee: { to: 'gallery', label: 'Run for the stairs' },
+      special: [{ label: 'Dodge through the doorway so he follows', text: 'You duck through the vault door. Big Ned charges after you and meets the lintel with his forehead.', dmg: 'd6', repeat: true }],
+    },
+  },
+  ned_win: {
+    on: [{ flag: 'nedGone' }],
+    text: ['Big Ned sits down heavily and decides, on reflection, to be furniture again.'],
+    choices: [{ text: 'Take the hat', to: 'hat' }],
+  },
+  hat: {
+    on: [{ item: 'hat', msg: 'The Lofty Hat takes up four significant item slots, and most of your dignity.' }], onceOnly: true,
+    text: ['You lift the Lofty Hat off its mannequin. It weighs almost nothing and is very, very long. Now you just have to get it out of the tallest building in the county.'],
+    choices: [
+      { text: 'Climb down the dumbwaiter shaft', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'out_kitchen', fail: 'shaft_drop' },
+      { text: 'Climb up to the roof', to: 'roof_escape' },
+      { text: 'Walk out of the front door wearing it', test: { stat: 'Cha', dd: 12, skill: ['lying', 'social'] }, pass: 'front_walk', fail: 'front_caught', if: STILTS },
+    ],
+  },
+  shaft_drop: {
+    on: [{ damage: 'd6', from: 'The dumbwaiter shaft' }],
+    text: ['You drop the last thirty feet, landing on the hat, which survives, and on Mrs Stump’s pudding, which doesn’t.'],
+    choices: [{ text: 'Get out through the kitchen door', to: 'out_kitchen' }],
+  },
+  out_kitchen: {
+    text: (c) => [c.flags.stump ? 'Mrs Stump holds the little door open for you. “Mind the hat,” she says, and winks.' : 'You squeeze out through the little kitchen door, hat first. It takes a while.'],
+    on: [{ if: { flag: 'stumpCut' }, gold: -30, msg: 'You leave Mrs Stump her cut: 30GP.' }],
+    choices: [{ text: 'Run for Mother Grubb’s', to: 'grubb' }],
+  },
+  roof: {
+    text: ['The roof is unfinished: scaffolding, a flagpole and a builders’ rope that runs all the way down to the town square. A hatch leads down into the Spire.'],
+    choices: [{ text: 'Climb down through the hatch', to: 'gallery' }],
+  },
+  roof_escape: {
+    text: ['You climb out onto the scaffolding at the top of the Spire. Far below, the town square glitters. A builders’ rope runs all the way down to it.'],
+    choices: [{ text: 'Slide down the rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'grubb', fail: 'rope_burn' }],
+  },
+  rope_burn: {
+    on: [{ damage: '2d6', from: 'The landing' }],
+    text: ['You arrive in the town square at a speed normally reserved for comets. The hat lands on top of you, gently.'],
+    choices: [{ text: 'Limp to Mother Grubb’s', to: 'grubb' }],
+  },
+  front_walk: {
+    text: ['You put on the Lofty Hat, which brings you to about fifteen feet, and stroll down the Grand Staircase and out through the front door. The doorman bows so low he falls over. The guests applaud. The Lord, watching from his balcony, assumes you’re his brother and is furious.'],
+    choices: [{ text: 'Stroll to Mother Grubb’s', to: 'grubb' }],
+  },
+  front_caught: {
+    text: ['“Thief!” cries the Lord from his balcony, recognising his own hat. Every pikeman in the hall begins, very slowly, to turn.'],
+    fight: { monsters: [pikeman, pikeman], distance: 1, win: 'grubb', flee: { to: 'grubb', label: 'Run for the door' } },
+  },
+  grubb: {
+    end: 'victory',
+    on: [
+      { sell: { item: 'hat', gold: 400, text: 'Mother Grubb takes the Lofty Hat and counts out the money' } },
+      { sell: { item: 'diary', gold: 100, text: 'Lord Shortshanks buys the diary, laughing so hard he has to sit down' } },
+      { sell: { item: 'candlestick', gold: 25, text: 'Mother Grubb takes the candlestick' } },
+    ],
+    text: (c) => [
+      'Mother Grubb’s barrow is waiting in the alley behind the Drowned Rat, as if it had always been there.',
+      c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says. “Then you owe me thirty gold. I’ll put it on your tab.” You don’t have a tab. You have one now.',
+      'Every 200GP you squander on a pointless endeavour gains you a level.',
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'You fall, and keep falling, and nobody at the party looks down to see where you land.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/fortunes-fang.js"] = function(){
+// FORTUNE'S FANG — break the bank at a casino run by a luck vampire. For a level 2–3 scumbag.
+// The `hour` counter moves on with every game you play; at 4, dawn sends the Count to his coffin.
+
+const META = {
+  id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
+  blurb: 'Under the town of Lesser Wager, in a crypt full of candles and card tables, Count Fortunato runs the only casino where the house always wins. He is a luck vampire: he feeds on yours. Tonight, you’re going to take his bank.',
+};
+
+const twin = (name) => ({ name, lvl: 2, hp: 7, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' });
+const count = { name: 'Count Fortunato', lvl: 7, range: 'engaged', feats: ['undead', 'unluckyAura', 'critWide'], note: 'Luck vampire; each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' };
+const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
+const GAME = { add: ['hour', 1] };
+
+const SECTIONS = {
+  start: {
+    on: [{ gold: 40, msg: 'You won 40GP in a raffle you didn’t enter. You keep it anyway.' }], onceOnly: true,
+    text: [
+      'A painted sign above a crypt door in the churchyard of Lesser Wager reads FORTUNE’S FANG: WHERE LUCK GOES TO DIE. Below it, smaller: NO PAUPERS. NO GARLIC. NO REFUNDS.',
+      'Everyone in Lesser Wager owes the Count money. Everyone in Lesser Wager is pale and tired and keeps tripping over things. Somewhere below your feet is the bank: every coin the town has lost in thirty years.',
+    ],
+    choices: [{ text: 'Go down the steps', to: 'doors' }],
+  },
+  doors: {
+    text: ['At the bottom of the steps, two enormous men in matching waistcoats block the door. “Evening,” says one. “Dress code,” says the other. “No paupers, no—” “—garlic,” finishes the first. They are the Bouncer Twins, and neither of them has finished a sentence alone in his life.'],
+    choices: [
+      { text: 'Flash your purse (needs 30GP)', to: 'floor', if: { gold: 30 } },
+      { text: 'Tell them you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'twins_fight' },
+      { text: 'Start a sentence and don’t finish it', test: { stat: 'Int', dd: 6, skill: ['analysis', 'languages'], why: 'you’ve spotted how they talk' }, pass: 'twins_puzzled', fail: 'twins_fight' },
+      { text: 'Fight them', to: 'twins_fight' },
+    ],
+  },
+  twins_puzzled: {
+    text: ['“I was wondering whether—” you say, and stop. Both twins lean forward, desperate to finish it. “—whether we could—” “—let you in?” “—of course—” They’re still arguing about how the sentence ends as you walk past.'],
+    choices: [{ text: 'Go in', to: 'floor' }],
+  },
+  twins_fight: {
+    text: ['“Then you’ll—” “—be leaving.” They come at you from both sides, which leaves their backs wide open.'],
+    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'twins_win', flee: { to: 'start', label: 'Run back up the steps' } },
+  },
+  twins_win: {
+    on: [{ flag: 'twinsDown' }, { gold: 20, msg: 'Their tips jar: 20GP.' }], onceOnly: true,
+    text: ['The twins sit down against the wall. “That was—” “—uncalled for,” they agree, and fall asleep.'],
+    choices: [{ text: 'Go in', to: 'floor' }],
+  },
+  floor: {
+    text: (c) => [
+      'The gaming floor is a crypt lined with coffins stood on end, each one a booth. Candles drip onto green baize. Pale gamblers lose quietly at the tables. Every so often one of them trips over nothing at all and doesn’t get up for a while.',
+      'There is a dice table, a great brass wheel, a card table run by a crab in a bow tie, a bar, and a cashier’s cage. A door marked STAFF ONLY stands in the corner, and a velvet rope guards a stair going down.',
+      HOUR(c),
+    ],
+    choices: [
+      { text: 'Play the Bones (dice)', to: 'bones' },
+      { text: 'Play the Wheel', to: 'wheel' },
+      { text: 'Play Liar’s Dice with the crab', to: 'crab_table' },
+      { text: 'Get a drink at the bar', to: 'bar', show: { notFlag: 'drank' } },
+      { text: 'Visit the cashier’s cage', to: 'cage' },
+      { text: 'Try the STAFF ONLY door', to: 'office' },
+      { text: 'Step over the velvet rope and go downstairs', to: 'crypt' },
+      { text: 'Cash out and leave', to: 'dawn_out' },
+    ],
+  },
+  bones: {
+    text: ['At the Bones, you bet on two dice made from the knucklebones of the Count’s previous accountant. The croupier is a skeleton. The minimum stake is 20GP.'],
+    choices: [
+      { text: 'Bet 20GP and trust your luck', test: { stat: 'Cha', dd: 8, save: true }, pass: 'bones_win', fail: 'bones_lose', if: { gold: 20 }, effects: [GAME] },
+      { text: 'Bet 20GP and palm a loaded die', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'bones_cheat', fail: 'caught', if: { gold: 20 }, effects: [GAME] },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  bones_win: {
+    on: [{ gold: 20 }],
+    text: ['Double sixes. The skeleton pays out with a rattle that might be disappointment.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  bones_lose: {
+    on: [{ gold: -20 }],
+    text: ['Snake eyes. Somewhere below, you’re sure you hear somebody laugh.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  bones_cheat: {
+    on: [{ gold: 60 }],
+    text: ['Your die comes up six. So does the other one, by coincidence. The skeleton pays three times your stake and looks at you for a long moment out of its empty eye sockets.'],
+    choices: [{ text: 'Back to the floor, quickly', to: 'floor' }],
+  },
+  caught: {
+    on: [{ gold: -20 }],
+    text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. The Bouncer Twins look up from the door.'],
+    fight: {
+      unless: { flag: 'twinsDown' },
+      monsters: [twin('Rex'), twin('Dex')], win: 'twins_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
+    },
+    choices: [{ text: 'Back to the floor, before anyone else notices', to: 'floor' }],
+  },
+  twins_win_floor: {
+    on: [{ flag: 'twinsDown' }],
+    text: ['The twins go down together, as they do everything. The gamblers barely look up.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  wheel: {
+    text: (c) => [
+      'The Wheel is a great brass disc spun by a hunchback who is paid by the spin. Red pays double.',
+      c.flags.magnet ? 'Now you know where the magnet is, you know exactly when to bet.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Bet 20GP on red', test: { stat: 'Cha', dd: 12, save: true }, pass: 'wheel_win', fail: 'wheel_lose', if: { gold: 20 }, effects: [GAME], show: { notFlag: 'magnet' } },
+      { text: 'Watch how the wheel stops', test: { stat: 'Int', dd: 8, skill: ['analysis'], knowledge: false }, pass: 'magnet', fail: 'wheel_watch', effects: [GAME], show: { notFlag: 'magnet' } },
+      { text: 'Bet 40GP, just before the magnet clicks', to: 'wheel_rig', if: { gold: 40 }, effects: [GAME], show: { flag: 'magnet', notFlag: 'wheelRigged' } },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  wheel_win: { on: [{ gold: 20 }], text: ['Red. The hunchback looks genuinely shocked.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  wheel_lose: { on: [{ gold: -20 }], text: ['Black. It’s always black. It’s been black since the Count opened.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  wheel_watch: { text: ['You watch the wheel for an hour and learn nothing, except that the hunchback hums.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  magnet: {
+    on: [{ flag: 'magnet' }],
+    text: ['There: a tiny click, and the wheel slows just before red. There’s a magnet under the baize, and the hunchback works it with his knee. Bet at the right moment, before he’s noticed you’ve noticed, and you can’t lose.'],
+    choices: [{ text: 'Back to the wheel', to: 'wheel' }],
+  },
+  wheel_rig: {
+    on: [{ flag: 'wheelRigged' }, { gold: 80 }],
+    text: ['You bet just as his knee twitches. Red. The hunchback looks at his knee as if it has betrayed him, and pays out double. He won’t take your bets again.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  crab_table: {
+    text: (c) => c.flags.pinchDown
+      ? ['The card table is empty. Somebody has put a lemon where the croupier used to be.']
+      : ['The Liar’s Dice table is run by Mr Pinch, a croupier-crab the size of an armchair, in a bow tie. He deals with one claw and takes your money with the other. You each roll under a cup and bid on what’s underneath. The trick is lying, and not blinking.'],
+    choices: [
+      { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { notFlag: 'pinchDown' } },
+      { text: 'Accuse him of cheating', to: 'pinch_fight', show: { notFlag: 'pinchDown' } },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  crab_win: {
+    on: [{ item: 'chips', msg: 'He pays in a single gold chip, worth 100GP at the cage.' }],
+    text: ['You bid five sixes with a face like a closed door. Mr Pinch looks at you, looks at his cup, and folds. His mandibles click in a way that suggests he will remember you.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  crab_lose: {
+    on: [{ gold: -20 }],
+    text: ['You blink. Mr Pinch sees it. The money vanishes into his shell.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  pinch_fight: {
+    text: ['“Cheating,” says Mr Pinch, “is my job.” He comes across the table claws first.'],
+    fight: {
+      monsters: [{ name: 'Mr Pinch', lvl: 2, range: 'engaged', ap: 4, onHit: { stat: 'Dex', dd: 4, label: 'keep hold of your purse', text: 'He pinches your purse with his other claw.', effect: 'gold', amount: 10 }, note: 'Croupier-crab; shell (4 AP); on hit, d4 Dex save or he pinches 10GP' }],
+      win: 'pinch_win', flee: { to: 'floor', label: 'Back away from the table' },
+    },
+  },
+  pinch_win: {
+    on: [{ flag: 'pinchDown' }, { item: 'chips', msg: 'Inside his shell: a gold chip, worth 100GP at the cage.' }], onceOnly: true,
+    text: ['Mr Pinch flips onto his back and waves his legs. The gamblers at the next table order him with garlic butter.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  bar: {
+    text: ['The barman serves a drink called a Bloody Count. It’s made with tomato juice, he says. He says it twice.'],
+    choices: [
+      { text: 'Drink it', test: { stat: 'Con', dd: 6, save: true, mods: [{ if: { feature: 'noPoison' }, auto: true, text: 'Sottish: you have drunk worse. Recently.' }] }, pass: 'bar_good', fail: 'bar_bad', effects: [{ flag: 'drank' }, GAME] },
+      { text: 'Ask him about the Count', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'bar_gossip', fail: 'bar_shrug', effects: [{ flag: 'drank' }, GAME] },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  bar_good: { on: [{ heal: '2d6' }], text: ['It is not tomato juice. You feel wonderful.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  bar_bad: { on: [{ damage: 'd4', from: 'The Bloody Count' }], text: ['It is not tomato juice. You feel dreadful.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  bar_gossip: {
+    on: [{ flag: 'gossip' }],
+    text: ['The barman leans closer. “Can’t stand his own reflection, the Count. No mirrors down here, ever. And come dawn he’s in his coffin, out like a light, till dusk. Keeps the coffin key in the office. Not that I told you.”'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  bar_shrug: { text: ['“Never heard of him,” says the barman, polishing a glass with a shaking hand.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
+  cage: {
+    text: ['A skeleton sits in the cashier’s cage behind iron bars, counting coins with bony fingers. Behind it, through a small door, you can see the edge of a strongbox.'],
+    choices: [
+      { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' } },
+      { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { notFlag: 'cageRobbed' } },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  cash_in: {
+    on: [{ sell: { item: 'chips', gold: 100, text: 'The skeleton pays out for a gold chip' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }],
+    text: ['The skeleton bites each chip, which is a waste of time, as it has no tongue.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  cage_robbed: {
+    on: [{ flag: 'cageRobbed' }, { gold: 120 }],
+    text: ['The lock clicks. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  cashier_fight: {
+    text: ['The skeleton stops counting. It reaches under the counter and comes up with a cashbox, which it swings at your head.'],
+    fight: {
+      monsters: [{ name: 'Cashier skeleton', lvl: 2, range: 'engaged', feats: ['undead'], note: 'Undead; counts everything, including your teeth' }],
+      win: 'cage_robbed', flee: { to: 'floor', label: 'Back to the floor' },
+    },
+  },
+  office: {
+    text: (c) => [
+      'The staff room is a crypt with a desk in it. On the wall hangs a calendar with every sunrise circled in red, and a hook with a small silver key on it, labelled COFFIN.',
+      c.flags.gossip ? 'The barman was right: there isn’t a mirror anywhere.' : '',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Take the coffin key', to: 'office_key', show: { notFlag: 'coffinKey' } },
+      { text: 'Back to the floor', to: 'floor' },
+    ],
+  },
+  office_key: {
+    on: [{ flag: 'coffinKey' }, { item: 'coffin' }],
+    text: ['You pocket the key. Somewhere below, something in a velvet-lined box is going to have a very bad morning.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  crypt: {
+    text: (c) => (c.flags.hour || 0) >= 4
+      ? ['Down the stair, the private crypt is quiet. Grey light leaks through a grating high in the wall: dawn. In the middle of the room, on a velvet dais, stands a black coffin. From inside comes a gentle snoring. Behind it, a great iron door is marked THE BANK.']
+      : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
+    choices: [
+      { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4] } },
+      { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4] } },
+      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4] } },
+      { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
+      { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
+      { text: 'Attack him', to: 'count_fight', show: { below: ['hour', 4] } },
+      { text: 'Go back upstairs', to: 'floor' },
+    ],
+  },
+  coffin_locked: {
+    on: [{ flag: 'countLocked' }],
+    text: ['The key turns with a satisfying click. Inside, the snoring stops, then starts again, slightly worried. You have until dusk.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_wakes: {
+    text: ['A floorboard creaks. The coffin lid creaks back. Count Fortunato sits up, squints at the grey light from the grating, and hisses. Dawn has made him weak and furious.'],
+    fight: {
+      monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
+      win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
+    },
+  },
+  count_lost: {
+    text: ['You cut the deck. Ace. He cuts. Two. For the first time in three hundred years, Count Fortunato has lost. He stares at the card. He stares at you. “That,” he says quietly, “is impossible.” He stands, bows stiffly, and walks into his coffin and closes the lid. You hear him weeping. The bank is yours.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_won: {
+    on: [{ gold: -1000, msg: 'You lose everything you have.' }],
+    text: ['You cut the deck. Ace. He cuts. Ace, again, and the one under it. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
+    choices: [{ text: 'Attack him, since you’ve nothing left to lose', to: 'count_fight' }, { text: 'Crawl back upstairs', to: 'floor' }],
+  },
+  mirror: {
+    text: ['You hold up the mirror. Count Fortunato looks into it and sees the room, the candles, the table, and no Count Fortunato at all. “No,” he whispers. “I’m… I’m not even here.” He sits down on the floor with his head in his hands and refuses to talk to anyone about anything. He’ll be like that for days.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_flees: {
+    text: ['You raise your holy symbol and Count Fortunato recoils as if it were the sun. He flees into his coffin and slams the lid. You hear him locking it from the inside.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  count_obeys: {
+    on: [{ gold: 100, msg: 'He hands you his personal winnings: 100GP. “Master.”' }], onceOnly: true,
+    text: ['You present your symbol of glorious entropy. The Count’s eyes cloud. He bows low. “Master,” he says. “What is mine is yours.” He opens the bank for you himself.'],
+    choices: [{ text: 'Into the bank', to: 'bank' }],
+  },
+  count_fight: {
+    text: ['The Count rises from his chair, and the candles gutter. You feel your luck draining away like warm water out of a bath.'],
+    fight: {
+      monsters: [count], win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
+      special: [
+        { flag: 'mirrored', label: 'Show him your hand mirror', if: { item: 'mirror' }, text: 'He sees no reflection, screams, and sits down on the floor with his head in his hands.', win: true },
+      ],
+    },
+  },
+  count_dead: {
+    text: ['Count Fortunato dissolves into a heap of dust and losing lottery tickets. Upstairs, every gambler in Fortune’s Fang suddenly feels much better, and three of them win at once.'],
+    choices: [{ text: 'Open the bank', to: 'bank' }],
+  },
+  bank: {
+    on: [{ gold: 400, msg: 'Thirty years of Lesser Wager’s losses. You take what you can carry.' }], onceOnly: true,
+    text: ['The bank is a vault full of coins, IOUs, deeds, wedding rings, false teeth and a surprising number of goats’ bells. It is everything the town ever lost.'],
+    choices: [{ text: 'Go upstairs and out', to: 'exit' }],
+  },
+  exit: {
+    text: (c) => c.flags.twinsDown
+      ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
+      : ['At the door, the Bouncer Twins look at your bulging pockets. “Leaving—” says one. “—so soon?” says the other. “Exit fee.”'],
+    choices: [
+      { text: 'Walk out into the dawn', to: 'dawn_out', show: { flag: 'twinsDown' } },
+      { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { notFlag: 'twinsDown' } },
+      { text: 'Fight your way out', to: 'exit_fight', show: { notFlag: 'twinsDown' } },
+    ],
+  },
+  exit_fight: {
+    text: ['“Then you’ll—” “—be staying.”'],
+    fight: { monsters: [twin('Rex'), twin('Dex')], win: 'dawn_out' },
+  },
+  dawn_out: {
+    end: 'victory',
+    text: (c) => [
+      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That, too, is none of your business.',
+      `You leave with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'Your luck runs out, and so do you. The Count adds your purse to the bank, and your name to the ledger of the unlucky.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/mothers-kitchen.js"] = function(){
+// MOTHER'S KITCHEN — steal a prize turnip from a hill giant's cottage. For a level 3–4 scumbag.
+// The `noise` counter rises with every clumsy act; at 3, Mother comes back (see `redirect` on the kitchen).
+
+const META = {
+  id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
+  blurb: 'Farmer Turnbull lost the last oversized turnip at market to a stranger. Then a hill giant grew a bigger one, had it gilded, and won every prize in the county. Turnbull will pay 300 gold to see it gone. It sits on her mantelpiece, forty feet up.',
+};
+
+const NOISE = (n = 1) => ({ add: ['noise', n] });
+const QUIET = { below: ['noise', 3] };
+const louse = { name: 'Head louse', lvl: 3, range: 'engaged', ap: 4, onHit: { stat: 'Con', dd: 6, label: 'shake off the itch', text: 'It bites. The itch is unbearable.', effect: 'damage', amount: 'd4' }, note: 'The size of a pig; shell (4 AP); on hit, d6 Con save or take d4 more' };
+
+const SECTIONS = {
+  start: {
+    on: [{ gold: 20, msg: 'Turnbull pays you 20GP in advance, in turnips. You sell them on the way.' }], onceOnly: true,
+    text: [
+      'Farmer Turnbull meets you behind the pig sheds. He has the eyes of a man who has been outbid for a turnip and has thought about nothing else since.',
+      '“Mother’s Golden Turnip,” he spits. “Grown by a giant. Gilded by a giant. Wins the county fair every year by a giant margin. It sits on her mantelpiece up on Hogback Hill. Bring it to me and I’ll pay three hundred gold.” He leans closer. “Mind the baby.”',
+    ],
+    choices: [{ text: 'Walk up Hogback Hill', to: 'cottage' }],
+  },
+  cottage: {
+    text: [
+      'Mother’s cottage is a perfectly ordinary cottage, except that it is a hundred feet tall. Roses the size of cartwheels climb the walls. The front door could let a galleon through, and there is a gap under it you could drive a cart into. A cat flap the size of a barn door swings in the breeze. Ivy as thick as your arm climbs to an open window.',
+      'Out by the well, you can see Mother herself, drawing water in a bucket the size of a house. She is humming. She will be back.',
+    ],
+    choices: [
+      { text: 'Crawl under the front door', to: 'kitchen' },
+      { text: 'Go through the cat flap', to: 'cat_flap' },
+      { text: 'Climb the ivy to the open window', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Hunter'], why: 'you know how to climb' }, pass: 'bedroom', fail: 'ivy_fall' },
+    ],
+  },
+  ivy_fall: {
+    on: [{ damage: '2d4', from: 'The ivy' }],
+    text: ['Forty feet up, a leaf the size of a shield comes away in your hand.'],
+    choices: [{ text: 'Try another way', to: 'cottage' }],
+  },
+  cat_flap: {
+    text: ['The cat flap swings shut behind you with a BANG that echoes through the cottage. On the other side, in a basket the size of a haycart, an enormous ginger cat opens one eye. A brass tag on its collar reads TIDDLES.'],
+    on: [NOISE()],
+    choices: [
+      { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight' },
+      { text: 'Let your rat go as a distraction', to: 'tiddles_rat', if: { item: 'rat' } },
+      { text: 'Fight it', to: 'tiddles_fight' },
+    ],
+  },
+  tiddles_rat: {
+    on: [{ lose: 'rat' }],
+    text: ['Your rat takes one look at Tiddles and makes the decision any rat would. Tiddles follows it at high speed. You will miss that rat. You won’t miss it much.'],
+    choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
+  },
+  tiddles_fight: {
+    text: ['Tiddles stretches, which takes a while, and then pounces, which doesn’t.'],
+    fight: {
+      monsters: [{ name: 'Tiddles', lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
+      win: 'tiddles_win', flee: { to: 'cottage', label: 'Dive back out through the flap' },
+    },
+  },
+  tiddles_win: {
+    on: [{ flag: 'tiddlesGone' }, NOISE()],
+    text: ['Tiddles decides you are not worth it, in the way only cats can, and stalks off to sit in a sunbeam and pretend none of this happened.'],
+    choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
+  },
+  kitchen: {
+    redirect: [{ if: { atLeast: ['noise', 3], notFlag: 'motherHome' }, to: 'mother_back' }],
+    text: (c) => [
+      'Mother’s kitchen is a cathedral of crockery. Table legs rise like tree trunks to a tabletop forty feet up. A dresser towers against one wall, and a door to the larder stands ajar. At the far end, a fire crackles in a hearth you could hold a barn dance in. On the mantelpiece above it, catching the firelight, sits the Golden Turnip.',
+      c.flags.motherAsleep ? 'Mother is asleep in her rocking chair by the fire, snoring like a landslide.' : (c.flags.noise || 0) ? 'Somewhere outside, the humming has stopped. Mother is listening.' : 'Through the window, you can hear Mother humming by the well.',
+      'A doorway leads to the nursery.',
+    ],
+    choices: [
+      { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
+      { text: 'Raid the larder', to: 'larder' },
+      { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
+      { text: 'Climb up to the mantelpiece', to: 'mantel_climb' },
+      { text: 'Go into the nursery', to: 'nursery' },
+      { text: 'Leave', to: 'turnbull' },
+    ],
+  },
+  table_fall: {
+    on: [{ damage: 'd6', from: 'The floor' }, NOISE()],
+    text: ['You slide down the table leg with a squeal like a fingernail on a slate. Outside, the humming stops.'],
+    choices: [{ text: 'Get up', to: 'kitchen' }],
+  },
+  table: {
+    text: ['The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. A pair of knitting needles like lances. A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel.'],
+    choices: [
+      { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
+      { text: 'Take a knitting needle as a lance', to: 'needle', show: { notFlag: 'needle' } },
+      { text: 'Climb down', to: 'kitchen' },
+    ],
+  },
+  coin: {
+    on: [{ flag: 'coin' }, { gold: 80 }],
+    text: ['The giant coin is soft gold, and with enough leverage a chunk the size of a dinner plate comes away. It is worth a fortune. It is a very small part of one of Mother’s pennies.'],
+    choices: [{ text: 'Back across the table', to: 'table' }],
+  },
+  coin_noise: {
+    on: [NOISE(), { damage: 'd4', from: 'The coin' }],
+    text: ['The coin slips, rolls, and falls off the table onto the stone floor with a sound like a cathedral bell. You’re lucky it didn’t take you with it.'],
+    choices: [{ text: 'Climb down before anyone comes', to: 'kitchen' }],
+  },
+  needle: {
+    on: [{ flag: 'needle' }],
+    text: ['A knitting needle is too big to use as a weapon, but just right as a bridge. You haul it to the edge of the table and swing the far end across to the mantelpiece. It’ll hold, probably.'],
+    choices: [{ text: 'Cross the needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall' }, { text: 'Back across the table', to: 'table' }],
+  },
+  needle_fall: {
+    on: [{ damage: '2d6', from: 'The fall' }, NOISE()],
+    text: ['Halfway across, the needle rolls. You don’t.'],
+    choices: [{ text: 'Get up', to: 'kitchen' }],
+  },
+  larder: {
+    text: ['The larder smells of cheese and old stone. Cheeses the size of millstones, a ham like a fallen tree, and on the floor, a mousetrap the size of a cart, baited with a lump of cheese you could live in.'],
+    choices: [
+      { text: 'Eat some ham', to: 'ham', show: { notFlag: 'ham' } },
+      { text: 'Take the cheese off the mousetrap', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], why: 'disarming traps' }, pass: 'trap_cheese', fail: 'trap_snap', show: { notFlag: 'trap' } },
+      { text: 'Back to the kitchen', to: 'kitchen' },
+    ],
+  },
+  ham: {
+    on: [{ flag: 'ham' }, { heal: '2d6' }],
+    text: ['You eat a slice of ham the size of a door. You feel much better, and slightly ashamed.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  trap_cheese: {
+    on: [{ flag: 'trap' }],
+    text: ['You ease the cheese off the trigger plate without a sound. Wedged under it is a silver ring, lost by Mother years ago and much too big to wear. You prise out its gemstone: a ruby the size of an egg.'],
+    choices: [{ text: 'Pocket the ruby', to: 'ruby' }],
+  },
+  ruby: {
+    on: [{ gold: 60, msg: 'The ruby is worth 60GP.' }],
+    text: ['It glows like a coal in your pocket.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  trap_snap: {
+    on: [{ flag: 'trap' }, { damage: '2d6', from: 'The mousetrap' }, NOISE()],
+    text: ['SNAP. The bar comes down like a portcullis, an inch from your nose and directly onto your foot.'],
+    choices: [{ text: 'Limp back to the kitchen', to: 'kitchen' }],
+  },
+  dresser_fall: {
+    on: [{ damage: 'd6', from: 'The dresser' }, NOISE()],
+    text: ['A plate the size of a millwheel comes down with you and explodes on the flagstones.'],
+    choices: [{ text: 'Get up', to: 'kitchen' }],
+  },
+  dresser: {
+    on: [{ flag: 'thimble' }, { item: 'thimble' }],
+    text: ['On the second shelf, among the giant crockery, sits Mother’s silver thimble. It’s the size of a bucket and worth a good sixty gold. It is also very, very shiny.'],
+    choices: [{ text: 'Climb down', to: 'kitchen' }],
+  },
+  mantel_climb: {
+    text: ['The fire roars below the mantelpiece. Climbing the chimney breast means going up through the heat.'],
+    choices: [
+      { text: 'Climb up through the heat', test: { stat: 'Str', dd: 12, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 8 }] }, pass: 'mantel', fail: 'mantel_burn' },
+      { text: 'Put the fire out with your bucket first', to: 'fire_out', if: { item: 'bucket' }, show: { notFlag: 'fireOut' } },
+      { text: 'Go round by the table instead', to: 'kitchen' },
+    ],
+  },
+  fire_out: {
+    on: [{ flag: 'fireOut' }, NOISE()],
+    text: ['It takes a lot of trips to the giant water butt with a normal-sized bucket. The fire dies with a hiss you could hear in the next county.'],
+    choices: [{ text: 'Climb the cool chimney breast', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'mantel', fail: 'mantel_slip' }],
+  },
+  mantel_slip: {
+    on: [{ damage: 'd6', from: 'The hearth' }],
+    text: ['You slide down into the ashes, which are still warm.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  mantel_burn: {
+    on: [{ damage: '2d6', from: 'The fire' }],
+    text: ['Halfway up, your eyebrows go. Then your sleeves. You drop back to the floor smoking gently.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  mantel: {
+    text: (c) => c.flags.turnip
+      ? ['The mantelpiece is bare except for a little rosette that says FIRST.']
+      : ['The mantelpiece is a long shelf of china dogs, each as big as a real one. In the middle, on a velvet cushion, under a rosette that says FIRST, sits the Golden Turnip: as big as a barrel, gilded from root to leaf, and absolutely ridiculous.'],
+    choices: [
+      { text: 'Take the Golden Turnip', to: 'turnip', show: { notFlag: 'turnip' } },
+      { text: 'Climb down', to: 'kitchen' },
+    ],
+  },
+  turnip: {
+    on: [{ flag: 'turnip' }, { item: 'turnip', msg: 'It takes up three significant item slots, and all of your arms.' }, NOISE()],
+    text: ['You roll it off its cushion. It’s heavier than it looks, and it looks very heavy. It goes over the edge of the mantelpiece, bounces off a china dog, and lands on the hearthrug with a thump that shakes the cottage.'],
+    choices: [{ text: 'Climb down after it', to: 'kitchen' }],
+  },
+  nursery: {
+    text: (c) => c.flags.babyAsleep
+      ? ['The baby is asleep in its cot, sucking a thumb the size of a ham.']
+      : ['In a cot the size of a cottage sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
+    choices: [
+      { text: 'Give it its rattle', to: 'baby_rattle', if: { item: 'rattle' }, show: { notFlag: 'babyAsleep' } },
+      { text: 'Sing it a lullaby', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you’ve sung people to sleep before' }, pass: 'baby_sleep', fail: 'baby_cries', show: { notFlag: 'babyAsleep' } },
+      { text: 'Pick up the rattle from the floor', to: 'rattle', show: { notFlag: 'rattle' } },
+      { text: 'Back to the kitchen', to: 'kitchen' },
+    ],
+  },
+  rattle: {
+    on: [{ flag: 'rattle' }, { item: 'rattle' }],
+    text: ['The rattle is the size of a barrel and full of something that sounds like gravel. Carrying it quietly takes both hands and all your concentration.'],
+    choices: [{ text: 'Back to the cot', to: 'nursery' }],
+  },
+  baby_rattle: {
+    on: [{ flag: 'babyAsleep' }, { lose: 'rattle' }],
+    text: ['You heave the rattle up through the bars. The baby shakes it twice, delighted, gives it a long suck, and falls fast asleep.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  baby_sleep: {
+    on: [{ flag: 'babyAsleep' }],
+    text: ['You sing the only lullaby you know, which is about a drowned sailor. The baby’s eyes droop. Its thumb goes in. It’s asleep before the sailor drowns.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  baby_cries: {
+    on: [NOISE(2)],
+    text: ['Your singing voice is not what it was. The baby’s lip wobbles, and then it starts to cry: a sound like a herd of cattle falling down a well. Outside, the humming stops dead.'],
+    fight: {
+      monsters: [{ name: 'The baby', lvl: 4, hp: 20, range: 'engaged', feats: ['topple', 'coward'], note: 'Infant hill giant (20 HP); falls over at the end of each turn; gives up at half health' }],
+      win: 'baby_stops', flee: { to: 'kitchen', label: 'Run for the kitchen' },
+    },
+  },
+  baby_stops: {
+    on: [{ flag: 'babyAsleep' }],
+    text: ['The baby hiccups, sniffs, and falls asleep from the effort of crying.'],
+    choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  bedroom: {
+    text: ['You climb in at the bedroom window. The bed is a valley of patchwork. On the dressing table, a hairbrush the size of a hedge. Something large moves among its bristles.'],
+    choices: [
+      { text: 'Search the dressing table', to: 'louse_fight', show: { notFlag: 'louse' } },
+      { text: 'Creep downstairs to the kitchen', to: 'kitchen' },
+    ],
+  },
+  louse_fight: {
+    text: ['Out of the hairbrush clambers a head louse the size of a pig, with a shell like a cart roof and an appetite for anything warm.'],
+    fight: { monsters: [louse], win: 'louse_win', flee: { to: 'kitchen', label: 'Run downstairs' } },
+  },
+  louse_win: {
+    on: [{ flag: 'louse' }, { gold: 40, msg: 'In the hairbrush: three of Mother’s gold hairpins, each worth 40GP. You can carry one without looking ridiculous. You take one.' }], onceOnly: true,
+    text: ['The louse lies on its back, legs curling. You will be scratching for days.'],
+    choices: [{ text: 'Creep downstairs to the kitchen', to: 'kitchen' }],
+  },
+  mother_back: {
+    on: [{ flag: 'motherHome' }],
+    text: ['The front door swings open with a noise like a ship coming into harbour. Mother ducks in, puts down her bucket, and looks round her kitchen with an expression of infinite patience. She has heard something. She is going to find it.'],
+    choices: [
+      { text: 'Hide under the dresser', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'you know how to lie still' }, pass: 'mother_sits', fail: 'mother_finds' },
+      { text: 'Cast Shroud and hide in the darkness', cast: 'shroud', pass: 'mother_sits', fail: 'mother_finds' },
+      { text: 'Run for the gap under the door', test: { stat: 'Dex', dd: 12, save: true }, pass: 'turnbull', fail: 'mother_finds' },
+    ],
+  },
+  mother_sits: {
+    on: [{ flag: 'motherAsleep' }],
+    text: ['Mother looks under the table, behind the bread bin and inside the teapot. Then she sighs, sits down in her rocking chair by the fire, picks up her knitting and, within a minute, is snoring like a landslide.'],
+    choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
+  },
+  mother_finds: {
+    text: ['A hand the size of a cart closes round you. Mother holds you up to her face. Her eyes are kind and enormous. “What’s this, then?” she says. She doesn’t squash you. She does something worse: she pops you in an empty jam jar, screws the lid on, and puts you on the windowsill to show the vicar.'],
+    choices: [
+      { text: 'Unscrew the lid from the inside', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },
+      { text: 'Pick the jar’s lid open', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'tools' } },
+      { text: 'Wait for the vicar', to: 'vicar' },
+    ],
+  },
+  jar_stuck: {
+    on: [{ damage: 'd4', from: 'The jar' }],
+    text: ['The lid doesn’t budge. Your fingers do.'],
+    choices: [
+      { text: 'Try again', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },
+      { text: 'Wait for the vicar', to: 'vicar' },
+    ],
+  },
+  jar_out: {
+    on: [{ flag: 'motherAsleep' }],
+    text: ['The lid gives. You climb out onto the windowsill. Inside, Mother has fallen asleep in her rocking chair, knitting a sock you could live in.'],
+    choices: [{ text: 'Climb down into the kitchen', to: 'kitchen' }],
+  },
+  vicar: {
+    text: ['The vicar arrives at teatime. He is an ordinary-sized man who has been the hill giants’ vicar for forty years and is unsurprised by anything. He looks at you in your jar. “Ah,” he says. “Turnbull sent you, did he?” While Mother pours the tea, he unscrews the lid, quietly puts the Golden Turnip back on the mantelpiece if you had it, and drops you into his coat pocket. He carries you down the hill without a word, and sets you down in the lane. “Go home,” he says.'],
+    on: [{ lose: 'turnip' }],
+    choices: [{ text: 'Go to Turnbull’s', to: 'turnbull' }],
+  },
+  turnbull: {
+    end: 'victory',
+    on: [
+      { sell: { item: 'turnip', gold: 300, text: 'Turnbull hugs the Golden Turnip and pays up' } },
+      { sell: { item: 'thimble', gold: 60, text: 'A fence in the village buys the thimble' } },
+    ],
+    text: (c) => [
+      c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a shotgun. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
+      `You come down from Hogback Hill with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'Somewhere far above you, a giant sighs, sweeps you into a dustpan and goes back to her knitting.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
+};
+__defs["src/adventure/eviction-notice.js"] = function(){
+// EVICTION NOTICE — evict a kobold siege-pyramid from the town square. For a level 4–5 scumbag.
+
+const META = {
+  id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
+  blurb: 'A kobold siege-pyramid has parked itself in the square at Middle Whelping and refuses to move. Lord Grimsby, who owns the square, owns the town and has never once bathed, will pay 300 gold to have it evicted. Nobody has asked the kobolds why they’re there.',
+};
+
+const slinger = { name: 'Kobold slinger', lvl: 1, range: 'short', note: 'Recently evicted; very good aim' };
+const sapper = { name: 'Kobold sapper', lvl: 2, range: 'engaged', feats: ['burst'], note: 'Carries a lit fuse; explodes when slain (d6 Dex save or 2d6 damage)' };
+
+const SECTIONS = {
+  start: {
+    text: [
+      'Lord Grimsby receives you in the town square of Middle Whelping, holding a scented handkerchief to his nose, which does nothing for anyone else’s. Behind him squats a wooden pyramid thirty feet high, bristling with arrow slits and painted with slogans: WE SHALL NOT BE MOVED. FAIR RENTS NOW. GRIMSBY IS A SMELL.',
+      '“Kobolds,” says Lord Grimsby. “Arrived on Tuesday. Squatting on my square. Three hundred gold to get them out, I don’t care how.” He hands you a formal eviction notice. It is spelled wrong.',
+    ],
+    choices: [
+      { text: 'Ask him why the kobolds are here', test: { stat: 'Cha', dd: 8, skill: ['social'] }, pass: 'grimsby_talks', fail: 'grimsby_huffs' },
+      { text: 'Walk up to the pyramid', to: 'pyramid' },
+      { text: 'Ask around the square', to: 'square' },
+    ],
+  },
+  grimsby_talks: {
+    on: [{ flag: 'knowsWarren' }],
+    text: ['Grimsby waves a hand. “Oh, they lived in a warren under Grimsby Common. I filled it in. I’m building a hunting lodge. Perfectly legal. Practically.”'],
+    choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }, { text: 'Ask around the square', to: 'square' }],
+  },
+  grimsby_huffs: {
+    text: ['“None of your business,” says Grimsby, and walks off with his handkerchief, trailing flies.'],
+    choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }, { text: 'Ask around the square', to: 'square' }],
+  },
+  square: {
+    text: ['The townsfolk of Middle Whelping are on the kobolds’ side, mostly because Lord Grimsby is their landlord too. A baker tells you the kobolds pay cash for bread. An old woman tells you the square has always been common land. “There was a deed,” she says, “in the town hall. Grimsby had it taken away. Said he was having it framed.”'],
+    on: [{ flag: 'heardDeed' }],
+    choices: [
+      { text: 'Search Grimsby’s carriage for the deed', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'deed', fail: 'bailiffs', show: { notFlag: 'deed' } },
+      { text: 'Visit the town hall', to: 'town_hall', show: { notFlag: 'deed' } },
+      { text: 'Buy a pie from the baker who feeds the kobolds', to: 'baker', show: { notFlag: 'pie' } },
+      { text: 'Walk up to the pyramid', to: 'pyramid' },
+    ],
+  },
+  town_hall: {
+    text: ['The town hall is one room, one clerk and one enormous dog asleep on the records. The clerk confirms that the deed to the square was “borrowed for framing” by Lord Grimsby twelve years ago. “I’ve got a copy,” he says. “Somewhere. Under the dog.”'],
+    choices: [
+      { text: 'Move the dog', test: { stat: 'Str', dd: 8, skill: ['bruteforce', 'survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'dog_moved', fail: 'dog_bite' },
+      { text: 'Forge a new copy with your quill', test: { stat: 'Int', dd: 8, skill: ['skulduggery', 'analysis'], why: 'forgery is a kind of skulduggery' }, pass: 'deed_forged', fail: 'forge_smudge', if: { item: 'quill' } },
+      { text: 'Back to the square', to: 'square' },
+    ],
+  },
+  dog_moved: {
+    text: ['The dog is the size of a pony and the temperament of a cushion. Under it, warm and slightly damp, is the town’s copy of the deed.'],
+    choices: [{ text: 'Take the copy', to: 'deed' }],
+  },
+  dog_bite: {
+    on: [{ damage: 'd6', from: 'The dog' }],
+    text: ['The dog wakes up, briefly, and expresses an opinion. Then it goes back to sleep, on the records, harder than before.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  deed_forged: {
+    text: ['With the clerk’s help and an old seal from a drawer, you produce a copy of the deed so good that the clerk files it and forgets it was ever a forgery.'],
+    choices: [{ text: 'Take the copy', to: 'deed' }],
+  },
+  forge_smudge: {
+    text: ['Your forgery reads: THIS SQUARE BELONGS TO THE PEPOLE. The clerk winces and puts it in the stove.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  baker: {
+    on: [{ flag: 'pie' }, { gold: -5 }, { heal: '2d6' }],
+    text: ['The pie costs five gold and is worth it. The baker leans over the counter. “The old one, Grandmother Snik, she’s fair. Pays on time. Talk to her straight and she’ll listen. Lie to her and she’ll know.”'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  deed: {
+    on: [{ flag: 'deed' }, { item: 'deed' }],
+    text: ['Under a pile of scented handkerchiefs in Grimsby’s carriage is a framed parchment: the deed to the square, granting it to the people of Middle Whelping forever. Grimsby doesn’t own the square at all. He’s been charging the market rent on it for twelve years.'],
+    choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }],
+  },
+  bailiffs: {
+    text: ['“Oi!” Two of Grimsby’s bailiffs, built like coal sheds and smelling worse, drag you out of the carriage by your ankles.'],
+    fight: {
+      monsters: [{ name: 'Bailiff', lvl: 2, range: 'engaged', note: 'Never bathes; takes things that aren’t his' }, { name: 'Bailiff', lvl: 2, range: 'engaged', note: 'Never bathes; takes things that aren’t his' }],
+      win: 'bailiffs_win', flee: { to: 'pyramid', label: 'Run for the pyramid' },
+    },
+  },
+  bailiffs_win: {
+    text: ['The bailiffs lie in the gutter, where they are comfortable. You go back to the carriage.'],
+    choices: [{ text: 'Search the carriage', to: 'deed' }],
+  },
+  pyramid: {
+    text: (c) => [
+      'Up close, the siege-pyramid is a marvel of kobold engineering: planks, barrel staves, cartwheels and stolen doors nailed together on a giant set of wheels. It smells strongly of lamp oil. A sign on the door reads: DANGEROUSLY FLAMMABLE. NO NAKED FLAMES. NO LANDLORDS.',
+      c.flags.slingersDown ? 'The arrow slits are quiet.' : 'From the arrow slits, small scaly faces watch you, and small scaly hands hold slings.',
+    ],
+    choices: [
+      { text: 'Knock on the door', to: 'door' },
+      { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living' }, pass: 'apex', fail: 'slingers' },
+      { text: 'Set fire to it', to: 'burn', if: { fire: true } },
+      { text: 'Take your bow to the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
+    ],
+  },
+  slingers: {
+    text: ['A volley of sling stones rattles off the cobbles around you. Three kobolds pop up along the slits, reloading.'],
+    fight: {
+      monsters: [slinger, slinger, slinger], distance: 1, cornered: true,
+      win: 'slingers_win', flee: { to: 'start', label: 'Retreat across the square' },
+    },
+  },
+  slingers_win: {
+    on: [{ flag: 'slingersDown' }],
+    text: ['The last slinger ducks down out of sight, and you hear a lot of small feet running upstairs.'],
+    choices: [{ text: 'Knock on the door', to: 'door' }],
+  },
+  door: {
+    text: ['A hatch opens at knee height. A kobold in a hard hat looks up at you. “If you’re from Grimsby,” it says, “you can tell him we’re not moving until we’ve got somewhere to move to. And we want our deposit back.”'],
+    choices: [
+      { text: 'Tell it you’re here to help', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'inside', fail: 'sapper_fight' },
+      { text: 'Show it the deed to the square', to: 'deed_shown', if: { item: 'deed' } },
+      { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'sapper_fight', fail: 'door_ouch' },
+    ],
+  },
+  door_ouch: {
+    on: [{ damage: 'd4', from: 'The door' }],
+    text: ['The door is made from six other doors. It is very solid.'],
+    choices: [{ text: 'Try something else', to: 'door' }],
+  },
+  deed_shown: {
+    on: [{ flag: 'trusted' }],
+    text: ['The kobold reads the deed, very slowly, with a claw under each word. Then it opens the door wide. “Grandmother will want to see this,” it says.'],
+    choices: [{ text: 'Go inside', to: 'inside' }],
+  },
+  sapper_fight: {
+    text: ['The door swings open on a kobold sapper with a barrel of black powder on its back and a lit fuse in its teeth. It charges.'],
+    fight: { monsters: [sapper], win: 'inside', flee: { to: 'pyramid', label: 'Back away from the fuse' } },
+  },
+  inside: {
+    text: (c) => [
+      'Inside, the pyramid is three floors of ladders, hammocks, cooking pots and drying washing. The ground floor is the engine room: a treadmill the size of a millwheel that turns the pyramid’s wheels.',
+      c.flags.trollGone ? 'The treadmill stands still.' : 'Inside the treadmill, plodding patiently, is a troll called Gnasher. He is the engine. He looks at you, then at his wheel, then at you.',
+      'A ladder leads up to the middle floor, where you can hear arguing.',
+    ],
+    choices: [
+      { text: 'Ask Gnasher what he gets paid', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'] }, pass: 'troll_strike', fail: 'troll_fight', show: { notFlag: 'trollGone' } },
+      { text: 'Jam the treadmill with your iron spikes', to: 'troll_jam', if: { item: 'spikes' }, show: { notFlag: 'trollGone' } },
+      { text: 'Climb the ladder', to: 'council' },
+      { text: 'Look into the hatch marked NURSERY', to: 'kobold_nursery', show: { notFlag: 'storyTold' } },
+      { text: 'Go back outside', to: 'pyramid' },
+    ],
+  },
+  kobold_nursery: {
+    text: ['Behind the hatch, a dozen kobold children in hammocks look up at you with enormous yellow eyes. “Are you the landlord?” asks the smallest. “Mum says the landlord eats kobolds.” “Tell us a story,” says another. “A story where the landlord loses.”'],
+    choices: [
+      { text: 'Tell them a story', test: { stat: 'Cha', dd: 6, skill: ['social', 'languages'], profs: ['Missionary', 'Cleric'], why: 'you tell stories for a living' }, pass: 'story_good', fail: 'story_bad' },
+      { text: 'Back to the engine room', to: 'inside' },
+    ],
+  },
+  story_good: {
+    on: [{ flag: 'storyTold' }, { flag: 'kidsLikeYou' }],
+    text: ['You tell them about a landlord who never washed, and who was eaten by his own fleas. They shriek with delight. By the end, they’re chanting your name, or at least the bits of it they can pronounce. Word will reach Grandmother Snik.'],
+    choices: [{ text: 'Back to the engine room', to: 'inside' }],
+  },
+  story_bad: {
+    on: [{ flag: 'storyTold' }],
+    text: ['Your story has a moral, which kobold children can smell a mile off. They boo you out of the nursery.'],
+    choices: [{ text: 'Back to the engine room', to: 'inside' }],
+  },
+  troll_strike: {
+    on: [{ flag: 'trollGone' }, { flag: 'trollFriend' }],
+    text: ['“Gets paid?” says Gnasher slowly. “Gets… paid?” He stops walking. The treadmill stops turning. “Nobody said nothing about getting paid.” He sits down in his wheel and folds his arms. The pyramid is going nowhere now, which, you realise, was also true before.'],
+    choices: [{ text: 'Climb the ladder', to: 'council' }],
+  },
+  troll_jam: {
+    on: [{ flag: 'trollGone' }, { lose: 'spikes' }],
+    text: ['You hammer the spikes into the treadmill’s gears. It lurches, groans and locks solid. Gnasher, mid-stride, falls over, decides this is a sign, and goes to sleep.'],
+    choices: [{ text: 'Climb the ladder', to: 'council' }],
+  },
+  troll_fight: {
+    text: ['“No visitors in the engine room,” says Gnasher, climbing out of his wheel. He is twelve feet tall, mostly knuckles.'],
+    fight: {
+      monsters: [{ name: 'Gnasher', lvl: 5, hp: 20, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay standing', text: 'He knocks you flat.', effect: 'prone' }, note: 'Treadmill troll (20 HP); on hit, d6 Str save or be knocked prone' }],
+      win: 'troll_win', flee: { to: 'pyramid', label: 'Dive out of the door' },
+    },
+  },
+  troll_win: {
+    on: [{ flag: 'trollGone' }],
+    text: ['Gnasher sits down heavily in his treadmill and says he’s had enough of this job anyway.'],
+    choices: [{ text: 'Climb the ladder', to: 'council' }],
+  },
+  council: {
+    text: (c) => c.flags.councilDone
+      ? ['The council floor is quiet now. The kobolds are packing.']
+      : [
+        'The middle floor is a meeting hall. Thirty kobolds sit on upturned buckets, arguing about the rent. At the head of the table, in a shawl and spectacles, sits Grandmother Snik, the oldest kobold anyone has ever seen. She raps the table with a ladle, and the room goes silent.',
+        '“Well,” she says. “Grimsby’s errand-runner. Say your piece.”',
+      ],
+    choices: [
+      { text: 'Show her the deed to the square', to: 'deed_council', if: { item: 'deed' }, show: { notFlag: 'councilDone' } },
+      { text: 'Offer them a new home: an empty counting house under Gallows Hill', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'], profs: ['Envoy'], why: 'negotiation is your trade', mods: [{ if: { flag: 'kidsLikeYou' }, dd: 4 }] }, pass: 'new_home', fail: 'snik_angry', show: { notFlag: 'councilDone' } },
+      { text: 'Read out Grimsby’s eviction notice', to: 'snik_angry', show: { notFlag: 'councilDone' } },
+      { text: 'Climb up to the top floor', to: 'apex' },
+      { text: 'Go back down', to: 'inside' },
+    ],
+  },
+  deed_council: {
+    on: [{ flag: 'councilDone' }, { flag: 'kobsStay' }],
+    text: ['Grandmother Snik reads the deed, and starts to laugh: a dry, cackling sound like a kettle with a cold. “Common land,” she says. “Common land! Then we’re not squatting. We’re commoners.” Thirty kobolds cheer. “You’ve done us a service, errand-runner. Take something from the top floor. Not the jar.”'],
+    choices: [{ text: 'Climb up to the top floor', to: 'apex' }],
+  },
+  new_home: {
+    on: [{ flag: 'councilDone' }, { flag: 'kobsLeave' }],
+    text: ['You describe the Counting House: dry, deep, quiet, with a wine cellar, a library and only one ghost, possibly none. Grandmother Snik’s eyes gleam behind her spectacles. “How much?” she asks. “Free,” you say. “The last owner is beyond collecting.” The room erupts. Kobolds begin packing at once. Snik pats your hand. “Take what you want from upstairs,” she says. “Except the jar.”'],
+    choices: [{ text: 'Climb up to the top floor', to: 'apex' }],
+  },
+  snik_angry: {
+    text: ['Grandmother Snik’s ladle comes down on the table like a gavel. “Then you’re no better than him,” she says. Around the room, thirty kobolds pick up thirty buckets.'],
+    fight: {
+      monsters: [{ name: 'Grandmother Snik', lvl: 4, hp: 16, range: 'short', note: 'Kobold matriarch (16 HP); hurls her ladle and catches it again' }, slinger],
+      win: 'council_won', flee: { to: 'pyramid', label: 'Jump out of a window' },
+    },
+  },
+  council_won: {
+    on: [{ flag: 'councilDone' }, { flag: 'kobsBeaten' }],
+    text: ['Grandmother Snik lowers her ladle. “Fine,” she says. “We’ll go. We always go. That’s what being a kobold is.” The pyramid empties around you, quietly, as the kobolds file out into the night with their buckets.'],
+    choices: [{ text: 'Climb up to the top floor', to: 'apex' }],
+  },
+  apex: {
+    text: (c) => [
+      'The top floor is the kobolds’ treasury: a single room under the point of the pyramid, with a window on each side and a jar on a shelf. The jar is full of coins, and labelled, in careful kobold letters, DEPOSIT FOR NEW HOME. A pile of odds and ends lies in the corner: the kobolds’ belongings, salvaged from the warren.',
+      c.flags.councilDone ? '' : 'Down below, you can hear the kobolds arguing.',
+    ].filter(Boolean),
+    choices: [
+      { text: 'Take the savings jar', to: 'jar', show: { notFlag: 'jar' } },
+      { text: 'Search the salvage pile', to: 'salvage', show: { notFlag: 'salvage' } },
+      { text: 'Go down to the council', to: 'council', show: { notFlag: 'councilDone' } },
+      { text: 'Climb out and down to the square', to: 'payday' },
+    ],
+  },
+  jar: {
+    on: [{ flag: 'jar' }, { item: 'savings' }],
+    text: (c) => [c.flags.councilDone ? 'You take the jar. Nobody stops you. Somewhere below, Grandmother Snik will notice soon, and she will not be surprised. That’s worse, somehow.' : 'You take the jar. It is very heavy, and nobody sees.'],
+    choices: [{ text: 'Back to the room', to: 'apex' }],
+  },
+  salvage: {
+    on: [{ flag: 'salvage' }, { item: 'potion' }, { item: 'fire' }, { gold: 30 }],
+    text: ['Among the broken teacups and lucky stones you find a healing potion, a jar of alchemist’s fire labelled DO NOT, and a purse of old coins the kobolds dug up in the warren.'],
+    choices: [{ text: 'Back to the room', to: 'apex' }],
+  },
+  burn: {
+    text: ['You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels and a melted jar.'],
+    on: [{ flag: 'burnt' }],
+    choices: [{ text: 'Go and collect your fee', to: 'payday' }],
+  },
+  payday: {
+    end: 'victory',
+    on: [
+      { if: { any: [{ flag: 'kobsLeave' }, { flag: 'kobsBeaten' }, { flag: 'burnt' }] }, gold: 300, uncapped: true, msg: 'Lord Grimsby pays your fee, holding the purse at arm’s length.' },
+      { if: { notFlag: 'kobsStay' }, sell: { item: 'deed', gold: 150, text: 'Grimsby buys the deed back from you, in a hurry, before anyone else sees it' } },
+      { sell: { item: 'savings', gold: 150, text: 'You break open the kobolds’ savings jar' } },
+    ],
+    text: (c) => [
+      c.flags.kobsStay
+        ? 'You tell Lord Grimsby that the square is common land, the kobolds are commoners, and he has been charging illegal rent for twelve years. He goes a colour you’ve never seen on a human face and refuses to pay you. The kobolds throw a party in the square that lasts three days.'
+        : c.flags.burnt
+          ? 'Lord Grimsby surveys the smoking ruin of his square with satisfaction and pays you in full. Somewhere out in the dark, thirty homeless kobolds are telling each other a story about you. It isn’t a nice one.'
+          : c.flags.kobsLeave
+            ? 'The pyramid rolls out of Middle Whelping at dawn, heading for Gallows Hill, with Gnasher at the wheel and Grandmother Snik waving from the top. Lord Grimsby pays you, and never finds out where they went.'
+            : c.flags.kobsBeaten
+              ? 'The kobolds are gone. Lord Grimsby pays you, eventually, after counting it twice.'
+              : 'The pyramid is still in the square, and the kobolds are still in it. Lord Grimsby pays you nothing, and says so, loudly, from a safe distance.',
+      `You walk away from Middle Whelping with ${c.flags.homeGold || 0} gold. Every 200GP you squander on a pointless endeavour gains you a level.`,
+    ],
+  },
+};
+
+const DEATH_TEXT = [
+  'They bury you on the common land, which, it turns out, belongs to everyone. The kobolds leave flowers. Grimsby sends the bill.',
+  'Your adventure ends here.',
+];
+
+return { META, SECTIONS, DEATH_TEXT };
 };
 __defs["src/engine/game.js"] = function(){
 // The gamebook engine: numbered sections, choices, stat tests, fights and effects.
 // State is plain data so it can be saved and restored (see save()/load()).
 const { Rng, rollExpr } = __req("src/rules/dice.js");
 const { statTest, successChance } = __req("src/rules/tests.js");
-const { DARK_DIE, SPELLS, MUNDANE, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } = __req("src/rules/data.js");
-const { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType } = __req("src/rules/character.js");
+const { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } = __req("src/rules/data.js");
+const { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots } = __req("src/rules/character.js");
 const { check, hasItem, lightSource, itemName } = __req("src/engine/conditions.js");
 const { startFight, act, actions } = __req("src/engine/combat.js");
 const OPPOSITE = { light: 'Shroud', shroud: 'Divine light', abundance: 'Famine', famine: 'Abundance', bless: 'Pollute', pollute: 'Bless' };
@@ -1192,8 +2530,9 @@ class Game {
     const s = this.adv.sections[key];
     if (!s) throw new Error(`No section "${key}"`);
     this.at = key; this.result = null; this.fight = null; this.messages = [];
-    this.visits[key] = (this.visits[key] || 0) + 1;
     const c = this.c;
+    for (const r of s.redirect || []) if (check(c, r.if).ok) { if (r.effects) this.apply(r.effects); return this.goto(r.to); }   // events that interrupt
+    this.visits[key] = (this.visits[key] || 0) + 1;
     // Darkness: entering a dark place uses up light.
     this.dark = false;
     if (s.dark) {
@@ -1201,9 +2540,9 @@ class Game {
       if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
       else this.spendLight(src);
     }
-    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
+    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.fight && !(s.fight.unless && check(c, s.fight.unless).ok)) {
       this.fight = startFight(this, s.fight);
       if (this.fight.lost) this.dead = true;   // killed before you could act
@@ -1237,7 +2576,15 @@ class Game {
     for (const e of [].concat(effects)) {
       if (e.if && !check(c, e.if).ok) continue;
       if (e.msg) this.say(e.msg, e.kind || 'info');
-      if (e.gold > 0) {
+      if (e.sell) {
+        if (!hasItem(c, e.sell.item)) continue;
+        this.take(e.sell.item); c.gold += e.sell.gold; c.flags[`sold_${e.sell.item}`] = true;
+        this.say(`${e.sell.text || `You sell the ${itemName(e.sell.item).toLowerCase()}`}: +${e.sell.gold}GP.`, 'good');
+        continue;
+      }
+      if (e.add) { const [k, n] = e.add; c.flags[k] = (c.flags[k] || 0) + n; }
+      if (e.gold > 0 && e.uncapped) { c.gold += e.gold; this.say(`+${e.gold}GP.`, 'good'); }
+      else if (e.gold > 0) {
         const room = goldRoom(c); const got = Math.min(room, e.gold);
         c.gold += got;
         this.say(`+${got}GP${got < e.gold ? ` (you can’t carry the other ${e.gold - got}GP: every 50GP takes a significant item slot)` : ''}.`, 'good');
@@ -1259,8 +2606,9 @@ class Game {
     const mundane = !!MUNDANE[id];
     const list = mundane ? c.mundane : c.significant;
     const limit = mundane ? MUNDANE_LIMIT : SIGNIFICANT_LIMIT;
-    const used = mundane ? list.length : list.length + Math.ceil(c.gold / 50);
-    if (used >= limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
+    const size = mundane ? 1 : (SIGNIFICANT[id].slots || 1);
+    const used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
     list.push(makeItem(id)); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
     return true;
   }
@@ -1634,6 +2982,8 @@ const MUNDANE = {
   tools: { name: 'Thieves’ tools', note: 'Required for picking locks and disarming traps' },
   torches: { name: 'Torches', tokens: 5, note: 'Depletion (5)' },
   whistle: { name: 'Watchman’s whistle' },
+  // (gamebook) found or bought during adventures; not offered at character creation
+  stilts: { name: 'Stilts', note: 'Makes you look six foot six', hidden: true },
 };
 const MUNDANE_LIMIT = 6;
 
@@ -1649,6 +2999,17 @@ const SIGNIFICANT = {
   card: { name: 'Business card', note: '“Disruptor. Thought leader. Lost.”' },
   vaultkey: { name: 'Iron key', note: 'Stamped VAULT. Subtle.' },
   abacus: { name: 'Vane’s golden abacus', note: 'Worth 100GP to a fool. Every abacus is worth 100GP to a fool.' },
+  invitation: { name: 'Invitation', note: '“No guest under six feet will be admitted.”' },
+  hat: { name: 'The Lofty Hat', slots: 4, note: 'Nine feet of velvet and rubies; takes 4 slots. Mother Grubb pays 400GP' },
+  diary: { name: 'The Lord’s diary', note: 'Reveals he is five foot two. Lord Shortshanks pays 100GP' },
+  candlestick: { name: 'Silver candlestick', slots: 2, note: 'Six feet tall; takes 2 slots. Worth 25GP' },
+  chips: { name: 'Gold chip', note: 'Fortune’s Fang casino chip. Cash it at the cage for 100GP' },
+  coffin: { name: 'Coffin key', note: 'Small, silver, and very important to someone' },
+  turnip: { name: 'The Golden Turnip', slots: 3, note: 'Prize-winning; takes 3 slots. Worth 300GP to the right buyer' },
+  thimble: { name: 'Giant’s thimble', slots: 2, note: 'Silver bucket; takes 2 slots. Worth 60GP' },
+  rattle: { name: 'Giant baby’s rattle', note: 'Loud. Very loud' },
+  deed: { name: 'Deed to the square', note: 'Proof the town square belongs to Lord Grimsby. Or doesn’t' },
+  savings: { name: 'Kobold savings jar', slots: 2, note: 'The kobolds’ deposit for a new home: 150GP; takes 2 slots' },
 };
 const SIGNIFICANT_LIMIT = 12;
 const GP_PER_SLOT = 50;
@@ -1745,6 +3106,7 @@ function makeItem(id) {
   const it = { id, name: def.name };
   if (def.tokens) it.tokens = def.tokens;
   if (def.uses) it.uses = def.uses;
+  if (def.slots) it.slots = def.slots;
   return it;
 }
 
@@ -1780,10 +3142,11 @@ function resetDay(c) {
   if (magicType(c)) for (let l = 1; l <= Math.min(10, c.level); l++) c.slots[l] = true;
 }
 
-function slotsUsed(c) { return c.significant.length + Math.ceil(c.gold / GP_PER_SLOT); }
+const itemSlots = (c) => c.significant.reduce((n, i) => n + (i.slots || 1), 0);
+function slotsUsed(c) { return itemSlots(c) + Math.ceil(c.gold / GP_PER_SLOT); }
 /** How much more coin fits in the remaining significant-item slots (each 50GP takes a slot). */
 function goldRoom(c) {
-  const freeSlots = SIGNIFICANT_LIMIT - c.significant.length;
+  const freeSlots = SIGNIFICANT_LIMIT - itemSlots(c);
   return Math.max(0, freeSlots * GP_PER_SLOT - c.gold);
 }
 
@@ -1806,7 +3169,7 @@ function levelUp(rng, c) {
   return { level: c.level, hpRoll, statRolls };
 }
 
-return { HERO_HP_BONUS, setHeroBonus, randomName, rollOrigins, qualityOf, profOf, prof, magicType, hasFeature, createCharacter, STARTING_EXTRAS, startingWeapons, makeItem, maxAp, isSkilled, armourPenalty, weaponPenalty, weaponDamageDie, knownSpells, resetDay, slotsUsed, goldRoom, wasteForLevel, levelUp };
+return { HERO_HP_BONUS, setHeroBonus, randomName, rollOrigins, qualityOf, profOf, prof, magicType, hasFeature, createCharacter, STARTING_EXTRAS, startingWeapons, makeItem, maxAp, isSkilled, armourPenalty, weaponPenalty, weaponDamageDie, knownSpells, resetDay, itemSlots, slotsUsed, goldRoom, wasteForLevel, levelUp };
 };
 __defs["src/engine/conditions.js"] = function(){
 // Conditions on choices ("If you have a rope, turn to 12") and the light/fire helpers they use.
@@ -1846,6 +3209,9 @@ function check(c, cond) {
   if (cond.flag) need(!!c.flags[cond.flag], cond.flagText || 'something you haven’t learned');
   if (cond.notFlag) need(!c.flags[cond.notFlag], cond.notFlagText || 'already done');
   if (cond.gold) need(c.gold >= cond.gold, `${cond.gold}GP`);
+  if (cond.atLeast) need((c.flags[cond.atLeast[0]] || 0) >= cond.atLeast[1], cond.atLeastText || 'more of something');
+  if (cond.below) need((c.flags[cond.below[0]] || 0) < cond.below[1], cond.belowText || 'less of something');
+  if (cond.level) need(c.level >= cond.level, `level ${cond.level}`);
   if (cond.magic) need(magicType(c) === cond.magic, cond.magic === 'divine' ? 'a divine magician' : 'an arcane magician');
   if (cond.alignment) need(c.alignment === cond.alignment, `serving ${cond.alignment}`);
   if (cond.skill) need(isSkilled(c, cond.skill), `the ${cond.skill} skill`);
@@ -1879,7 +3245,7 @@ function makeMonster(rng, def) {
   const hp = def.hp != null ? def.hp : brute ? 8 * lvl : Math.max(1, rng.roll(lvl, 8));
   return {
     uid: uid++, name: def.name, lvl, dd: MONSTER_DD(lvl), range: def.range || 'engaged', feats: [...(def.feats || [])],
-    hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
+    hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, onHit: def.onHit || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
     unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0,
   };
 }
@@ -1901,7 +3267,7 @@ function startFight(g, def) {
   else {
     // Initiative: a d4 Dex saving throw
     const t = test(g, f, { stat: 'Dex', dd: 4, skill: 'save:Dex', label: 'Initiative (Dex save)' });
-    if (!t.success) { note(f, 'Too slow. They go first.'); monstersTurn(g, f); }
+    if (!t.success) { note(f, 'Too slow. They go first.'); monstersTurn(g, f); if (!f.over && !active(f).length) { f.over = true; f.won = true; finish(g, f); } }
     else note(f, 'You go first.');
   }
   return f;
@@ -1922,7 +3288,7 @@ function test(g, f, o) {
   if (o.weaponTest && weaponPenalty(c, o.weapon)) dd = 20;
   if (armourPenalty(c)) dd = 20;
   const skilled = isSkilled(c, o.skill);
-  const roll = () => statTest(rng, { stat: c.stats[o.stat] + (o.statBonus || 0), dd, skilled, forceRoll: true, modifier: o.modifier || 0, critRange: o.critRange || 1 });
+  const roll = () => statTest(rng, { stat: c.stats[o.stat] + (o.statBonus || 0), dd, skilled, forceRoll: true, modifier: o.modifier || 0, critRange: o.critRange || 1, critFailFrom: o.critFailFrom || (f.def.unlucky ? 19 : 20) });
   let r = roll();
   const line = (r, extra = '') => note(f, `${o.label}: ${o.stat} ${c.stats[o.stat]}${skilled ? ' (skilled)' : ''} vs d20+d${dd}${o.modifier ? `+${o.modifier}` : ''} → ${rollText(r)} ${r.critSuccess ? 'CRITICAL!' : r.critFail ? 'critical failure' : r.success ? 'success' : 'fail'}${extra}`, 'roll');
   line(r);
@@ -1948,6 +3314,7 @@ function playerAttack(g, f, m, opts = {}) {
   });
   let hit = t.success, crit = t.critSuccess;
   if (m.unaware && hit) crit = true;
+  if (has(m, 'exposed') && f.distance === 0 && hit && !ranged) { crit = true; note(f, `The ${m.name}’s back is exposed: a critical hit.`); }
   if (!ranged && (m.prone || m.dormant > 0) && !hit) { hit = true; note(f, `The ${m.name} is down: melee attacks against prone opponents always hit.`); }
   if (!hit) { note(f, 'You miss.'); return false; }
   let dmg = rng.die(weaponDamageDie(w)) + c.level;
@@ -1978,6 +3345,13 @@ function hurtMonster(g, f, m, dmg, o = {}) {
       return;
     }
     note(f, `The ${m.name} is dead.`, 'good');
+    if (has(m, 'burst') && g.c.hp > 0) {
+      const s = test(g, f, { stat: 'Dex', dd: 6, skill: 'save:Dex', label: `Dex save: the ${m.name} explodes`, reroll: 'rerollSave' });
+      if (!s.success) hurtPlayer(g, f, rollExpr(g.rng, '2d6'), 'explosion');
+      else note(f, 'You dive clear of the blast.');
+    }
+  } else if (has(m, 'coward') && m.hp < m.maxHp / 2) {
+    m.fled = true; note(f, `The ${m.name} bursts into tears and gives up.`, 'good');
   }
 }
 
@@ -2000,11 +3374,12 @@ function hurtPlayer(g, f, dmg, src) {
 function monsterAttack(g, f, m) {
   const { c, rng } = g;
   if (has(m, 'handgun') && rng.chance(1, 3)) { note(f, `The ${m.name} fumbles with the safety catch.`); return; }
+  if (has(m, 'noEngaged') && f.distance === 0) { note(f, `You’re too close for the ${m.name} to do anything but shout.`); return; }
   const melee = m.range === 'engaged';
   let crit = false;
   if (c.prone && melee) { note(f, 'You’re on the floor: the attack can’t miss.'); }
   else {
-    const t = test(g, f, { stat: c.stats.Dex > c.stats.Str ? 'Dex' : 'Str', dd: m.dd, skill: melee ? 'defend:melee' : 'defend:ranged', label: `Defend against the ${m.name}`, reroll: 'rerollDefend', weaponTest: true });
+    const t = test(g, f, { stat: c.stats.Dex > c.stats.Str ? 'Dex' : 'Str', dd: m.dd, skill: melee ? 'defend:melee' : 'defend:ranged', label: `Defend against the ${m.name}`, reroll: 'rerollDefend', weaponTest: true, critFailFrom: has(m, 'critWide') ? 17 : undefined });
     if (t.success) {
       note(f, 'It misses.');
       if (melee && hasFeature(c, 'counter') && alive(m)) { note(f, 'Pit fighter: you counterattack.'); playerAttack(g, f, m, { free: true }); }
@@ -2017,6 +3392,16 @@ function monsterAttack(g, f, m) {
   if (has(m, 'dealD6')) dmg += rng.die(6);
   if (crit) dmg *= 2;
   hurtPlayer(g, f, dmg, m.name);
+  if (m.onHit && c.hp > 0) {
+    const o = m.onHit;
+    const s = test(g, f, { stat: o.stat, dd: o.dd, skill: `save:${o.stat}`, label: `${o.stat} save: ${o.label}`, reroll: 'rerollSave' });
+    if (!s.success) {
+      note(f, o.text, 'bad');
+      if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
+      if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
+      if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), o.label);
+    }
+  }
   if (has(m, 'contract') && c.hp > 0) {
     const s = test(g, f, { stat: 'Cha', dd: 4, skill: 'save:Cha', label: 'Cha save against the contract', reroll: 'rerollSave' });
     if (!s.success) { const lost = Math.min(10, c.gold); c.gold -= lost; note(f, `Ink everywhere, and somehow you’ve signed something. −${lost}GP.`, 'bad'); }
@@ -2046,6 +3431,7 @@ function monstersTurn(g, f) {
       note(f, `The ${m.name} closes in.`);
     }
     for (let i = 0; i < attacksOf(m) && !f.over; i++) monsterAttack(g, f, m);
+    if (has(m, 'topple')) { m.prone = true; note(f, `The ${m.name} falls over.`); }
   }
   for (const m of f.monsters) if (alive(m) && m.regen && !(m.regenStop && c.flags[m.regenStop])) {
     const h = Math.min(m.regen, m.maxHp - m.hp); if (h > 0) { m.hp += h; note(f, `The ${m.name} heals ${h} HP.`, 'bad'); }
@@ -2067,7 +3453,9 @@ function actions(g, f) {
     } else if (canMelee) out.push({ id: 'attack', target: m.uid, label: m.dormant > 0 ? `Pulp the ${m.name} while they’re down` : `Attack the ${m.name}` });
   }
   if (f.distance === 0 && c.weapon.ranged && hasItem(c, 'ammo') && !f.def.cornered) out.push({ id: 'fallback', target: targets[0] && targets[0].uid, label: 'Fall back a little, then shoot' });
-  if (!canMelee && melee) out.push({ id: 'advance', label: 'Advance' });
+  if (!canMelee && !out.some((a) => a.id === 'shoot')) out.push({ id: 'advance', label: 'Advance' });
+  // nothing to hit them with: fists
+  if (canMelee && !out.some((a) => ['attack', 'sidearm', 'shoot'].includes(a.id))) for (const m of targets) out.push({ id: 'unarmed', target: m.uid, label: `Punch the ${m.name} (unarmed, d4)` });
   if (c.slots[1]) {
     if (magicType(c) === 'arcane') for (const m of targets) if (alive(m)) out.push({ id: 'bolt', target: m.uid, label: `Cast Arcane bolt at the ${m.name}` });
     if (magicType(c) === 'divine' && c.alignment === 'chaos' && hasItem(c, 'holysymbol')) out.push({ id: 'famine', label: 'Cast Famine (summon a swarm of locusts)' });
@@ -2078,7 +3466,7 @@ function actions(g, f) {
     if (hasItem(c, id)) for (const m of targets) if (alive(m) || (id === 'fire' && m.dormant)) out.push({ id, target: m.uid, label: `${verb} the ${m.name}` });
   }
   if (c.shield && !c.blocking) out.push({ id: 'block', label: `Block with your ${c.shield.name.toLowerCase()}` });
-  for (const sp of f.def.special || []) if (!c.flags[sp.flag] && check(c, sp.if).ok) out.push({ id: 'special', sp, label: sp.label });
+  for (const sp of f.def.special || []) if (!(sp.flag && c.flags[sp.flag]) && check(c, sp.if).ok) out.push({ id: 'special', sp, label: sp.label });
   if (f.def.flee) out.push({ id: 'flee', label: f.def.flee.label || 'Run for it' });
   return out;
 }
@@ -2098,6 +3486,7 @@ function act(g, f, a) {
   const m = f.monsters.find((x) => x.uid === a.target);
   if (c.prone) { c.prone = false; note(f, 'You get up (standing is free).'); }
   switch (a.id) {
+    case 'unarmed': if (f.distance > 0) f.distance = 0; playerAttack(g, f, m, { weapon: 'unarmed' }); break;
     case 'attack': case 'sidearm': {
       if (f.distance > 0) { f.distance = 0; note(f, 'You close in.'); }
       playerAttack(g, f, m, { weapon: a.id === 'sidearm' ? 'sidearm' : 'main' });
@@ -2155,7 +3544,10 @@ function act(g, f, a) {
         const t = test(g, f, { ...sp.test, label: sp.label });
         if (!t.success) { note(f, sp.failText || 'It doesn’t work.'); break; }
       }
-      c.flags[sp.flag] = true; note(f, sp.text, 'good');
+      if (sp.flag) c.flags[sp.flag] = true;
+      note(f, sp.text, 'good');
+      if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }
+      if (sp.win) { for (const x of f.monsters) if (alive(x)) x.fled = true; }
       break;
     }
     case 'block': c.blocking = true; note(f, `You raise your ${c.shield.name.toLowerCase()}.`); break;
@@ -2168,6 +3560,7 @@ function act(g, f, a) {
   }
   for (const x of f.monsters) x.unaware = false;
   if (!f.over && !active(f).length) { f.over = true; f.won = true; return finish(g, f); }
+  if (!f.over && f.monsters.some((x) => alive(x) && has(x, 'unluckyAura')) && !hasFeature(c, 'noProne') && rng.chance(2, 6)) { c.prone = true; note(f, 'Your luck runs out, along with your footing. You fall prone.', 'bad'); }
   if (!f.over) monstersTurn(g, f);
   if (!f.over && !active(f).length) { f.over = true; f.won = true; }
   f.round++;

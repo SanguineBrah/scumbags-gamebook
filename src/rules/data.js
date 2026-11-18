@@ -129,6 +129,8 @@ export const MUNDANE = {
   tools: { name: 'Thieves’ tools', note: 'Required for picking locks and disarming traps' },
   torches: { name: 'Torches', tokens: 5, note: 'Depletion (5)' },
   whistle: { name: 'Watchman’s whistle' },
+  // (gamebook) found or bought during adventures; not offered at character creation
+  stilts: { name: 'Stilts', note: 'Makes you look six foot six', hidden: true },
 };
 export const MUNDANE_LIMIT = 6;
 
@@ -144,6 +146,17 @@ export const SIGNIFICANT = {
   card: { name: 'Business card', note: '“Disruptor. Thought leader. Lost.”' },
   vaultkey: { name: 'Iron key', note: 'Stamped VAULT. Subtle.' },
   abacus: { name: 'Vane’s golden abacus', note: 'Worth 100GP to a fool. Every abacus is worth 100GP to a fool.' },
+  invitation: { name: 'Invitation', note: '“No guest under six feet will be admitted.”' },
+  hat: { name: 'The Lofty Hat', slots: 4, note: 'Nine feet of velvet and rubies; takes 4 slots. Mother Grubb pays 400GP' },
+  diary: { name: 'The Lord’s diary', note: 'Reveals he is five foot two. Lord Shortshanks pays 100GP' },
+  candlestick: { name: 'Silver candlestick', slots: 2, note: 'Six feet tall; takes 2 slots. Worth 25GP' },
+  chips: { name: 'Gold chip', note: 'Fortune’s Fang casino chip. Cash it at the cage for 100GP' },
+  coffin: { name: 'Coffin key', note: 'Small, silver, and very important to someone' },
+  turnip: { name: 'The Golden Turnip', slots: 3, note: 'Prize-winning; takes 3 slots. Worth 300GP to the right buyer' },
+  thimble: { name: 'Giant’s thimble', slots: 2, note: 'Silver bucket; takes 2 slots. Worth 60GP' },
+  rattle: { name: 'Giant baby’s rattle', note: 'Loud. Very loud' },
+  deed: { name: 'Deed to the square', note: 'Proof the town square belongs to Lord Grimsby. Or doesn’t' },
+  savings: { name: 'Kobold savings jar', slots: 2, note: 'The kobolds’ deposit for a new home: 150GP; takes 2 slots' },
 };
 export const SIGNIFICANT_LIMIT = 12;
 export const GP_PER_SLOT = 50;

@@ -13,7 +13,7 @@ export function makeMonster(rng, def) {
   const hp = def.hp != null ? def.hp : brute ? 8 * lvl : Math.max(1, rng.roll(lvl, 8));
   return {
     uid: uid++, name: def.name, lvl, dd: MONSTER_DD(lvl), range: def.range || 'engaged', feats: [...(def.feats || [])],
-    hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
+    hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, onHit: def.onHit || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
     unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0,
   };
 }
@@ -35,7 +35,7 @@ export function startFight(g, def) {
   else {
     // Initiative: a d4 Dex saving throw
     const t = test(g, f, { stat: 'Dex', dd: 4, skill: 'save:Dex', label: 'Initiative (Dex save)' });
-    if (!t.success) { note(f, 'Too slow. They go first.'); monstersTurn(g, f); }
+    if (!t.success) { note(f, 'Too slow. They go first.'); monstersTurn(g, f); if (!f.over && !active(f).length) { f.over = true; f.won = true; finish(g, f); } }
     else note(f, 'You go first.');
   }
   return f;
@@ -56,7 +56,7 @@ function test(g, f, o) {
   if (o.weaponTest && weaponPenalty(c, o.weapon)) dd = 20;
   if (armourPenalty(c)) dd = 20;
   const skilled = isSkilled(c, o.skill);
-  const roll = () => statTest(rng, { stat: c.stats[o.stat] + (o.statBonus || 0), dd, skilled, forceRoll: true, modifier: o.modifier || 0, critRange: o.critRange || 1 });
+  const roll = () => statTest(rng, { stat: c.stats[o.stat] + (o.statBonus || 0), dd, skilled, forceRoll: true, modifier: o.modifier || 0, critRange: o.critRange || 1, critFailFrom: o.critFailFrom || (f.def.unlucky ? 19 : 20) });
   let r = roll();
   const line = (r, extra = '') => note(f, `${o.label}: ${o.stat} ${c.stats[o.stat]}${skilled ? ' (skilled)' : ''} vs d20+d${dd}${o.modifier ? `+${o.modifier}` : ''} → ${rollText(r)} ${r.critSuccess ? 'CRITICAL!' : r.critFail ? 'critical failure' : r.success ? 'success' : 'fail'}${extra}`, 'roll');
   line(r);
@@ -82,6 +82,7 @@ function playerAttack(g, f, m, opts = {}) {
   });
   let hit = t.success, crit = t.critSuccess;
   if (m.unaware && hit) crit = true;
+  if (has(m, 'exposed') && f.distance === 0 && hit && !ranged) { crit = true; note(f, `The ${m.name}’s back is exposed: a critical hit.`); }
   if (!ranged && (m.prone || m.dormant > 0) && !hit) { hit = true; note(f, `The ${m.name} is down: melee attacks against prone opponents always hit.`); }
   if (!hit) { note(f, 'You miss.'); return false; }
   let dmg = rng.die(weaponDamageDie(w)) + c.level;
@@ -112,6 +113,13 @@ export function hurtMonster(g, f, m, dmg, o = {}) {
       return;
     }
     note(f, `The ${m.name} is dead.`, 'good');
+    if (has(m, 'burst') && g.c.hp > 0) {
+      const s = test(g, f, { stat: 'Dex', dd: 6, skill: 'save:Dex', label: `Dex save: the ${m.name} explodes`, reroll: 'rerollSave' });
+      if (!s.success) hurtPlayer(g, f, rollExpr(g.rng, '2d6'), 'explosion');
+      else note(f, 'You dive clear of the blast.');
+    }
+  } else if (has(m, 'coward') && m.hp < m.maxHp / 2) {
+    m.fled = true; note(f, `The ${m.name} bursts into tears and gives up.`, 'good');
   }
 }
 
@@ -134,11 +142,12 @@ function hurtPlayer(g, f, dmg, src) {
 function monsterAttack(g, f, m) {
   const { c, rng } = g;
   if (has(m, 'handgun') && rng.chance(1, 3)) { note(f, `The ${m.name} fumbles with the safety catch.`); return; }
+  if (has(m, 'noEngaged') && f.distance === 0) { note(f, `You’re too close for the ${m.name} to do anything but shout.`); return; }
   const melee = m.range === 'engaged';
   let crit = false;
   if (c.prone && melee) { note(f, 'You’re on the floor: the attack can’t miss.'); }
   else {
-    const t = test(g, f, { stat: c.stats.Dex > c.stats.Str ? 'Dex' : 'Str', dd: m.dd, skill: melee ? 'defend:melee' : 'defend:ranged', label: `Defend against the ${m.name}`, reroll: 'rerollDefend', weaponTest: true });
+    const t = test(g, f, { stat: c.stats.Dex > c.stats.Str ? 'Dex' : 'Str', dd: m.dd, skill: melee ? 'defend:melee' : 'defend:ranged', label: `Defend against the ${m.name}`, reroll: 'rerollDefend', weaponTest: true, critFailFrom: has(m, 'critWide') ? 17 : undefined });
     if (t.success) {
       note(f, 'It misses.');
       if (melee && hasFeature(c, 'counter') && alive(m)) { note(f, 'Pit fighter: you counterattack.'); playerAttack(g, f, m, { free: true }); }
@@ -151,6 +160,16 @@ function monsterAttack(g, f, m) {
   if (has(m, 'dealD6')) dmg += rng.die(6);
   if (crit) dmg *= 2;
   hurtPlayer(g, f, dmg, m.name);
+  if (m.onHit && c.hp > 0) {
+    const o = m.onHit;
+    const s = test(g, f, { stat: o.stat, dd: o.dd, skill: `save:${o.stat}`, label: `${o.stat} save: ${o.label}`, reroll: 'rerollSave' });
+    if (!s.success) {
+      note(f, o.text, 'bad');
+      if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
+      if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
+      if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), o.label);
+    }
+  }
   if (has(m, 'contract') && c.hp > 0) {
     const s = test(g, f, { stat: 'Cha', dd: 4, skill: 'save:Cha', label: 'Cha save against the contract', reroll: 'rerollSave' });
     if (!s.success) { const lost = Math.min(10, c.gold); c.gold -= lost; note(f, `Ink everywhere, and somehow you’ve signed something. −${lost}GP.`, 'bad'); }
@@ -180,6 +199,7 @@ function monstersTurn(g, f) {
       note(f, `The ${m.name} closes in.`);
     }
     for (let i = 0; i < attacksOf(m) && !f.over; i++) monsterAttack(g, f, m);
+    if (has(m, 'topple')) { m.prone = true; note(f, `The ${m.name} falls over.`); }
   }
   for (const m of f.monsters) if (alive(m) && m.regen && !(m.regenStop && c.flags[m.regenStop])) {
     const h = Math.min(m.regen, m.maxHp - m.hp); if (h > 0) { m.hp += h; note(f, `The ${m.name} heals ${h} HP.`, 'bad'); }
@@ -201,7 +221,9 @@ export function actions(g, f) {
     } else if (canMelee) out.push({ id: 'attack', target: m.uid, label: m.dormant > 0 ? `Pulp the ${m.name} while they’re down` : `Attack the ${m.name}` });
   }
   if (f.distance === 0 && c.weapon.ranged && hasItem(c, 'ammo') && !f.def.cornered) out.push({ id: 'fallback', target: targets[0] && targets[0].uid, label: 'Fall back a little, then shoot' });
-  if (!canMelee && melee) out.push({ id: 'advance', label: 'Advance' });
+  if (!canMelee && !out.some((a) => a.id === 'shoot')) out.push({ id: 'advance', label: 'Advance' });
+  // nothing to hit them with: fists
+  if (canMelee && !out.some((a) => ['attack', 'sidearm', 'shoot'].includes(a.id))) for (const m of targets) out.push({ id: 'unarmed', target: m.uid, label: `Punch the ${m.name} (unarmed, d4)` });
   if (c.slots[1]) {
     if (magicType(c) === 'arcane') for (const m of targets) if (alive(m)) out.push({ id: 'bolt', target: m.uid, label: `Cast Arcane bolt at the ${m.name}` });
     if (magicType(c) === 'divine' && c.alignment === 'chaos' && hasItem(c, 'holysymbol')) out.push({ id: 'famine', label: 'Cast Famine (summon a swarm of locusts)' });
@@ -212,7 +234,7 @@ export function actions(g, f) {
     if (hasItem(c, id)) for (const m of targets) if (alive(m) || (id === 'fire' && m.dormant)) out.push({ id, target: m.uid, label: `${verb} the ${m.name}` });
   }
   if (c.shield && !c.blocking) out.push({ id: 'block', label: `Block with your ${c.shield.name.toLowerCase()}` });
-  for (const sp of f.def.special || []) if (!c.flags[sp.flag] && check(c, sp.if).ok) out.push({ id: 'special', sp, label: sp.label });
+  for (const sp of f.def.special || []) if (!(sp.flag && c.flags[sp.flag]) && check(c, sp.if).ok) out.push({ id: 'special', sp, label: sp.label });
   if (f.def.flee) out.push({ id: 'flee', label: f.def.flee.label || 'Run for it' });
   return out;
 }
@@ -232,6 +254,7 @@ export function act(g, f, a) {
   const m = f.monsters.find((x) => x.uid === a.target);
   if (c.prone) { c.prone = false; note(f, 'You get up (standing is free).'); }
   switch (a.id) {
+    case 'unarmed': if (f.distance > 0) f.distance = 0; playerAttack(g, f, m, { weapon: 'unarmed' }); break;
     case 'attack': case 'sidearm': {
       if (f.distance > 0) { f.distance = 0; note(f, 'You close in.'); }
       playerAttack(g, f, m, { weapon: a.id === 'sidearm' ? 'sidearm' : 'main' });
@@ -289,7 +312,10 @@ export function act(g, f, a) {
         const t = test(g, f, { ...sp.test, label: sp.label });
         if (!t.success) { note(f, sp.failText || 'It doesn’t work.'); break; }
       }
-      c.flags[sp.flag] = true; note(f, sp.text, 'good');
+      if (sp.flag) c.flags[sp.flag] = true;
+      note(f, sp.text, 'good');
+      if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }
+      if (sp.win) { for (const x of f.monsters) if (alive(x)) x.fled = true; }
       break;
     }
     case 'block': c.blocking = true; note(f, `You raise your ${c.shield.name.toLowerCase()}.`); break;
@@ -302,6 +328,7 @@ export function act(g, f, a) {
   }
   for (const x of f.monsters) x.unaware = false;
   if (!f.over && !active(f).length) { f.over = true; f.won = true; return finish(g, f); }
+  if (!f.over && f.monsters.some((x) => alive(x) && has(x, 'unluckyAura')) && !hasFeature(c, 'noProne') && rng.chance(2, 6)) { c.prone = true; note(f, 'Your luck runs out, along with your footing. You fall prone.', 'bad'); }
   if (!f.over) monstersTurn(g, f);
   if (!f.over && !active(f).length) { f.over = true; f.won = true; }
   f.round++;

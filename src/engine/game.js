@@ -2,8 +2,8 @@
 // State is plain data so it can be saved and restored (see save()/load()).
 import { Rng, rollExpr } from '../rules/dice.js';
 import { statTest, successChance } from '../rules/tests.js';
-import { DARK_DIE, SPELLS, MUNDANE, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } from '../rules/data.js';
-import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType } from '../rules/character.js';
+import { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } from '../rules/data.js';
+import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots } from '../rules/character.js';
 import { check, hasItem, lightSource, itemName } from './conditions.js';
 import { startFight, act, actions } from './combat.js';
 
@@ -32,8 +32,9 @@ export class Game {
     const s = this.adv.sections[key];
     if (!s) throw new Error(`No section "${key}"`);
     this.at = key; this.result = null; this.fight = null; this.messages = [];
-    this.visits[key] = (this.visits[key] || 0) + 1;
     const c = this.c;
+    for (const r of s.redirect || []) if (check(c, r.if).ok) { if (r.effects) this.apply(r.effects); return this.goto(r.to); }   // events that interrupt
+    this.visits[key] = (this.visits[key] || 0) + 1;
     // Darkness: entering a dark place uses up light.
     this.dark = false;
     if (s.dark) {
@@ -41,9 +42,9 @@ export class Game {
       if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
       else this.spendLight(src);
     }
-    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
+    if (s.end === 'victory') c.flags.homeGold = c.gold;
     if (s.fight && !(s.fight.unless && check(c, s.fight.unless).ok)) {
       this.fight = startFight(this, s.fight);
       if (this.fight.lost) this.dead = true;   // killed before you could act
@@ -77,7 +78,15 @@ export class Game {
     for (const e of [].concat(effects)) {
       if (e.if && !check(c, e.if).ok) continue;
       if (e.msg) this.say(e.msg, e.kind || 'info');
-      if (e.gold > 0) {
+      if (e.sell) {
+        if (!hasItem(c, e.sell.item)) continue;
+        this.take(e.sell.item); c.gold += e.sell.gold; c.flags[`sold_${e.sell.item}`] = true;
+        this.say(`${e.sell.text || `You sell the ${itemName(e.sell.item).toLowerCase()}`}: +${e.sell.gold}GP.`, 'good');
+        continue;
+      }
+      if (e.add) { const [k, n] = e.add; c.flags[k] = (c.flags[k] || 0) + n; }
+      if (e.gold > 0 && e.uncapped) { c.gold += e.gold; this.say(`+${e.gold}GP.`, 'good'); }
+      else if (e.gold > 0) {
         const room = goldRoom(c); const got = Math.min(room, e.gold);
         c.gold += got;
         this.say(`+${got}GP${got < e.gold ? ` (you can’t carry the other ${e.gold - got}GP: every 50GP takes a significant item slot)` : ''}.`, 'good');
@@ -99,8 +108,9 @@ export class Game {
     const mundane = !!MUNDANE[id];
     const list = mundane ? c.mundane : c.significant;
     const limit = mundane ? MUNDANE_LIMIT : SIGNIFICANT_LIMIT;
-    const used = mundane ? list.length : list.length + Math.ceil(c.gold / 50);
-    if (used >= limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
+    const size = mundane ? 1 : (SIGNIFICANT[id].slots || 1);
+    const used = mundane ? list.length : itemSlots(c) + Math.ceil(c.gold / 50);
+    if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
     list.push(makeItem(id)); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
     return true;
   }

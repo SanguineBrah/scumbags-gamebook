@@ -72,6 +72,7 @@ export function makeItem(id) {
   const it = { id, name: def.name };
   if (def.tokens) it.tokens = def.tokens;
   if (def.uses) it.uses = def.uses;
+  if (def.slots) it.slots = def.slots;
   return it;
 }
 
@@ -107,10 +108,11 @@ export function resetDay(c) {
   if (magicType(c)) for (let l = 1; l <= Math.min(10, c.level); l++) c.slots[l] = true;
 }
 
-export function slotsUsed(c) { return c.significant.length + Math.ceil(c.gold / GP_PER_SLOT); }
+export const itemSlots = (c) => c.significant.reduce((n, i) => n + (i.slots || 1), 0);
+export function slotsUsed(c) { return itemSlots(c) + Math.ceil(c.gold / GP_PER_SLOT); }
 /** How much more coin fits in the remaining significant-item slots (each 50GP takes a slot). */
 export function goldRoom(c) {
-  const freeSlots = SIGNIFICANT_LIMIT - c.significant.length;
+  const freeSlots = SIGNIFICANT_LIMIT - itemSlots(c);
   return Math.max(0, freeSlots * GP_PER_SLOT - c.gold);
 }
 

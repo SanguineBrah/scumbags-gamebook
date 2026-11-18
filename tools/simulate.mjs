@@ -1,21 +1,23 @@
 // Bot playthroughs: random scumbags making random (but not suicidal) choices.
 // Catches crashes and soft locks, and shows how deadly each fight is.
 // Usage: node tools/simulate.mjs [games=2000] [seed=1]
-import { buildAdventure } from '../src/adventure/index.js';
+import { buildAdventure, ADVENTURES } from '../src/adventure/index.js';
 import { Game } from '../src/engine/game.js';
 import { Rng } from '../src/rules/dice.js';
 import { setHeroBonus } from '../src/rules/character.js';
 import { botCharacter, fightMove, tidyUp } from './bot.mjs';
 
-const N = +(process.argv[2] || 2000), SEED = +(process.argv[3] || 1);
+const N = +(process.argv[2] || 1000), SEED = +(process.argv[3] || 1);
 if (process.argv[4]) setHeroBonus(+process.argv[4]);
-const adv = buildAdventure();
 const rng = new Rng(SEED);
 
+for (const meta of ADVENTURES) {
+const adv = buildAdventure(meta.id);
+const LEVEL = parseInt(meta.levels, 10);
 const stats = { victory: 0, death: 0, quit: 0, stuck: 0, gold: 0, deaths: {}, fights: {} };
 for (let n = 0; n < N; n++) {
   const g = new Game(adv, rng.int(1, 1e9));
-  g.begin(botCharacter(rng));
+  g.begin(botCharacter(rng, LEVEL));
   let steps = 0;
   while (!g.isOver() && steps++ < 400) {
     if (g.fight && !g.fight.over) {
@@ -39,8 +41,9 @@ for (let n = 0; n < N; n++) {
   else if (end === 'quit') stats.quit++;
   else stats.stuck++;
 }
-console.log(`${N} games: ${(100 * stats.victory / N).toFixed(0)}% back in town (avg ${(stats.gold / Math.max(1, stats.victory)).toFixed(0)}GP), ${(100 * stats.death / N).toFixed(0)}% dead, ${stats.stuck} stuck`);
+console.log(`\n${adv.title} (level ${LEVEL}): ${N} games: ${(100 * stats.victory / N).toFixed(0)}% back in town (avg ${(stats.gold / Math.max(1, stats.victory)).toFixed(0)}GP), ${(100 * stats.death / N).toFixed(0)}% dead, ${stats.stuck} stuck`);
 console.log('deaths by section:', Object.entries(stats.deaths).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', '));
 console.log('fights (won/lost/fled):');
 for (const [k, v] of Object.entries(stats.fights)) console.log(`  ${k.padEnd(18)} ${String(v.n).padStart(5)}  ${(100 * v.won / v.n).toFixed(0)}% / ${(100 * v.lost / v.n).toFixed(0)}% / ${(100 * v.fled / v.n).toFixed(0)}%`);
-if (stats.stuck) process.exit(1);
+if (stats.stuck) process.exitCode = 1;
+}
