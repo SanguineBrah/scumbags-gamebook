@@ -228,6 +228,7 @@ export function act(g, f, a) {
   if (c.prone) { c.prone = false; note(f, 'You get up (standing is free).'); }
   switch (a.id) {
     case 'attack': case 'sidearm': {
+      if (f.distance > 0) { f.distance = 0; note(f, 'You close in.'); }
       playerAttack(g, f, m, { weapon: a.id === 'sidearm' ? 'sidearm' : 'main' });
       if (hasFeature(c, 'extraAttack') && !f.over) {
         const t = alive(m) || m.dormant ? m : f.monsters.find(alive);

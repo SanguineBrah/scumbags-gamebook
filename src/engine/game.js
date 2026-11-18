@@ -141,7 +141,7 @@ export class Game {
     if (this.result) return [{ i: 'result', label: 'Carry on', to: this.result.to, num: this.number(this.result.to), ok: true }];
     return (s.choices || []).map((ch, i) => {
       if (ch.show && !check(c, ch.show).ok) return null;   // `show`: only listed when the condition holds
-      const r = check(c, ch.if);
+      const r = check(c, ch.cast ? { ...ch.if, spell: ch.cast } : ch.if);
       let to = ch.to;
       const num = to ? this.number(to) : null;
       return { i, label: ch.text, num, to, ok: r.ok, reason: r.reason, kind: ch.test ? 'test' : ch.cast ? 'cast' : ch.turn ? 'test' : 'go', detail: this.describeTest(ch) };
@@ -172,7 +172,7 @@ export class Game {
     if (i === 'fight') return this.goto(this.fight.fled ? this.section().fight.flee.to : this.section().fight.win);
     if (i === 'result') return this.goto(this.result.to);
     const ch = this.section().choices[i];
-    if (!check(c, ch.if).ok) return;
+    if (!check(c, ch.cast ? { ...ch.if, spell: ch.cast } : ch.if).ok) return;
     if (ch.effects) this.apply(ch.effects);
     if (this.dead) return;
     if (ch.test || ch.cast || ch.turn) return this.runTest(ch, opts);
@@ -247,11 +247,11 @@ export class Game {
   isOver() { return this.dead || !!this.section().end; }
   ending() { return this.dead ? 'death' : this.section().end || null; }
 
-  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, dead: !!this.dead }); }
+  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, dead: !!this.dead, result: this.result, messages: this.messages }); }
   static load(adventure, json) {
     const d = JSON.parse(json);
     const g = new Game(adventure, 1);
-    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.dead = d.dead;
+    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.dead = d.dead; g.result = d.result || null; g.messages = d.messages || [];
     // A fight in progress restarts from the top of its section (a FF tradition: no saving mid-fight).
     const s = g.section();
     if (s.fight && !g.dead && !(s.fight.unless && check(g.c, s.fight.unless).ok)) g.fight = startFight(g, s.fight);

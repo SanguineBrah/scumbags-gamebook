@@ -113,7 +113,18 @@ export const SECTIONS = {
       { text: 'Knock at the front door', to: 'front_door' },
       { text: 'Climb down the chimney', to: 'chimney' },
       { text: 'Try the sewer grate', to: 'sewer' },
+      { text: 'Cast Divine light on your holy symbol', cast: 'light', pass: 'hill_lit', fail: 'hill_fizzle', show: { notFlag: 'lit' } },
     ],
+  },
+  hill_lit: {
+    on: [{ flag: 'lit' }, { lightCharges: 4, msg: 'Your holy symbol glows like a lantern. It will light the next four dark places you enter.' }],
+    text: ['Law smiles on you, briefly and without enthusiasm.'],
+    choices: [{ text: 'Back to the hillside', to: 'hill' }],
+  },
+  hill_fizzle: {
+    on: [{ flag: 'lit' }],
+    text: ['Your god is busy. The holy symbol stays resolutely dull.'],
+    choices: [{ text: 'Back to the hillside', to: 'hill' }],
   },
   front_door: {
     text: (c) => [
@@ -126,6 +137,7 @@ export const SECTIONS = {
       { text: 'Tell him you’re the new auditor', test: { stat: 'Cha', dd: 8, skill: 'lying' }, pass: 'front_lie_win', fail: 'front_lie_fail', show: { notFlag: 'bureaucratDead' } },
       { text: 'Hand him the time-traveller’s business card', to: 'front_card', if: { item: 'card' }, show: { notFlag: 'bureaucratDead' } },
       { text: 'Pick the lock while he looks for a form', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'front_picked', fail: 'front_fight', if: { item: 'tools' }, show: { notFlag: 'bureaucratDead' } },
+      { text: 'Cast Shroud and slip in under a cloak of darkness', cast: 'shroud', pass: 'front_shroud', fail: 'front_door', show: { notFlag: 'bureaucratDead' } },
       { text: 'Kick the door in', test: { stat: 'Str', dd: 12, skill: 'bruteforce' }, pass: 'front_fight', fail: 'front_kick_fail', show: { notFlag: 'bureaucratDead' } },
       { text: 'Go round the back', to: 'hill' },
     ],
@@ -152,6 +164,11 @@ export const SECTIONS = {
   front_picked: {
     on: [{ flag: 'sneaked' }],
     text: ['The lock gives with a click. By the time the moustache comes back with Form 7B, the doorstep is empty and he assumes you were never there. Fair enough.'],
+    choices: [{ text: 'Go inside', to: 'hall' }],
+  },
+  front_shroud: {
+    on: [{ flag: 'sneaked' }],
+    text: ['Darkness pours out of your sleeves like smoke. The moustache says “Who turned the lights off?” and goes to fill in a form about it. You walk straight past him.'],
     choices: [{ text: 'Go inside', to: 'hall' }],
   },
   front_kick_fail: {
@@ -244,6 +261,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Offer her some of your rations', to: 'fishwife_fed', if: { item: 'rations' } },
       { text: 'Sneak along the wall', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'cellar', fail: 'fishwife_fight' },
+      { text: 'Cast Abundance and offer her the food', cast: 'abundance', pass: 'fishwife_fed', fail: 'fishwife_fight' },
+      { text: 'Cast Pollute and turn her cistern to oil', cast: 'pollute', pass: 'pollute_win', fail: 'fishwife_fight' },
       { text: 'Attack her while she’s busy', to: 'fishwife_ambush' },
       { text: 'Back out of the tunnel', to: 'hill' },
     ],
@@ -251,6 +270,11 @@ export const SECTIONS = {
   fishwife_fed: {
     on: [{ flag: 'hintLedger' }, { item: 'potion', msg: 'She gives you a jar of pickled eels. They are, she insists, medicinal. (Healing potion.)' }], onceOnly: true,
     text: ['She eats the biscuit, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
+    choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
+  },
+  pollute_win: {
+    on: [{ item: 'oil', msg: 'You fill a flask from the edge of the cistern. (Flask of oil.)' }], onceOnly: true,
+    text: ['The black water turns blacker and thicker. The fishwife surfaces, gasping, coated head to tail, and flees down the tunnel making a noise like a blocked drain. You feel slightly bad. Only slightly.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   fishwife_ambush: {
@@ -295,8 +319,14 @@ export const SECTIONS = {
       { text: 'Go into the gallery', to: 'gallery' },
       { text: 'Open the Chief Clerk’s door', to: 'office' },
       { text: 'Take the stair down', to: 'vault_stairs' },
+      { text: 'Cast Bless on the water in your rations', cast: 'bless', pass: 'hall_bless', fail: 'hall', if: { item: 'rations' }, show: { notFlag: 'blessed' } },
       { text: 'Leave with what you’ve got', to: 'town' },
     ],
+  },
+  hall_bless: {
+    on: [{ flag: 'blessed' }, { item: 'holywater' }],
+    text: ['The water in your flask begins to glow faintly and taste of church. It is now holy water, which ought to make a ghost think twice.'],
+    choices: [{ text: 'Back to the great hall', to: 'hall' }],
   },
   chandelier_win: {
     on: [{ flag: 'chandelier' }, { gold: 40 }],
@@ -409,10 +439,16 @@ export const SECTIONS = {
     choices: [
       { text: 'Show them your approved Form 7B', to: 'vault_door', if: { flag: 'appointment' }, show: { notFlag: 'assessorsGone' }, effects: [{ flag: 'assessorsGone' }] },
       { text: 'Pay the toll', to: 'vault_door', if: { gold: 10 }, effects: [{ gold: -10 }, { flag: 'assessorsGone' }], show: { notFlag: 'assessorsGone' } },
+      { text: 'Throw your voice back up the stair: “Toll-dodger!”', cast: 'voice', pass: 'voice_win', fail: 'assessors_fight', show: { notFlag: 'assessorsGone' } },
       { text: 'Refuse', to: 'assessors_fight', show: { notFlag: 'assessorsGone' } },
       { text: 'Go on to the vault door', to: 'vault_door', show: { flag: 'assessorsGone' } },
       { text: 'Go back up', to: 'hall' },
     ],
+  },
+  voice_win: {
+    on: [{ flag: 'assessorsGone' }],
+    text: ['“TOLL-DODGER!” cries a voice from the top of the stairs, which sounds a lot like yours. The little assessors look at each other, then charge up the stairs at shin height, shouting about penalties. They do not come back.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   assessors_fight: {
     text: ['“Then you’re assessed,” says the spearman, and they charge, roughly at shin height.'],

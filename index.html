@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
 <style>
   :root {
+    color-scheme: light;
     --paper: #f3ecdc; --paper-2: #e9dfc8; --ink: #22190f; --ink-soft: #5c4d3c; --rule: #b9a682;
     --blood: #8e1b12; --good: #2f5d2a; --bad: #8e1b12; --gold: #9a6b12;
     --serif: 'Alegreya', Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
@@ -23,7 +24,7 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-text-size-adjust: 100%;
   }
-  button { font: inherit; color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
   #app { min-height: 100%; }
 
   /* ---------- layout ---------- */
@@ -119,7 +120,7 @@
   .opt input { margin-top: .3rem; accent-color: var(--ink); }
   .opt.on { border-color: var(--ink); background: #fff; }
   .opt .note { display: block; font-size: .78rem; color: var(--ink-soft); }
-  input[type=text] { font: inherit; padding: .45rem .6rem; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; width: min(100%, 22rem); }
+  input[type=text] { color: var(--ink); -webkit-text-fill-color: var(--ink); caret-color: var(--ink); font: inherit; padding: .45rem .6rem; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; width: min(100%, 22rem); }
   .dice { display: inline-flex; gap: .3rem; vertical-align: middle; }
   .die { display: inline-grid; place-items: center; min-width: 2rem; height: 2rem; padding: 0 .3rem; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
   .title-page { text-align: center; padding-top: clamp(1.5rem, 8vh, 5rem); }
