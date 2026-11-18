@@ -155,7 +155,9 @@ export class Game {
     const skilled = this.testSkilled(t);
     const auto = (t.mods || []).some((m) => m.auto && check(this.c, m.if).ok) || (t.knowledge && hasFeature(this.c, 'canny'));
     if (auto) return 'automatic success';
-    return `${t.stat} ${this.c.stats[t.stat]} vs d20+d${dd}${skilled ? ', skilled' : ''} (${Math.round(100 * successChance(this.c.stats[t.stat], dd, skilled))}%)`;
+    const listed = [].concat(t.skill || []).some((s) => isSkilled(this.c, s)) || (t.save && isSkilled(this.c, `save:${t.stat}`));
+    const why = skilled && !listed && t.why ? ` (${t.why})` : '';
+    return `${t.stat} ${this.c.stats[t.stat]} vs d20+d${dd}${skilled ? `, skilled${why}` : ''} — ${Math.round(100 * successChance(this.c.stats[t.stat], dd, skilled))}%`;
   }
   testDie(t) {
     let dd = t.dd;
@@ -164,7 +166,14 @@ export class Game {
     if (armourPenalty(this.c)) dd = 20;
     return dd;
   }
-  testSkilled(t) { return isSkilled(this.c, t.skill) || (t.save && isSkilled(this.c, `save:${t.stat}`)); }
+  /** Skilled if any listed skill applies, if the character's profession justifies it (t.profs),
+   *  or for a saving throw on a core or ancillary stat. */
+  testSkilled(t) {
+    const c = this.c;
+    return [].concat(t.skill || []).some((s) => isSkilled(c, s))
+      || (t.profs || []).includes(c.profession)
+      || (!!t.save && isSkilled(c, `save:${t.stat}`));
+  }
 
   /** Choose option i. Tests resolve immediately and leave a result to show before moving on. */
   choose(i, opts = {}) {

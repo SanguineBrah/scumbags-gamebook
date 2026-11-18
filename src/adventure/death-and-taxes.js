@@ -22,7 +22,7 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Pay him 50GP', to: 'paid', if: { gold: 50 } },
-      { text: 'Haggle', test: { stat: 'Cha', dd: 8, skill: 'social' }, pass: 'haggle_win', fail: 'haggle_lose' },
+      { text: 'Haggle', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cutpurse'], why: 'a cutpurse knows what stolen goods are worth' }, pass: 'haggle_win', fail: 'haggle_lose' },
       { text: 'Pick his pocket while he’s talking', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'steal_win', fail: 'steal_caught' },
       { text: 'Go home and live a long, sensible life', to: 'go_home' },
     ],
@@ -79,7 +79,7 @@ export const SECTIONS = {
   traveller_talk: {
     text: ['He introduces himself as a disruptor. You aren’t sure what he disrupts, but it seems to be mostly his own life. He wants to know where the nearest “hub” is.'],
     choices: [
-      { text: 'Explain, kindly, that there is no signal and never will be', test: { stat: 'Cha', dd: 4, skill: 'social' }, pass: 'traveller_friend', fail: 'traveller_bored' },
+      { text: 'Explain, kindly, that there is no signal and never will be', test: { stat: 'Cha', dd: 4, skill: ['social', 'languages'] }, pass: 'traveller_friend', fail: 'traveller_bored' },
       { text: 'Rob him after all', to: 'traveller_fight' },
       { text: 'Leave him to it', to: 'hill' },
     ],
@@ -191,7 +191,7 @@ export const SECTIONS = {
   chimney: {
     text: ['The chimney is wide, crooked and warm. Somebody below is cooking.'],
     choices: [{
-      text: 'Climb down', test: { stat: 'Str', dd: 8, skill: 'athletics', mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'kitchen_arrive', fail: 'chimney_fall',
+      text: 'Climb down', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter'], why: 'woodcutters climb for a living', mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'kitchen_arrive', fail: 'chimney_fall',
     }, { text: 'Think better of it', to: 'hill' }],
   },
   chimney_fall: {
@@ -209,7 +209,7 @@ export const SECTIONS = {
       : ['A homunculus stands on a stool, stirring a pot almost as big as he is. He is about a foot tall, round as a turnip and wearing a tiny chef’s hat. He is, unfortunately, adorable. “Soup?” he asks.'],
     choices: [
       { text: 'Chat with the chef', test: { stat: 'Cha', dd: 4, skill: 'social' }, pass: 'chef_talk', fail: 'chef_snub', show: { notFlag: 'chefDead' } },
-      { text: 'Have some soup', test: { stat: 'Con', dd: 8, save: true, mods: [{ if: { feature: 'noPoison' }, auto: true, text: 'Sottish: you ignore simple poisons. And this is a simple poison.' }] }, pass: 'soup_good', fail: 'soup_bad', show: { notFlag: 'chefDead' } },
+      { text: 'Have some soup', test: { stat: 'Con', dd: 8, save: true, skill: ['medicine'], why: 'medicine covers identifying poisons', mods: [{ if: { feature: 'noPoison' }, auto: true, text: 'Sottish: you ignore simple poisons. And this is a simple poison.' }] }, pass: 'soup_good', fail: 'soup_bad', show: { notFlag: 'chefDead' } },
       { text: 'Attack the chef', to: 'chef_fight', show: { notFlag: 'chefDead' } },
       { text: 'Go through to the great hall', to: 'hall' },
     ],
@@ -260,7 +260,7 @@ export const SECTIONS = {
     text: ['The tunnel opens into a cistern. Squatting at the edge of the black water, gutting a rat with her teeth, is a fishwife: gills, scales, an apron and arms like hams. She smells of the sea, which is eighty miles away.'],
     choices: [
       { text: 'Offer her some of your rations', to: 'fishwife_fed', if: { item: 'rations' } },
-      { text: 'Sneak along the wall', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'cellar', fail: 'fishwife_fight' },
+      { text: 'Sneak along the wall', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'a hunter knows how to stalk' }, pass: 'cellar', fail: 'fishwife_fight' },
       { text: 'Cast Abundance and offer her the food', cast: 'abundance', pass: 'fishwife_fed', fail: 'fishwife_fight' },
       { text: 'Cast Pollute and turn her cistern to oil', cast: 'pollute', pass: 'pollute_win', fail: 'fishwife_fight' },
       { text: 'Attack her while she’s busy', to: 'fishwife_ambush' },
@@ -314,7 +314,7 @@ export const SECTIONS = {
       c.flags.chandelier ? 'The chandelier is somewhat less golden than it was.' : '',
     ].filter(Boolean),
     choices: [
-      { text: 'Climb up and pick coins off the chandelier', test: { stat: 'Dex', dd: 12, skill: 'athletics', mods: [{ if: { anyItem: ['rope', 'climbing', 'pole'] }, dd: 8 }] }, pass: 'chandelier_win', fail: 'chandelier_fall', show: { notFlag: 'chandelier' } },
+      { text: 'Climb up and pick coins off the chandelier', test: { stat: 'Dex', dd: 12, skill: ['athletics'], profs: ['Cutpurse', 'Woodcutter'], mods: [{ if: { anyItem: ['rope', 'climbing', 'pole'] }, dd: 8 }] }, pass: 'chandelier_win', fail: 'chandelier_fall', show: { notFlag: 'chandelier' } },
       { text: 'Go into the library', to: 'library' },
       { text: 'Go into the gallery', to: 'gallery' },
       { text: 'Open the Chief Clerk’s door', to: 'office' },
@@ -342,7 +342,7 @@ export const SECTIONS = {
     dark: true,
     text: ['Ledgers fill the shelves from floor to ceiling: every debt Vane ever owned, and he owned all of them. One shelf is different. A single fat book with a gilt spine reads TOME RAIDER, and it is breathing.'],
     choices: [
-      { text: 'Search the shelves for anything useful', test: { stat: 'Int', dd: 8, skill: 'analysis' }, pass: 'library_found', fail: 'mimic_fight', show: { notFlag: 'combo' } },
+      { text: 'Search the shelves for anything useful', test: { stat: 'Int', dd: 8, skill: ['analysis', 'languages'], why: 'reading old ledgers' }, pass: 'library_found', fail: 'mimic_fight', show: { notFlag: 'combo' } },
       { text: 'Stab the suspicious book', to: 'mimic_ambush', show: { notFlag: 'mimicDead' } },
       { text: 'Leave the library', to: 'hall' },
     ],
@@ -359,7 +359,7 @@ export const SECTIONS = {
     on: [{ flag: 'mimicDead' }, { gold: 20, msg: 'Pressed between its pages: 20GP, and a bookmark.' }], onceOnly: true,
     text: ['The book-mimic flops shut for the last time. Its sequel, TOME RAIDER II: THE CRADLE OF BITE, is on the shelf next to it, but it seems to be just a book.'],
     choices: [
-      { text: 'Search the shelves', test: { stat: 'Int', dd: 8, skill: 'analysis' }, pass: 'library_found', fail: 'library_nothing', show: { notFlag: 'combo' } },
+      { text: 'Search the shelves', test: { stat: 'Int', dd: 8, skill: ['analysis', 'languages'], why: 'reading old ledgers' }, pass: 'library_found', fail: 'library_nothing', show: { notFlag: 'combo' } },
       { text: 'Leave the library', to: 'hall' },
     ],
   },
@@ -373,26 +373,41 @@ export const SECTIONS = {
     choices: [{ text: 'Leave the library', to: 'hall' }],
   },
   gallery: {
-    text: (c) => c.flags.legsDead
-      ? ['The gallery is quiet. The portraits of debtors look down at you, and you look down at what’s left of the legs.']
-      : ['Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, beneath a portrait of a man with no legs, stands a pair of legs in fine silk stockings. A fat purse hangs on the wall behind them.'],
+    text: (c) => c.flags.knightGone
+      ? ['The gallery is quiet. The portraits of debtors look down at you, and the empty plinth at the end looks down at nothing.']
+      : [
+        'Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. A fat purse hangs on the wall behind him.',
+        'The visor squeaks open. “Sir Reginald Overdraft,” says a hollow voice. “Pledged against a loan of twenty gold, in the year of the wet harvest. I am to guard this gallery until the debt is paid.” He has been standing there for forty-one years.',
+      ],
     choices: [
-      { text: 'Fight the legs', to: 'legs_fight', show: { notFlag: 'legsDead' } },
-      { text: 'Creep past them to the purse', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'gallery_purse', fail: 'legs_fight', show: { notFlag: 'legsDead' } },
-      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'legsDead' } },
+      { text: 'Pay off his debt', to: 'knight_paid', if: { gold: 20 }, effects: [{ gold: -20 }], show: { notFlag: 'knightGone' } },
+      { text: 'Point out that his creditor is dead', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'], profs: ['Cleric', 'Missionary'], why: 'clerics and missionaries are good at telling people they are free' }, pass: 'knight_freed', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
+      { text: 'Creep past him to the purse', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'gallery_purse', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
+      { text: 'Fight him', to: 'knight_fight', show: { notFlag: 'knightGone' } },
+      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'knightGone' } },
       { text: 'Go back to the great hall', to: 'hall' },
     ],
   },
-  legs_fight: {
-    text: ['The legs turn towards you, which is an achievement without a face, and come at you in a flurry of kicks.'],
+  knight_paid: {
+    on: [{ flag: 'knightGone' }],
+    text: ['You count twenty gold into his gauntlet. He looks at it for a long time. “Paid,” he says, and climbs down off the plinth with a noise like a dropped kitchen. “I am free. I shall go home.” He bows, takes the purse off the wall, hands it to you, and clanks away to find out what year it is.'],
+    choices: [{ text: 'Open the purse', to: 'gallery_purse' }],
+  },
+  knight_freed: {
+    on: [{ flag: 'knightGone' }],
+    text: ['You explain, gently, that Vane has been dead for twenty years and that a contract with a dead man is a contract with nobody. Sir Reginald thinks about this for a full minute. Then he weeps, loudly, inside his helmet, thanks you, and clanks off into the dark to find his wife, who has remarried twice.'],
+    choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
+  },
+  knight_fight: {
+    text: ['“Theft from the collateral,” booms Sir Reginald, “is a breach of contract.” He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
     fight: {
-      monsters: [{ name: 'animated legs', lvl: 2, range: 'engaged', feats: ['relentless'], note: 'Relentless; must be burned or pulped' }],
-      win: 'legs_win', flee: { to: 'hall', label: 'Run back to the hall' },
+      monsters: [{ name: 'Sir Reginald Overdraft', lvl: 2, hp: 6, range: 'engaged', ap: 6, note: 'Defaulted knight, forty-one years without lunch (6 HP); repossessed plate armour (6 AP)' }],
+      win: 'knight_win', flee: { to: 'hall', label: 'Run back to the hall' },
     },
   },
-  legs_win: {
-    on: [{ flag: 'legsDead' }],
-    text: ['The legs stop kicking. You give them one more stamp, just to be sure, and they don’t get up. You could probably sell the stockings.'],
+  knight_win: {
+    on: [{ flag: 'knightGone' }],
+    text: ['Sir Reginald topples off his plinth with a final clang. “Default,” he whispers, “at last.” His armour is too rusty to sell, which is the only reason you don’t.'],
     choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
   },
   gallery_purse: {
@@ -423,8 +438,20 @@ export const SECTIONS = {
   },
   office_noise: {
     on: [{ damage: 'd4', from: 'The desk' }],
-    text: ['The desk fights back, in the sense that you hit it very hard with your hand. The drawer is unmoved.'],
+    text: (c) => c.flags.impDead
+      ? ['The desk fights back, in the sense that you hit it very hard with your hand. The drawer is unmoved.']
+      : ['The desk fights back, in the sense that you hit it very hard with your hand. The noise wakes something in the inkwell. A small black shape climbs out, dripping, holding a quill like a spear and a contract like a shield. It is an inkwell imp, and it would very much like your signature.'],
+    fight: {
+      unless: { flag: 'impDead' },
+      monsters: [{ name: 'Inkwell imp', lvl: 1, range: 'short', feats: ['contract'], note: 'Flicks ink from short range; on hit, d4 Cha save or you’ve signed something (lose 10GP)' }],
+      win: 'imp_win', flee: { to: 'hall', label: 'Run back to the hall' },
+    },
     choices: [{ text: 'Try again', to: 'office' }, { text: 'Go back to the great hall', to: 'hall' }],
+  },
+  imp_win: {
+    on: [{ flag: 'impDead' }],
+    text: ['The imp bursts into a puddle of ink and a smell of sealing wax. Among the splashes is a contract with your name on it, which you eat, to be safe.'],
+    choices: [{ text: 'Try the drawer again', to: 'office' }, { text: 'Go back to the great hall', to: 'hall' }],
   },
   office_drawer: {
     on: [{ flag: 'drawer' }, { item: 'vaultkey' }, { gold: 25, msg: 'Under the key: 25GP in a tin marked BRIBES (INCOMING).' }], onceOnly: true,

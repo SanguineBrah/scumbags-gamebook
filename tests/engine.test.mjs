@@ -65,3 +65,22 @@ test('hundreds of bot playthroughs finish without crashing or getting stuck', ()
     assert.ok(g.isOver() || steps >= 400);
   }
 });
+
+test('tests count as skilled when the profession justifies it', () => {
+  const g = new Game(adv, 6); g.begin(make(6));
+  const climb = { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter'] };
+  g.c.profession = 'Woodcutter'; assert.equal(g.testSkilled(climb), true);
+  g.c.profession = 'Sellsword'; assert.equal(g.testSkilled(climb), true);   // athletics
+  g.c.profession = 'Sorcerer'; assert.equal(g.testSkilled(climb), false);
+  g.c.profession = 'Alchemist';
+  assert.equal(g.testSkilled({ stat: 'Con', dd: 8, save: true, skill: ['medicine'] }), true);
+});
+
+test('monster armour soaks damage before HP', async () => {
+  const { makeMonster, hurtMonster } = await import('../src/engine/combat.js');
+  const g = new Game(adv, 7); g.begin(make(7));
+  const m = makeMonster(g.rng, { name: 'knight', lvl: 2, hp: 6, ap: 6 });
+  const f = { log: [] };
+  hurtMonster(g, f, m, 8);
+  assert.equal(m.ap, 0); assert.equal(m.hp, 4);
+});

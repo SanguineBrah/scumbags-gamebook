@@ -13,7 +13,7 @@ export function makeMonster(rng, def) {
   const hp = def.hp != null ? def.hp : brute ? 8 * lvl : Math.max(1, rng.roll(lvl, 8));
   return {
     uid: uid++, name: def.name, lvl, dd: MONSTER_DD(lvl), range: def.range || 'engaged', feats: [...(def.feats || [])],
-    hp, maxHp: hp, dmg: def.dmg || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
+    hp, maxHp: hp, ap: def.ap || 0, dmg: def.dmg || null, note: def.note || '', regen: def.regen || 0, regenStop: def.regenStop || null,
     unaware: false, prone: false, stunned: 0, dormant: 0, fled: false, obeys: false, tick: 0,
   };
 }
@@ -101,6 +101,7 @@ function playerAttack(g, f, m, opts = {}) {
 export function hurtMonster(g, f, m, dmg, o = {}) {
   if (o.magic && has(m, 'magicImmune')) { note(f, `The ${m.name} is immune to magic.`); return; }
   if (has(m, 'takeD6') && !o.noBonus) { const x = g.rng.die(6); dmg += x; note(f, `The ${m.name} receives +${x} damage.`); }
+  if (m.ap > 0) { const a = Math.min(m.ap, dmg); m.ap -= a; dmg -= a; note(f, `Its armour soaks up ${a}${m.ap ? ` (${m.ap} AP left)` : ' — the armour is wrecked'}.`); }
   m.hp -= dmg;
   note(f, `${dmg} damage to the ${m.name}${m.hp > 0 ? ` (${m.hp}/${m.maxHp} HP)` : ''}.`, 'hit');
   if (m.hp <= 0) {
@@ -150,6 +151,10 @@ function monsterAttack(g, f, m) {
   if (has(m, 'dealD6')) dmg += rng.die(6);
   if (crit) dmg *= 2;
   hurtPlayer(g, f, dmg, m.name);
+  if (has(m, 'contract') && c.hp > 0) {
+    const s = test(g, f, { stat: 'Cha', dd: 4, skill: 'save:Cha', label: 'Cha save against the contract', reroll: 'rerollSave' });
+    if (!s.success) { const lost = Math.min(10, c.gold); c.gold -= lost; note(f, `Ink everywhere, and somehow you’ve signed something. −${lost}GP.`, 'bad'); }
+  }
   if (has(m, 'vomit') && c.hp > 0 && !hasFeature(c, 'noProne')) {
     const s = test(g, f, { stat: 'Dex', dd: 4, skill: 'save:Dex', label: 'Dex save against the slippery vomit', reroll: 'rerollSave' });
     if (!s.success) { c.prone = true; note(f, 'You slip and fall prone.', 'bad'); }

@@ -204,7 +204,7 @@ function sectionView() {
   if (g.fight) out.push(fightView());
   const choices = g.choices();
   if (choices.length) out.push(h('div', { class: 'choices' }, choices.map((ch) => {
-    const versatile = ch.kind === 'test' && ch.ok && hasFeature(c, 'versatile') && c.daily.versatile && ch.detail && !/skilled|automatic/.test(ch.detail);
+    const versatile = ch.kind === 'test' && ch.ok && hasFeature(c, 'versatile') && c.daily.versatile && ch.detail && !/, skilled|automatic/.test(ch.detail);
     const btn = h('button', { class: `choice${ch.kind === 'test' || ch.kind === 'cast' ? ' test' : ''}`, disabled: !ch.ok, onclick: () => pick(ch.i) },
       h('span', null, ch.label, (ch.detail || ch.reason) && h('span', { class: 'sub' }, [ch.detail && `Test: ${ch.detail}`, !ch.ok && ch.reason].filter(Boolean).join(' — '))),
       h('span', { class: 'turn' }, ch.num ? `Turn to ${ch.num}` : 'Roll'));
@@ -227,7 +227,7 @@ function fightView() {
     const status = [m.fled && 'fled', m.obeys && 'obeys you', m.dormant && 'twitching on the floor', m.prone && !m.dormant && 'prone', m.stunned && 'blinded by sand', m.unaware && 'unaware'].filter(Boolean).join(', ');
     return h('div', { class: `foe${dead ? ' dead' : ''}` },
       h('div', { class: 'name' }, m.name),
-      h('div', { class: 'stats' }, `Level ${m.lvl} · DD d${m.dd} · ${m.range}${status ? ` · ${status}` : ''}`),
+      h('div', { class: 'stats' }, `Level ${m.lvl} · DD d${m.dd} · ${m.range}${m.ap ? ` · ${m.ap} AP` : ''}${status ? ` · ${status}` : ''}`),
       h('div', { class: 'bar' }, h('i', { style: `width:${Math.max(0, 100 * m.hp / m.maxHp)}%` })),
       h('div', { class: 'stats' }, `${Math.max(0, m.hp)}/${m.maxHp} HP${m.note ? ` — ${m.note}` : ''}`));
   });
