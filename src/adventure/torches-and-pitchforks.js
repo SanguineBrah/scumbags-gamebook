@@ -147,13 +147,13 @@ export const SECTIONS = {
     text: (c) => [`${c.flags.thrown ? 'Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear, and the fight goes out of the mob at once.' : 'You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear.'} The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”`],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
-  mob_fight: { outdoors: true,
+  mob_fight: {
     on: [{ flag: 'mobAngry' }],
     text: (c) => [
       'The mob surges. Pitchforks you can see through still go into you.',
       c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
     ],
-    fight: {
+    fight: { outdoors: true,
       monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
       special: [
         { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },

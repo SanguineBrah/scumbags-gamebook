@@ -67,9 +67,9 @@ export const SECTIONS = {
     text: ['You pump your bellows at it. It is made of cloud. It comes apart in a long grey streamer and blows away over the castle wall, whimpering.'],
     choices: [{ text: 'Go into the castle', to: 'castle' }],
   },
-  hound_fight: { outdoors: true,
+  hound_fight: {
     text: ['The cloud hound comes at you out of the fog, all teeth.'],
-    fight: { monsters: [hound], win: 'hound_down', flee: { to: 'climb', label: 'Drop back down through the cloud' } },
+    fight: { outdoors: true, monsters: [hound], win: 'hound_down', flee: { to: 'climb', label: 'Drop back down through the cloud' } },
   },
   hound_down: {
     on: [{ flag: 'houndGone' }],
@@ -159,7 +159,7 @@ export const SECTIONS = {
   },
   giant_fight: {
     text: ['Lord Nimbus gets up out of his chair, which takes a while, and is very bad news.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [nimbus], win: 'giant_down', flee: { to: 'escape', label: 'Run for the door' },
       special: [{ label: 'Throw caltrops under his bare feet', if: { item: 'caltrops' }, flag: 'caltropsGiant', text: 'A ninety-foot giant in his socks treads on your caltrops, hops, and sits down on his own fire.', dmg: '3d6', stun: 1 }],
     },

@@ -108,9 +108,9 @@ export const SECTIONS = {
     text: ['A small silver whistle, too high to hear. Blink dogs come to it, the way other dogs come to their name.'],
     choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
-  dogs_fight: { outdoors: true,
+  dogs_fight: {
     text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [blinkdog, blinkdog],
       win: 'dogs_down', flee: { to: 'square', label: 'Run back to the square' },
       special: [{ label: 'Throw them your rations', if: { item: 'rations' }, flag: 'dogsFed', text: 'They fall on the food, and forget you exist.', win: true }],

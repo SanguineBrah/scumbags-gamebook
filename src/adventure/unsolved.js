@@ -7,7 +7,7 @@ export const META = {
 };
 
 const CLUE = { add: ['clues', 1] };
-const cube = { name: 'Transdimensional murdercube', lvl: 8, hp: 40, range: 'short', note: 'Unsolved puzzle; hovers; folds space at you' };
+const cube = { name: 'Transdimensional murdercube', lvl: 8, hp: 40, range: 'short', feats: ['flies'], note: 'Unsolved puzzle; hovers; folds space at you' };
 
 export const SECTIONS = {
   start: {

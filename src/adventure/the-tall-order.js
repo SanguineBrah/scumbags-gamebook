@@ -153,7 +153,7 @@ export const SECTIONS = {
   pocket_topple: {
     on: [{ flag: 'pockets' }],
     text: ['Your mark feels the tug, turns round in surprise and topples off her stilts, taking three other guests with her. Everyone looks. A pikeman starts turning round.'],
-    fight: { monsters: [pikeman], distance: 1, win: 'long_hall_after', flee: { to: 'staircase', label: 'Lose yourself on the staircase' } },
+    fight: { ceiling: 'high', monsters: [pikeman], distance: 1, win: 'long_hall_after', flee: { to: 'staircase', label: 'Lose yourself on the staircase' } },
   },
   long_hall_after: {
     text: ['The pikeman lies on the floor, his pike still upright and swaying, like a flagpole without a flag. The guests decide it is part of the entertainment and applaud.'],
@@ -295,7 +295,7 @@ export const SECTIONS = {
   },
   hounds_fight: {
     text: ['The hounds come at you all knees and teeth.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
@@ -357,7 +357,7 @@ export const SECTIONS = {
   },
   ned_fight: {
     text: ['Big Ned stops being furniture. He fills the vault, and he hits like a falling tree. But he’s spent his life in rooms built for ordinary people, and he flinches every time he passes a doorway.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Big Ned', lvl: 2, hp: 18, range: 'engaged', note: 'The tallest man in the world (18 HP); takes d6 damage whenever he runs through a doorway' }],
       win: 'ned_win', flee: { to: 'gallery', label: 'Run for the stairs' },
       special: [{ label: 'Dodge through the doorway so he follows', text: 'You duck through the vault door. Big Ned charges after you and meets the lintel with his forehead.', dmg: 'd6', repeat: true }],
@@ -414,7 +414,7 @@ export const SECTIONS = {
   },
   front_caught: {
     text: ['“Thief!” cries the Lord from his balcony, recognising his own hat. Every pikeman in the hall begins, very slowly, to turn.'],
-    fight: { monsters: [pikeman, pikeman], distance: 1, win: 'grubb', flee: { to: 'grubb', label: 'Run for the door' } },
+    fight: { ceiling: 'high', monsters: [pikeman, pikeman], distance: 1, win: 'grubb', flee: { to: 'grubb', label: 'Run for the door' } },
   },
   grubb: {
     end: 'victory',
@@ -442,7 +442,7 @@ export const SECTIONS = {
   },
   hounds_locusts: {
     text: ['Your god scorns you. Instead of dinner, a swarm of locusts pours out across the landing. The hounds snap at them, eat a few, and then decide you are the larger snack.'],
-    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   hounds_buckled: {
     on: [{ flag: 'houndsGone' }],
@@ -451,7 +451,7 @@ export const SECTIONS = {
   },
   hounds_light: {
     text: ['Your god scorns you. Instead of getting heavier, the hounds can walk on water for ten minutes. There is no water on the landing, so it makes no difference at all, except that they’ve noticed you.'],
-    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   ned_felled: {
     on: [{ flag: 'nedGone' }],

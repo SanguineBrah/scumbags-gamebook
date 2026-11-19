@@ -40,7 +40,7 @@ library: {
   without one. Cast choices are hidden from scumbags who don't know the spell, so a section must
   never rely on a cast as its only way out. Offer spells up to the top level of the adventure's band.
 - **Fights:** `fight: { monsters: [{ name, lvl, range, feats, hp, dmg, note }], win, key, flee: { to, label },
-  surprise, distance, cornered, unless, unlucky, outdoors (Lightning storm works), special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
+  surprise, distance, cornered, unless, unlucky, outdoors (Lightning storm works; Descend flings things into the sky), ceiling: 'high' (indoors, but too lofty for Descend to slam anything into the ceiling), special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
   'prone' | 'gold' | 'damage', amount }`. Wounds from a fight you ran from are kept per section, or per `key` if two
   sections fight the same monster (a later fight's lower `hp` still caps it). Names: the fight text calls a monster "the Filthy footman", or "the baby" for a name
   starting "The". Names with a second capitalised word or a possessive ("Lord Mudlark", "Sid’s heavy")

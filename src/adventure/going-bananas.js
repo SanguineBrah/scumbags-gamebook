@@ -7,7 +7,7 @@ export const META = {
 };
 
 const golem = { name: 'Banana-flesh golem', lvl: 4, hp: 22, range: 'engaged', feats: ['dealD6', 'takeD6'], note: 'Nine feet of bananas; deals and receives +d6 damage; delicious' };
-const flies = { name: 'Cloud of fruit flies', lvl: 2, hp: 6, range: 'engaged', feats: ['tiny'], note: 'A buzzing cloud the size of a cart; hard to hit (+2 to tests when being attacked)' };
+const flies = { name: 'Cloud of fruit flies', lvl: 2, hp: 6, range: 'engaged', feats: ['tiny', 'flies'], note: 'A buzzing cloud the size of a cart; hard to hit (+2 to tests when being attacked)' };
 const grocer = { name: 'Guild greengrocer', lvl: 2, hp: 8, range: 'engaged', note: 'Armed with a marrow; very protective of produce' };
 
 export const SECTIONS = {
@@ -42,9 +42,9 @@ export const SECTIONS = {
       { text: 'Give up and go back to the Guild', to: 'festival' },
     ],
   },
-  flies_fight: { outdoors: true,
+  flies_fight: {
     text: ['The fruit flies come at you in a cloud, up your nose and in your ears and, you suspect, in your soul.'],
-    fight: { monsters: [flies], win: 'flies_gone', flee: { to: 'orchard', label: 'Run out of the cloud' } },
+    fight: { outdoors: true, monsters: [flies], win: 'flies_gone', flee: { to: 'orchard', label: 'Run out of the cloud' } },
   },
   flies_smoked: {
     on: [{ flag: 'fliesGone' }],
@@ -103,9 +103,9 @@ export const SECTIONS = {
       special: [{ label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
-  golem_fight: { outdoors: true,
+  golem_fight: {
     text: ['The golem draws itself up to its full nine feet, and comes at you swinging bunches.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
         { label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },

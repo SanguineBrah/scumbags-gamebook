@@ -101,10 +101,10 @@ export const SECTIONS = {
     text: ['You tie his laces together in a double knot while he’s touching his toes. He doesn’t notice. He has a very long way to look down.'],
     choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
-  neville_fight: { outdoors: true,
+  neville_fight: {
     on: [{ flag: 'nevilleAngry' }],
     text: ['Neville feels a tug on his laces, looks down the length of himself, and bites you.'],
-    fight: { monsters: [neville], win: 'neville_beaten', flee: { to: 'paddock', label: 'Run back to the paddock' } },
+    fight: { outdoors: true, monsters: [neville], win: 'neville_beaten', flee: { to: 'paddock', label: 'Run back to the paddock' } },
   },
   neville_beaten: {
     on: [{ flag: 'nevilleNobbled' }, { flag: 'nevilleDone' }],

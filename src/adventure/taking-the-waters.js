@@ -122,7 +122,7 @@ export const SECTIONS = {
   },
   blob_fight: {
     text: ['The water stands up. The blob rises out of the Great Bath like a wave that has decided not to come down, and comes for you.'],
-    fight: {
+    fight: { ceiling: 'high',
       key: 'blob', monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
       special: [
         { label: 'Throw salt from your rations into it', if: { item: 'rations' }, flag: 'blobSalt', text: 'The blob flinches from the salt and shrinks back.', dmg: '2d6' },
@@ -132,7 +132,7 @@ export const SECTIONS = {
   },
   blob_weak: {
     text: ['What’s left of the blob heaves itself up off the tiles at you, sluggish and shrinking.'],
-    fight: { key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
+    fight: { ceiling: 'high', key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
   },
   blob_dead: {
     on: [{ flag: 'blobGone' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'In what’s left of the blob: a tiara worth 120GP.' }, { gold: 60, msg: 'And three wedding rings: 60GP.' }],

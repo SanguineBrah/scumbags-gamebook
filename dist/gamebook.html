@@ -20,20 +20,24 @@
     --sheet-w: 320px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; overflow-anchor: none; }   /* the page is redrawn wholesale; don't let the browser 'helpfully' keep the old scroll spot */
+  html, body { margin: 0; overflow: hidden; }
   body {
     background: var(--paper); color: var(--ink); font-family: var(--serif);
     font-size: clamp(17px, 1.05rem + 0.2vw, 20px); line-height: 1.55;
     /* The top inset goes on the bar itself, so the notch area is the bar's colour, not a pale strip. */
     padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-text-size-adjust: 100%;
+    /* The page itself never scrolls: the bar sits on top and the game scrolls underneath it, in #app.
+       Mobile browsers (Firefox for Android especially) hide their address bar when the page scrolls,
+       and redrawing the page under a half-hidden address bar left a blank strip at the top. */
+    height: 100vh; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;
   }
   button, input, select, textarea { font: inherit; color: inherit; }
-  #app { min-height: 100vh; min-height: 100dvh; }
+  #app { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; overflow-anchor: none; }
 
   /* ---------- layout ---------- */
   .topbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; gap: .6rem;
+    position: relative; flex: none; z-index: 20; display: flex; align-items: center; gap: .6rem;
     padding: calc(.45rem + env(safe-area-inset-top)) .9rem .45rem; background: var(--ink); color: var(--paper);
     font-size: .9rem; min-height: calc(48px + env(safe-area-inset-top));
   }
@@ -49,7 +53,7 @@
   .sheet { display: none; }
   @media (min-width: 960px) {
     .layout.with-sheet { grid-template-columns: minmax(0, 1fr) var(--sheet-w); gap: 0; }
-    .layout.with-sheet .sheet { display: block; position: sticky; top: 48px; align-self: start; max-height: calc(100vh - 48px); overflow-y: auto; border-left: 1px solid var(--rule); background: var(--paper-2); }
+    .layout.with-sheet .sheet { display: block; position: sticky; top: 0; align-self: start; max-height: calc(100dvh - 48px); overflow-y: auto; border-left: 1px solid var(--rule); background: var(--paper-2); }
     .sheet-toggle { display: none; }
   }
   /* mobile drawer */
@@ -149,7 +153,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="b59fb9b81c3a">
+<meta name="build" content="f7ace08a889b">
 </head>
 <body>
 <div id="app"></div>
@@ -215,22 +219,14 @@ function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify
 function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
 function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 
-/** Back to the top of the page. Some mobile browsers nudge the page down again a moment later
- *  (the address bar settling, or the top bar changing size), so check again once things have settled. */
-function toTop() {
-  window.scrollTo({ top: 0, behavior: 'instant' });
-  for (const ms of [50, 300]) setTimeout(() => { if (window.scrollY > 0 && window.scrollY < 120) window.scrollTo({ top: 0, behavior: 'instant' }); }, ms);
-}
+/** Back to the top of the page (the game scrolls inside #app, not the window). */
+function toTop() { root.scrollTop = 0; }
 function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); toTop(); }
 
 // ---------- screens
-// The top bar is one fixed element that lives outside the app and only has its contents swapped.
-// Rebuilding a sticky bar on every render left a blank strip at the top in some mobile browsers.
+// The top bar is one element above the scrolling game, and only has its contents swapped.
 const bar = document.createElement('header'); bar.className = 'topbar'; bar.hidden = true;
-const barSpace = document.createElement('div'); barSpace.className = 'topbar-space';
-document.body.insertBefore(bar, root); document.body.insertBefore(barSpace, root);
-const fitBar = () => { barSpace.style.height = bar.hidden ? '0' : `${bar.offsetHeight}px`; };
-if (window.ResizeObserver) new ResizeObserver(fitBar).observe(bar);
+document.body.insertBefore(bar, root);
 
 /** A page left open for hours keeps running the old game. Check for a newer build when the tab comes back. */
 const BUILD = document.querySelector('meta[name="build"]')?.content;
@@ -259,7 +255,6 @@ function render() {
   const head = view.querySelector('header.topbar');
   if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
   root.replaceChildren(...[updateBanner(), view].filter(Boolean));
-  fitBar();
   save();
 }
 
@@ -882,9 +877,9 @@ const SECTIONS = {
     text: ['He tells you about his company for an hour. It is a company that sells nothing to nobody, and it is worth a billion of something. When you finally escape, the sun has moved noticeably.'],
     choices: [{ text: 'Climb Gallows Hill', to: 'hill' }],
   },
-  traveller_fight: { outdoors: true,
+  traveller_fight: {
     text: ['He backs away, fumbling at his belt, and produces a small black crossbow with no string. “I don’t want to use this,” he says, and then uses it. It goes BANG.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture-capitalist; iPad; handgun (2d6+lvl damage)' }],
       distance: 2, win: 'traveller_loot', flee: { to: 'hill', label: 'Run up the hill' },
     },
@@ -965,9 +960,9 @@ const SECTIONS = {
     text: ['The iron door doesn’t notice. Your foot does. The moustache writes something down.'],
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
-  front_fight: { outdoors: true,
+  front_fight: {
     text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'front_win', flee: { to: 'hill', label: 'Retreat down the hill' },
     },
@@ -1142,11 +1137,11 @@ const SECTIONS = {
   },
   mimic_ambush: {
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
     on: [{ flag: 'mimicDead' }, { gold: 20, msg: 'Pressed between its pages: 20GP, and a bookmark.' }], onceOnly: true,
@@ -1407,9 +1402,9 @@ const SECTIONS = {
       { text: 'Refuse', to: 'exit_fight', show: { none: [{ flag: 'bureaucratDead' }, { flag: 'appointment' }, { flag: 'auditor' }, { flag: 'sneaked' }] } },
     ],
   },
-  exit_fight: { outdoors: true,
+  exit_fight: {
     text: ['“Refusal noted,” he says, and reaches for his stamps.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'town',
     },
@@ -1608,7 +1603,7 @@ const SECTIONS = {
   pocket_topple: {
     on: [{ flag: 'pockets' }],
     text: ['Your mark feels the tug, turns round in surprise and topples off her stilts, taking three other guests with her. Everyone looks. A pikeman starts turning round.'],
-    fight: { monsters: [pikeman], distance: 1, win: 'long_hall_after', flee: { to: 'staircase', label: 'Lose yourself on the staircase' } },
+    fight: { ceiling: 'high', monsters: [pikeman], distance: 1, win: 'long_hall_after', flee: { to: 'staircase', label: 'Lose yourself on the staircase' } },
   },
   long_hall_after: {
     text: ['The pikeman lies on the floor, his pike still upright and swaying, like a flagpole without a flag. The guests decide it is part of the entertainment and applaud.'],
@@ -1750,7 +1745,7 @@ const SECTIONS = {
   },
   hounds_fight: {
     text: ['The hounds come at you all knees and teeth.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
@@ -1812,7 +1807,7 @@ const SECTIONS = {
   },
   ned_fight: {
     text: ['Big Ned stops being furniture. He fills the vault, and he hits like a falling tree. But he’s spent his life in rooms built for ordinary people, and he flinches every time he passes a doorway.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Big Ned', lvl: 2, hp: 18, range: 'engaged', note: 'The tallest man in the world (18 HP); takes d6 damage whenever he runs through a doorway' }],
       win: 'ned_win', flee: { to: 'gallery', label: 'Run for the stairs' },
       special: [{ label: 'Dodge through the doorway so he follows', text: 'You duck through the vault door. Big Ned charges after you and meets the lintel with his forehead.', dmg: 'd6', repeat: true }],
@@ -1869,7 +1864,7 @@ const SECTIONS = {
   },
   front_caught: {
     text: ['“Thief!” cries the Lord from his balcony, recognising his own hat. Every pikeman in the hall begins, very slowly, to turn.'],
-    fight: { monsters: [pikeman, pikeman], distance: 1, win: 'grubb', flee: { to: 'grubb', label: 'Run for the door' } },
+    fight: { ceiling: 'high', monsters: [pikeman, pikeman], distance: 1, win: 'grubb', flee: { to: 'grubb', label: 'Run for the door' } },
   },
   grubb: {
     end: 'victory',
@@ -1897,7 +1892,7 @@ const SECTIONS = {
   },
   hounds_locusts: {
     text: ['Your god scorns you. Instead of dinner, a swarm of locusts pours out across the landing. The hounds snap at them, eat a few, and then decide you are the larger snack.'],
-    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   hounds_buckled: {
     on: [{ flag: 'houndsGone' }],
@@ -1906,7 +1901,7 @@ const SECTIONS = {
   },
   hounds_light: {
     text: ['Your god scorns you. Instead of getting heavier, the hounds can walk on water for ten minutes. There is no water on the landing, so it makes no difference at all, except that they’ve noticed you.'],
-    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   ned_felled: {
     on: [{ flag: 'nedGone' }],
@@ -2398,7 +2393,7 @@ const SECTIONS = {
   tiddles_fight: {
     on: [{ flag: 'tiddlesAngry' }],
     text: ['Tiddles stretches, which takes a while, and then pounces, which doesn’t.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Tiddles', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
       win: 'tiddles_win', flee: { to: 'cottage', label: 'Dive back out through the flap' },
     },
@@ -2583,7 +2578,7 @@ const SECTIONS = {
   baby_cries: {
     on: [NOISE(2), { flag: 'babyUpset' }],
     text: ['Your singing voice is not what it was. The baby’s lip wobbles, and then it starts to cry: a sound like a herd of cattle falling down a well. Outside, the humming stops dead.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'The baby', lvl: 4, hp: 20, range: 'engaged', feats: ['topple', 'coward'], note: 'Infant hill giant (20 HP); falls over at the end of each turn; gives up at half health' }],
       win: 'baby_stops', flee: { to: 'kitchen', label: 'Run for the kitchen' },
     },
@@ -2602,7 +2597,7 @@ const SECTIONS = {
   },
   louse_fight: {
     text: ['Out of the hairbrush clambers a head louse the size of a pig, with a shell like a cart roof and an appetite for anything warm.'],
-    fight: { monsters: [louse], win: 'louse_win', flee: { to: 'kitchen', label: 'Run downstairs' } },
+    fight: { ceiling: 'high', monsters: [louse], win: 'louse_win', flee: { to: 'kitchen', label: 'Run downstairs' } },
   },
   louse_win: {
     on: [{ flag: 'louse' }, { gold: 40, msg: 'In the hairbrush: three of Mother’s gold hairpins, each worth 40GP. You can carry one without looking ridiculous. You take one.' }], onceOnly: true,
@@ -3806,9 +3801,9 @@ const SECTIONS = {
     text: ['You kneel beside Sir Gristle, take off your hat, and wait until you’re sure.'],
     choices: [{ text: 'Take him home', to: 'pension_office' }],
   },
-  cannon_fight: { outdoors: true,
+  cannon_fight: {
     text: ['Croaker swings the cannon round and lights the fuse. A toad the size of a cat comes whistling down at you, glowing and ticking.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Old Croaker', lvl: 4, range: 'long', onHit: { stat: 'Dex', dd: 6, label: 'dodge the blast', text: 'The toad goes off at your feet.', effect: 'damage', amount: '2d6' }, note: 'Eccentric; launches burst toads from a cannon (on hit, d6 Dex save or 2d6 more)' }, toad],
       distance: 3, win: 'croaker_beaten', flee: { to: 'fen_edge', label: 'Retreat into the reeds' },
       special: [{ label: 'Douse his fuse with your bucket', if: { item: 'bucket' }, flag: 'doused', text: 'You hurl a bucket of fen water at the roof. The fuse goes out with a hiss, and so does Croaker’s will to fight.', win: true }],
@@ -3957,10 +3952,10 @@ const SECTIONS = {
     text: ['Bruno’s arm goes down with a crash that shakes the tent. He looks at it, then at you, with deep respect. “Free entry,” he says. “And a tip. The ape hates the smell of onions. Never stand downwind of the ape.”'],
     choices: [{ text: 'Go into the big top', to: 'big_top' }],
   },
-  bruno_fight: { outdoors: true,
+  bruno_fight: {
     on: [{ flag: 'brunoAngry' }],
     text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
-    fight: { monsters: [{ name: 'Bruno', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
+    fight: { outdoors: true, monsters: [{ name: 'Bruno', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
   },
   bruno_down: {
     text: ['Bruno sits down in the sawdust and decides you can go in for free.'],
@@ -4001,10 +3996,10 @@ const SECTIONS = {
     text: ['“ACCEPTABLE,” says the Visitor. “BRING THE APE TO MY CRAFT. I SHALL PAY YOU IN ANY QUANTITY OF YOUR YELLOW METAL. I HAVE A GREAT DEAL OF IT. IT IS USELESS.”'],
     choices: [{ text: 'Go back to the tent', to: 'gate' }],
   },
-  visitor_fight: { outdoors: true,
+  visitor_fight: {
     on: [{ flag: 'visitorAngry' }, { unflag: 'visitorDeal' }],
     text: ['The Visitor raises its hairdryer. “HOSTILE,” it says sadly. “AS PREDICTED.”'],
-    fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
+    fight: { outdoors: true, monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
   },
   visitor_down: {
     on: [{ flag: 'visitorGone' }, { gold: 100, msg: 'Inside the craft: a sack of useless yellow metal. 100GP.' }], onceOnly: true,
@@ -4102,7 +4097,7 @@ const SECTIONS = {
   },
   ostrich_fight: {
     text: ['Something invisible and seven feet tall comes down off the platform at you, kicking.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Invisible ostrich', lvl: 4, range: 'engaged', feats: ['invisible'], note: 'Invisible; kicks like a horse; very protective of its egg' }],
       win: 'egg', flee: { to: 'big_top', label: 'Run for it' },
       special: [
@@ -4136,7 +4131,7 @@ const SECTIONS = {
   },
   ape_fight: {
     text: ['Something huge and invisible hits the bars from the inside, and the cage door bursts open. You smell it before anything else.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [ape], distance: 1, win: 'ape_down', flee: { to: 'big_top', label: 'Run into the crowd' },
       special: [
         { label: 'Throw flour at the smell', if: { flag: 'flour' }, flag: 'apeFloured', text: 'A white, ape-shaped cloud appears, roaring. Now you can see what you’re hitting.', reveal: true },
@@ -4245,7 +4240,7 @@ const META = {
 };
 
 const CLUE = { add: ['clues', 1] };
-const cube = { name: 'Transdimensional murdercube', lvl: 8, hp: 40, range: 'short', note: 'Unsolved puzzle; hovers; folds space at you' };
+const cube = { name: 'Transdimensional murdercube', lvl: 8, hp: 40, range: 'short', feats: ['flies'], note: 'Unsolved puzzle; hovers; folds space at you' };
 
 const SECTIONS = {
   start: {
@@ -4665,13 +4660,13 @@ const SECTIONS = {
     text: (c) => [`${c.flags.thrown ? 'Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear, and the fight goes out of the mob at once.' : 'You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear.'} The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”`],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
-  mob_fight: { outdoors: true,
+  mob_fight: {
     on: [{ flag: 'mobAngry' }],
     text: (c) => [
       'The mob surges. Pitchforks you can see through still go into you.',
       c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
     ],
-    fight: {
+    fight: { outdoors: true,
       monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
       special: [
         { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },
@@ -5160,10 +5155,10 @@ const SECTIONS = {
       : 'You bring a pair of legs down and get the boots off, which takes a lot of pulling. The legs sit down in the grass and stop, as if somebody had cut their strings.'],
     choices: [{ text: 'Back to the fair', to: 'fair' }],
   },
-  legs_fight: { outdoors: true,
+  legs_fight: {
     on: [{ add: ['tackled', 1] }],
     text: ['You grab a pair of legs in hobnail boots. They do not want to be grabbed.'],
-    fight: { monsters: [legs], win: 'legs_down', flee: { to: 'fair', label: 'Let go and back off' } },
+    fight: { outdoors: true, monsters: [legs], win: 'legs_down', flee: { to: 'fair', label: 'Let go and back off' } },
   },
   legs_down: {
     on: [BOOTS()],
@@ -5223,9 +5218,9 @@ const SECTIONS = {
       { text: 'Get the boots off before they find their feet', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], mods: [{ if: { flag: 'knowsLaces' }, dd: 4 }] }, pass: 'seven_league', fail: 'leader_fight' },
     ],
   },
-  leader_fight: { outdoors: true,
+  leader_fight: {
     text: ['The legs in the seven-league boots turn on you. They don’t run away. They kick, and every kick lands like a falling cart.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Legs in seven-league boots', plural: true, lvl: 2, hp: 12, range: 'engaged', feats: ['relentless'], note: 'Relentless; seven-league boots (kicks hard, 12 HP)' }],
       win: 'seven_league', flee: { to: 'fair', label: 'Run back to the fair' },
       special: [{ label: 'Tickle them with your quill', if: { item: 'quill' }, flag: 'leaderTickled', text: 'They collapse, kicking with laughter. You get both boots off.', win: true }],
@@ -5444,10 +5439,10 @@ const SECTIONS = {
     text: ['Lord Mudlark is a lord, and has never been told no, and doesn’t know what to do when he’s tied up. He comes along, complaining, but he comes.'],
     choices: [{ text: 'Take him up to the bathroom', to: 'tub' }],
   },
-  lord_fight: { outdoors: true,
+  lord_fight: {
     on: [{ flag: 'lordAngry' }],
     text: ['Lord Mudlark comes out of the sty at you with his stick. The pig watches, with interest, from a safe distance.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [mudlark],
       win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' },
       special: [{ label: 'Throw a bucket of water over him', if: { item: 'bucket' }, flag: 'splashed', text: 'He gets a bucket of water full in the face and stops dead, gasping, as if you’d thrown acid. It’s the first water that’s touched him in thirty years.', stun: 1 }],
@@ -5655,10 +5650,10 @@ const SECTIONS = {
     text: ['You tie his laces together in a double knot while he’s touching his toes. He doesn’t notice. He has a very long way to look down.'],
     choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
-  neville_fight: { outdoors: true,
+  neville_fight: {
     on: [{ flag: 'nevilleAngry' }],
     text: ['Neville feels a tug on his laces, looks down the length of himself, and bites you.'],
-    fight: { monsters: [neville], win: 'neville_beaten', flee: { to: 'paddock', label: 'Run back to the paddock' } },
+    fight: { outdoors: true, monsters: [neville], win: 'neville_beaten', flee: { to: 'paddock', label: 'Run back to the paddock' } },
   },
   neville_beaten: {
     on: [{ flag: 'nevilleNobbled' }, { flag: 'nevilleDone' }],
@@ -5889,9 +5884,9 @@ const SECTIONS = {
     text: ['A small silver whistle, too high to hear. Blink dogs come to it, the way other dogs come to their name.'],
     choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
-  dogs_fight: { outdoors: true,
+  dogs_fight: {
     text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [blinkdog, blinkdog],
       win: 'dogs_down', flee: { to: 'square', label: 'Run back to the square' },
       special: [{ label: 'Throw them your rations', if: { item: 'rations' }, flag: 'dogsFed', text: 'They fall on the food, and forget you exist.', win: true }],
@@ -6133,10 +6128,10 @@ const SECTIONS = {
     on: [{ damage: '2', from: 'A penance' }],
     choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
   },
-  octavius_fight: { outdoors: true,
+  octavius_fight: {
     on: [{ flag: 'octaviusCame' }],
     text: ['Brother Octavius comes at you without a sound, all eight hands open, and the air fills with slaps.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [octavius], win: 'octavius_down', flee: { to: 'clatter', label: 'Run for the gate' },
       special: [{ label: 'Glue two of his hands together', if: { item: 'glue' }, flag: 'octavusGlued', text: 'You slap a dollop of glue into his nearest palm while he slaps you. Two hands stick together. He looks at them, appalled, and spends a whole turn trying to pull them apart.', stun: 1 }],
     },
@@ -6381,9 +6376,9 @@ const SECTIONS = {
     text: ['The rope tightens, and the black horse drags you the length of the lists, through the barrier and into the pie stall.'],
     choices: [{ text: 'Get up', to: 'lists' }],
   },
-  fight: { outdoors: true,
+  fight: {
     text: ['The black horse squares up to you, bows, and charges.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ ...knightmare }], win: 'horse_down', flee: { to: 'lists', label: 'Dive over the barrier' },
       special: [{ label: 'Hold up your hand mirror', if: { item: 'mirror' }, flag: 'mirrorFight', text: 'It sees the empty saddle in the mirror and stops, mid-charge, head down.', stun: 1 }],
     },
@@ -6665,7 +6660,7 @@ const META = {
 };
 
 const golem = { name: 'Banana-flesh golem', lvl: 4, hp: 22, range: 'engaged', feats: ['dealD6', 'takeD6'], note: 'Nine feet of bananas; deals and receives +d6 damage; delicious' };
-const flies = { name: 'Cloud of fruit flies', lvl: 2, hp: 6, range: 'engaged', feats: ['tiny'], note: 'A buzzing cloud the size of a cart; hard to hit (+2 to tests when being attacked)' };
+const flies = { name: 'Cloud of fruit flies', lvl: 2, hp: 6, range: 'engaged', feats: ['tiny', 'flies'], note: 'A buzzing cloud the size of a cart; hard to hit (+2 to tests when being attacked)' };
 const grocer = { name: 'Guild greengrocer', lvl: 2, hp: 8, range: 'engaged', note: 'Armed with a marrow; very protective of produce' };
 
 const SECTIONS = {
@@ -6700,9 +6695,9 @@ const SECTIONS = {
       { text: 'Give up and go back to the Guild', to: 'festival' },
     ],
   },
-  flies_fight: { outdoors: true,
+  flies_fight: {
     text: ['The fruit flies come at you in a cloud, up your nose and in your ears and, you suspect, in your soul.'],
-    fight: { monsters: [flies], win: 'flies_gone', flee: { to: 'orchard', label: 'Run out of the cloud' } },
+    fight: { outdoors: true, monsters: [flies], win: 'flies_gone', flee: { to: 'orchard', label: 'Run out of the cloud' } },
   },
   flies_smoked: {
     on: [{ flag: 'fliesGone' }],
@@ -6761,9 +6756,9 @@ const SECTIONS = {
       special: [{ label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
-  golem_fight: { outdoors: true,
+  golem_fight: {
     text: ['The golem draws itself up to its full nine feet, and comes at you swinging bunches.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
         { label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
@@ -6956,9 +6951,9 @@ const SECTIONS = {
     text: ['You blow a long blast on your whistle and shout “TRUANCY!” The lookout drops his wand and runs. So, through the back door, do two more pointed hats. That leaves three inside, and they are very nervous.'],
     choices: [{ text: 'Go in', to: 'inside' }],
   },
-  lookout_fight: { outdoors: true,
+  lookout_fight: {
     text: ['The lookout raises his wand and grins, which is a mistake, because it means you know exactly when he’s going to cast.'],
-    fight: { monsters: [{ ...delinquent, name: 'Lookout' }], distance: 1, win: 'lookout_down', flee: { to: 'muttering', label: 'Back off down the high street' } },
+    fight: { outdoors: true, monsters: [{ ...delinquent, name: 'Lookout' }], distance: 1, win: 'lookout_down', flee: { to: 'muttering', label: 'Back off down the high street' } },
   },
   lookout_down: {
     on: [{ flag: 'lookoutGone' }],
@@ -7203,9 +7198,9 @@ const SECTIONS = {
     text: ['The baby giggles, a noise like a landslide, and puts you down very gently. It wants to play now. It will follow you anywhere.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  baby_fight: { outdoors: true,
+  baby_fight: {
     text: ['The baby decides you are a squeaky toy, and squeezes.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [baby], win: 'baby_cries', flee: { to: 'square', label: 'Squirm free and run' },
       special: [{ label: 'Wave your smelling salts under its nose', if: { item: 'salts' }, flag: 'sneezed', text: 'The baby sneezes, which blows you clear across the square, and starts to cry.', win: true }],
     },
@@ -7244,9 +7239,9 @@ const SECTIONS = {
     text: ['Captain Snare reads the letter you wave at him, which is a laundry list, very quickly. He packs up his net with a face like thunder and leaves, grumbling about councils.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  snare_fight: { outdoors: true,
+  snare_fight: {
     text: ['Captain Snare catches you at it. “Giant-lover,” he says, and nods to the biggest of his men, who picks up a boathook.'],
-    fight: { monsters: [snareman], distance: 1, win: 'snare_beaten', flee: { to: 'square', label: 'Run back to the square' } },
+    fight: { outdoors: true, monsters: [snareman], distance: 1, win: 'snare_beaten', flee: { to: 'square', label: 'Run back to the square' } },
   },
   snare_beaten: {
     on: [{ flag: 'snareFixed' }],
@@ -7465,7 +7460,7 @@ const SECTIONS = {
   },
   blob_fight: {
     text: ['The water stands up. The blob rises out of the Great Bath like a wave that has decided not to come down, and comes for you.'],
-    fight: {
+    fight: { ceiling: 'high',
       key: 'blob', monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
       special: [
         { label: 'Throw salt from your rations into it', if: { item: 'rations' }, flag: 'blobSalt', text: 'The blob flinches from the salt and shrinks back.', dmg: '2d6' },
@@ -7475,7 +7470,7 @@ const SECTIONS = {
   },
   blob_weak: {
     text: ['What’s left of the blob heaves itself up off the tiles at you, sluggish and shrinking.'],
-    fight: { key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
+    fight: { ceiling: 'high', key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
   },
   blob_dead: {
     on: [{ flag: 'blobGone' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'In what’s left of the blob: a tiara worth 120GP.' }, { gold: 60, msg: 'And three wedding rings: 60GP.' }],
@@ -7692,9 +7687,9 @@ const SECTIONS = {
     text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men come at you down the jetty.'],
     choices: [{ text: 'Fight', to: 'gall_fight' }],
   },
-  gall_fight: { outdoors: true,
+  gall_fight: {
     text: ['Righteous Gall throws off his black coat and comes down the jetty at you with his iron pricker.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [gall], win: 'gall_down', flee: { to: 'dawn', label: 'Run' },
       special: [
         { label: 'Throw the rennet powder in his face', if: { item: 'rennet' }, flag: 'rennetThrown', text: 'A cloud of rennet hits Gall in the face. He chokes, and the crowd, who know what rennet is, start muttering.', stun: 1 },
@@ -8043,7 +8038,7 @@ const META = {
   blurb: 'Two hundred years ago, the clockmaker Ezra Tock built Cogsbury Cathedral a bishop: brass, wind-up and word-perfect. Last week it started excommunicating people. Then the brass gargoyles came down off the roof. The Archbishop arrives on Sunday. The Dean will pay 350 gold to have His Mechanical Grace stopped, or at least made to behave.',
 };
 
-const gargoyle = { name: 'Brass gargoyle', lvl: 5, hp: 8, ap: 4, range: 'engaged', note: 'Clockwork; wings and teeth (8 HP, 4 AP); ticks loudly' };
+const gargoyle = { name: 'Brass gargoyle', lvl: 5, hp: 8, ap: 4, range: 'engaged', feats: ['flies'], note: 'Clockwork; wings and teeth (8 HP, 4 AP); ticks loudly' };
 const bishop = { name: 'His Mechanical Grace', lvl: 8, hp: 28, ap: 8, range: 'engaged', dmg: '2d8', note: 'Clockwork bishop (28 HP, 8 AP); brass crozier (2d8); excommunicates' };
 
 const SECTIONS = {
@@ -8082,7 +8077,7 @@ const SECTIONS = {
   },
   gargoyle_fight: {
     text: ['The gargoyles see you, and come at you on clicking brass feet.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [gargoyle, gargoyle], win: 'gargoyles_down', flee: { to: 'start', label: 'Run out of the cathedral' },
       special: [{ label: 'Pour your oil on the flagstones under them', if: { item: 'oil' }, flag: 'slicked', text: 'Brass feet on oiled stone. They skid, crash into each other and go down in a heap of springs.', stun: 1 }],
     },
@@ -8194,7 +8189,7 @@ const SECTIONS = {
   },
   bishop_fight: {
     text: ['“HERETIC,” says His Mechanical Grace, and lets go of the bell ropes, all six of them, and picks up its crozier.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [bishop], win: 'bishop_down', flee: { to: 'nave', label: 'Run down the stairs' },
       special: [{ label: 'Wind it down with Ezra Tock’s key', if: { item: 'windingkey' }, test: { stat: 'Dex', dd: 8, skill: 'athletics' }, flag: 'keyFight', text: 'You get round behind it and turn the key. It slows, and stops.', failText: 'It turns faster than you, and the key slips.', win: true }],
     },
@@ -8610,9 +8605,9 @@ const SECTIONS = {
     text: ['You load the boat with oil, row it out towards the hydra, light it and dive over the side. The heads watch the burning boat come, interested, and then very interested. It hits the body, and the whole reservoir lights up. The hydra screams in eleven voices. Every head that burns, stays burnt.'],
     choices: [{ text: 'Swim back to the dam', to: 'dam' }],
   },
-  hydra_fight: { outdoors: true,
+  hydra_fight: {
     text: (c) => [c.flags.cauterised ? 'The hydra, scorched and smoking, comes up out of the water at you with every head it has left.' : 'The hydra comes up out of the water at you, eleven heads at once.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
         { label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
@@ -8761,9 +8756,9 @@ const SECTIONS = {
       { text: 'Back to the promenade', to: 'prom' },
     ],
   },
-  gull_fight: { outdoors: true,
+  gull_fight: {
     text: ['The seagulls come down on you in a shrieking cloud, and they don’t stop coming, because they can’t.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [gull], win: 'gulls_down', flee: { to: 'prom', label: 'Run back along the pier' },
       special: [{ label: 'Throw them your rations', if: { item: 'rations' }, flag: 'gullFood', text: 'The gulls go after your rations into the sea, fighting over them.', win: true }],
     },
@@ -8953,9 +8948,9 @@ const SECTIONS = {
     text: ['You pump your bellows at it. It is made of cloud. It comes apart in a long grey streamer and blows away over the castle wall, whimpering.'],
     choices: [{ text: 'Go into the castle', to: 'castle' }],
   },
-  hound_fight: { outdoors: true,
+  hound_fight: {
     text: ['The cloud hound comes at you out of the fog, all teeth.'],
-    fight: { monsters: [hound], win: 'hound_down', flee: { to: 'climb', label: 'Drop back down through the cloud' } },
+    fight: { outdoors: true, monsters: [hound], win: 'hound_down', flee: { to: 'climb', label: 'Drop back down through the cloud' } },
   },
   hound_down: {
     on: [{ flag: 'houndGone' }],
@@ -9045,7 +9040,7 @@ const SECTIONS = {
   },
   giant_fight: {
     text: ['Lord Nimbus gets up out of his chair, which takes a while, and is very bad news.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [nimbus], win: 'giant_down', flee: { to: 'escape', label: 'Run for the door' },
       special: [{ label: 'Throw caltrops under his bare feet', if: { item: 'caltrops' }, flag: 'caltropsGiant', text: 'A ninety-foot giant in his socks treads on your caltrops, hops, and sits down on his own fire.', dmg: '3d6', stun: 1 }],
     },
@@ -9957,7 +9952,7 @@ function spellActions(g, f, targets) {
     if (fs.undead && !targets.some((m) => has(m, 'undead'))) continue;
     if (fs.ranged && !targets.some((m) => m.range !== 'engaged')) continue;
     if (fs.weapon && c.weapon.magic) continue;
-    if (fs.t === 'one') { for (const m of targets) if (alive(m)) out.push({ id: 'cast', spell: id, target: m.uid, label: `${name} on ${the(m)} (level ${sp.lvl})` }); }
+    if (fs.t === 'one') { for (const m of targets) if (alive(m) && !(id === 'descend' && has(m, 'flies') && (f.def.outdoors || f.def.ceiling === 'high'))) out.push({ id: 'cast', spell: id, target: m.uid, label: `${name} on ${the(m)} (level ${sp.lvl})` }); }
     else out.push({ id: 'cast', spell: id, label: `${name} (level ${sp.lvl}: ${sp.text.charAt(0).toLowerCase()}${sp.text.slice(1)})${id === 'fireball' && f.distance === 0 ? ' — you’re standing in it' : ''}` });
   }
   return out;
@@ -10028,7 +10023,16 @@ function spellEffect(g, f, id, m) {
       f.monsters.push(makeMonster(rng, { name: 'Snake that was your weapon', lvl: 3, range: 'engaged' }));
       break;
     }
-    case 'descend': if (resist(m)) break; if (has(m, 'flies')) { note(f, `${The(m)} ${verb(m, 'goes', 'go')} up, and ${verb(m, 'stays', 'stay')} up. ${verb(m, 'It flies', 'They fly')}.`); break; } note(f, `${The(m)} ${verb(m, 'is', 'are')} flung into the sky, and comes down again.`, 'good'); hurtMonster(g, f, m, rollExpr(rng, '6d6'), { noBonus: true, crit: true }); break;
+    case 'descend': {
+      // Up, then down. Outdoors that means the sky; indoors, the ceiling, unless it's a lofty one.
+      if (resist(m)) break;
+      const flies = has(m, 'flies'), ceiling = !f.def.outdoors && f.def.ceiling !== 'high';
+      if (flies && !ceiling) { note(f, `${The(m)} ${verb(m, 'shoots', 'shoot')} straight up, ${verb(m, 'rights itself', 'right themselves')} and ${verb(m, 'flies', 'fly')} back down, unhurt.`); break; }
+      note(f, f.def.outdoors ? `${The(m)} ${verb(m, 'is', 'are')} flung into the sky, and ${verb(m, 'comes', 'come')} down again.`
+        : ceiling ? `${The(m)} ${verb(m, 'is', 'are')} flung into the ceiling${flies ? ', hard' : ', and then the floor'}.`
+          : `${The(m)} ${verb(m, 'is', 'are')} flung up into the rafters, and ${verb(m, 'drops', 'drop')} back to the floor.`, 'good');
+      hurtMonster(g, f, m, rollExpr(rng, '6d6'), { noBonus: true, crit: true }); break;
+    }
     case 'ascend': if (resist(m)) break; if (!has(m, 'flies')) { m.feats.push('flies'); m.floating = true; } note(f, `${The(m)} ${verb(m, 'floats', 'float')} gently up off the ground, and ${verb(m, 'flies', 'fly')} now.`, 'bad'); break;
     case 'pillar': if (resist(m)) break; m.hp = 0; m.dormant = 0; note(f, `${The(m)} ${verb(m, 'turns', 'turn')} into a pillar of salt.`, 'good'); break;
     case 'immortalise': if (resist(m)) break; m.maxHp *= 2; m.hp *= 2; note(f, `${The(m)}’s skin turns to stone (${m.hp}/${m.maxHp} HP).`, 'bad'); break;

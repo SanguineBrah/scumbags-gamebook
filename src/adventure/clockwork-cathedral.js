@@ -5,7 +5,7 @@ export const META = {
   blurb: 'Two hundred years ago, the clockmaker Ezra Tock built Cogsbury Cathedral a bishop: brass, wind-up and word-perfect. Last week it started excommunicating people. Then the brass gargoyles came down off the roof. The Archbishop arrives on Sunday. The Dean will pay 350 gold to have His Mechanical Grace stopped, or at least made to behave.',
 };
 
-const gargoyle = { name: 'Brass gargoyle', lvl: 5, hp: 8, ap: 4, range: 'engaged', note: 'Clockwork; wings and teeth (8 HP, 4 AP); ticks loudly' };
+const gargoyle = { name: 'Brass gargoyle', lvl: 5, hp: 8, ap: 4, range: 'engaged', feats: ['flies'], note: 'Clockwork; wings and teeth (8 HP, 4 AP); ticks loudly' };
 const bishop = { name: 'His Mechanical Grace', lvl: 8, hp: 28, ap: 8, range: 'engaged', dmg: '2d8', note: 'Clockwork bishop (28 HP, 8 AP); brass crozier (2d8); excommunicates' };
 
 export const SECTIONS = {
@@ -44,7 +44,7 @@ export const SECTIONS = {
   },
   gargoyle_fight: {
     text: ['The gargoyles see you, and come at you on clicking brass feet.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [gargoyle, gargoyle], win: 'gargoyles_down', flee: { to: 'start', label: 'Run out of the cathedral' },
       special: [{ label: 'Pour your oil on the flagstones under them', if: { item: 'oil' }, flag: 'slicked', text: 'Brass feet on oiled stone. They skid, crash into each other and go down in a heap of springs.', stun: 1 }],
     },
@@ -156,7 +156,7 @@ export const SECTIONS = {
   },
   bishop_fight: {
     text: ['“HERETIC,” says His Mechanical Grace, and lets go of the bell ropes, all six of them, and picks up its crozier.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [bishop], win: 'bishop_down', flee: { to: 'nave', label: 'Run down the stairs' },
       special: [{ label: 'Wind it down with Ezra Tock’s key', if: { item: 'windingkey' }, test: { stat: 'Dex', dd: 8, skill: 'athletics' }, flag: 'keyFight', text: 'You get round behind it and turn the key. It slows, and stops.', failText: 'It turns faster than you, and the key slips.', win: true }],
     },

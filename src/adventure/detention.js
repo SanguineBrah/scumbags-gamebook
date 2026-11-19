@@ -82,9 +82,9 @@ export const SECTIONS = {
     text: ['You blow a long blast on your whistle and shout “TRUANCY!” The lookout drops his wand and runs. So, through the back door, do two more pointed hats. That leaves three inside, and they are very nervous.'],
     choices: [{ text: 'Go in', to: 'inside' }],
   },
-  lookout_fight: { outdoors: true,
+  lookout_fight: {
     text: ['The lookout raises his wand and grins, which is a mistake, because it means you know exactly when he’s going to cast.'],
-    fight: { monsters: [{ ...delinquent, name: 'Lookout' }], distance: 1, win: 'lookout_down', flee: { to: 'muttering', label: 'Back off down the high street' } },
+    fight: { outdoors: true, monsters: [{ ...delinquent, name: 'Lookout' }], distance: 1, win: 'lookout_down', flee: { to: 'muttering', label: 'Back off down the high street' } },
   },
   lookout_down: {
     on: [{ flag: 'lookoutGone' }],

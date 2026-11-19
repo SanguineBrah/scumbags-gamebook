@@ -95,9 +95,9 @@ export const SECTIONS = {
     text: ['He tells you about his company for an hour. It is a company that sells nothing to nobody, and it is worth a billion of something. When you finally escape, the sun has moved noticeably.'],
     choices: [{ text: 'Climb Gallows Hill', to: 'hill' }],
   },
-  traveller_fight: { outdoors: true,
+  traveller_fight: {
     text: ['He backs away, fumbling at his belt, and produces a small black crossbow with no string. “I don’t want to use this,” he says, and then uses it. It goes BANG.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture-capitalist; iPad; handgun (2d6+lvl damage)' }],
       distance: 2, win: 'traveller_loot', flee: { to: 'hill', label: 'Run up the hill' },
     },
@@ -178,9 +178,9 @@ export const SECTIONS = {
     text: ['The iron door doesn’t notice. Your foot does. The moustache writes something down.'],
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
-  front_fight: { outdoors: true,
+  front_fight: {
     text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'front_win', flee: { to: 'hill', label: 'Retreat down the hill' },
     },
@@ -355,11 +355,11 @@ export const SECTIONS = {
   },
   mimic_ambush: {
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
     on: [{ flag: 'mimicDead' }, { gold: 20, msg: 'Pressed between its pages: 20GP, and a bookmark.' }], onceOnly: true,
@@ -620,9 +620,9 @@ export const SECTIONS = {
       { text: 'Refuse', to: 'exit_fight', show: { none: [{ flag: 'bureaucratDead' }, { flag: 'appointment' }, { flag: 'auditor' }, { flag: 'sneaked' }] } },
     ],
   },
-  exit_fight: { outdoors: true,
+  exit_fight: {
     text: ['“Refusal noted,” he says, and reaches for his stamps.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'town',
     },

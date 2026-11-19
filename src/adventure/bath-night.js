@@ -157,10 +157,10 @@ export const SECTIONS = {
     text: ['Lord Mudlark is a lord, and has never been told no, and doesn’t know what to do when he’s tied up. He comes along, complaining, but he comes.'],
     choices: [{ text: 'Take him up to the bathroom', to: 'tub' }],
   },
-  lord_fight: { outdoors: true,
+  lord_fight: {
     on: [{ flag: 'lordAngry' }],
     text: ['Lord Mudlark comes out of the sty at you with his stick. The pig watches, with interest, from a safe distance.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [mudlark],
       win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' },
       special: [{ label: 'Throw a bucket of water over him', if: { item: 'bucket' }, flag: 'splashed', text: 'He gets a bucket of water full in the face and stops dead, gasping, as if you’d thrown acid. It’s the first water that’s touched him in thirty years.', stun: 1 }],

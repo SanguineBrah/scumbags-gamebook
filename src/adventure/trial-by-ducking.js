@@ -158,9 +158,9 @@ export const SECTIONS = {
     text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men come at you down the jetty.'],
     choices: [{ text: 'Fight', to: 'gall_fight' }],
   },
-  gall_fight: { outdoors: true,
+  gall_fight: {
     text: ['Righteous Gall throws off his black coat and comes down the jetty at you with his iron pricker.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [gall], win: 'gall_down', flee: { to: 'dawn', label: 'Run' },
       special: [
         { label: 'Throw the rennet powder in his face', if: { item: 'rennet' }, flag: 'rennetThrown', text: 'A cloud of rennet hits Gall in the face. He chokes, and the crowd, who know what rennet is, start muttering.', stun: 1 },

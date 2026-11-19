@@ -48,6 +48,8 @@ for (const k of Object.keys(S)) {
     const free = (s.choices || []).filter((ch) => !ch.if && !ch.cast);
     if (!free.length) errors.push(`${k}: every choice needs something (possible soft lock)`);
   }
+  const SECTION_KEYS = new Set(['text', 'on', 'redirect', 'fight', 'choices', 'onceOnly', 'dark', 'end']);
+  for (const key of Object.keys(s)) if (!SECTION_KEYS.has(key)) errors.push(`${k}: unknown section field "${key}" (does it belong inside fight?)`);
   if (!s.text) errors.push(`${k}: no text`);
   lint(s, k, errors);
 }

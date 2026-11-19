@@ -165,9 +165,9 @@ export const SECTIONS = {
     text: ['The rope tightens, and the black horse drags you the length of the lists, through the barrier and into the pie stall.'],
     choices: [{ text: 'Get up', to: 'lists' }],
   },
-  fight: { outdoors: true,
+  fight: {
     text: ['The black horse squares up to you, bows, and charges.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ ...knightmare }], win: 'horse_down', flee: { to: 'lists', label: 'Dive over the barrier' },
       special: [{ label: 'Hold up your hand mirror', if: { item: 'mirror' }, flag: 'mirrorFight', text: 'It sees the empty saddle in the mirror and stops, mid-charge, head down.', stun: 1 }],
     },

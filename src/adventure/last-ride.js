@@ -267,9 +267,9 @@ export const SECTIONS = {
     text: ['You kneel beside Sir Gristle, take off your hat, and wait until you’re sure.'],
     choices: [{ text: 'Take him home', to: 'pension_office' }],
   },
-  cannon_fight: { outdoors: true,
+  cannon_fight: {
     text: ['Croaker swings the cannon round and lights the fuse. A toad the size of a cat comes whistling down at you, glowing and ticking.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Old Croaker', lvl: 4, range: 'long', onHit: { stat: 'Dex', dd: 6, label: 'dodge the blast', text: 'The toad goes off at your feet.', effect: 'damage', amount: '2d6' }, note: 'Eccentric; launches burst toads from a cannon (on hit, d6 Dex save or 2d6 more)' }, toad],
       distance: 3, win: 'croaker_beaten', flee: { to: 'fen_edge', label: 'Retreat into the reeds' },
       special: [{ label: 'Douse his fuse with your bucket', if: { item: 'bucket' }, flag: 'doused', text: 'You hurl a bucket of fen water at the roof. The fuse goes out with a hiss, and so does Croaker’s will to fight.', win: true }],

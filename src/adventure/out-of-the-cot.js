@@ -121,9 +121,9 @@ export const SECTIONS = {
     text: ['The baby giggles, a noise like a landslide, and puts you down very gently. It wants to play now. It will follow you anywhere.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  baby_fight: { outdoors: true,
+  baby_fight: {
     text: ['The baby decides you are a squeaky toy, and squeezes.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [baby], win: 'baby_cries', flee: { to: 'square', label: 'Squirm free and run' },
       special: [{ label: 'Wave your smelling salts under its nose', if: { item: 'salts' }, flag: 'sneezed', text: 'The baby sneezes, which blows you clear across the square, and starts to cry.', win: true }],
     },
@@ -162,9 +162,9 @@ export const SECTIONS = {
     text: ['Captain Snare reads the letter you wave at him, which is a laundry list, very quickly. He packs up his net with a face like thunder and leaves, grumbling about councils.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  snare_fight: { outdoors: true,
+  snare_fight: {
     text: ['Captain Snare catches you at it. “Giant-lover,” he says, and nods to the biggest of his men, who picks up a boathook.'],
-    fight: { monsters: [snareman], distance: 1, win: 'snare_beaten', flee: { to: 'square', label: 'Run back to the square' } },
+    fight: { outdoors: true, monsters: [snareman], distance: 1, win: 'snare_beaten', flee: { to: 'square', label: 'Run back to the square' } },
   },
   snare_beaten: {
     on: [{ flag: 'snareFixed' }],

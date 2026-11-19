@@ -77,9 +77,9 @@ export const SECTIONS = {
       { text: 'Back to the promenade', to: 'prom' },
     ],
   },
-  gull_fight: { outdoors: true,
+  gull_fight: {
     text: ['The seagulls come down on you in a shrieking cloud, and they don’t stop coming, because they can’t.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [gull], win: 'gulls_down', flee: { to: 'prom', label: 'Run back along the pier' },
       special: [{ label: 'Throw them your rations', if: { item: 'rations' }, flag: 'gullFood', text: 'The gulls go after your rations into the sea, fighting over them.', win: true }],
     },

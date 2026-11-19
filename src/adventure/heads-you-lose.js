@@ -110,9 +110,9 @@ export const SECTIONS = {
     text: ['You load the boat with oil, row it out towards the hydra, light it and dive over the side. The heads watch the burning boat come, interested, and then very interested. It hits the body, and the whole reservoir lights up. The hydra screams in eleven voices. Every head that burns, stays burnt.'],
     choices: [{ text: 'Swim back to the dam', to: 'dam' }],
   },
-  hydra_fight: { outdoors: true,
+  hydra_fight: {
     text: (c) => [c.flags.cauterised ? 'The hydra, scorched and smoking, comes up out of the water at you with every head it has left.' : 'The hydra comes up out of the water at you, eleven heads at once.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
         { label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },

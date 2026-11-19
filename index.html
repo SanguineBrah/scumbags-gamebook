@@ -20,20 +20,24 @@
     --sheet-w: 320px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; overflow-anchor: none; }   /* the page is redrawn wholesale; don't let the browser 'helpfully' keep the old scroll spot */
+  html, body { margin: 0; overflow: hidden; }
   body {
     background: var(--paper); color: var(--ink); font-family: var(--serif);
     font-size: clamp(17px, 1.05rem + 0.2vw, 20px); line-height: 1.55;
     /* The top inset goes on the bar itself, so the notch area is the bar's colour, not a pale strip. */
     padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-text-size-adjust: 100%;
+    /* The page itself never scrolls: the bar sits on top and the game scrolls underneath it, in #app.
+       Mobile browsers (Firefox for Android especially) hide their address bar when the page scrolls,
+       and redrawing the page under a half-hidden address bar left a blank strip at the top. */
+    height: 100vh; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;
   }
   button, input, select, textarea { font: inherit; color: inherit; }
-  #app { min-height: 100vh; min-height: 100dvh; }
+  #app { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; overflow-anchor: none; }
 
   /* ---------- layout ---------- */
   .topbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; gap: .6rem;
+    position: relative; flex: none; z-index: 20; display: flex; align-items: center; gap: .6rem;
     padding: calc(.45rem + env(safe-area-inset-top)) .9rem .45rem; background: var(--ink); color: var(--paper);
     font-size: .9rem; min-height: calc(48px + env(safe-area-inset-top));
   }
@@ -49,7 +53,7 @@
   .sheet { display: none; }
   @media (min-width: 960px) {
     .layout.with-sheet { grid-template-columns: minmax(0, 1fr) var(--sheet-w); gap: 0; }
-    .layout.with-sheet .sheet { display: block; position: sticky; top: 48px; align-self: start; max-height: calc(100vh - 48px); overflow-y: auto; border-left: 1px solid var(--rule); background: var(--paper-2); }
+    .layout.with-sheet .sheet { display: block; position: sticky; top: 0; align-self: start; max-height: calc(100dvh - 48px); overflow-y: auto; border-left: 1px solid var(--rule); background: var(--paper-2); }
     .sheet-toggle { display: none; }
   }
   /* mobile drawer */

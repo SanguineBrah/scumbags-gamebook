@@ -48,22 +48,14 @@ function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify
 function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
 function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 
-/** Back to the top of the page. Some mobile browsers nudge the page down again a moment later
- *  (the address bar settling, or the top bar changing size), so check again once things have settled. */
-function toTop() {
-  window.scrollTo({ top: 0, behavior: 'instant' });
-  for (const ms of [50, 300]) setTimeout(() => { if (window.scrollY > 0 && window.scrollY < 120) window.scrollTo({ top: 0, behavior: 'instant' }); }, ms);
-}
+/** Back to the top of the page (the game scrolls inside #app, not the window). */
+function toTop() { root.scrollTop = 0; }
 function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); toTop(); }
 
 // ---------- screens
-// The top bar is one fixed element that lives outside the app and only has its contents swapped.
-// Rebuilding a sticky bar on every render left a blank strip at the top in some mobile browsers.
+// The top bar is one element above the scrolling game, and only has its contents swapped.
 const bar = document.createElement('header'); bar.className = 'topbar'; bar.hidden = true;
-const barSpace = document.createElement('div'); barSpace.className = 'topbar-space';
-document.body.insertBefore(bar, root); document.body.insertBefore(barSpace, root);
-const fitBar = () => { barSpace.style.height = bar.hidden ? '0' : `${bar.offsetHeight}px`; };
-if (window.ResizeObserver) new ResizeObserver(fitBar).observe(bar);
+document.body.insertBefore(bar, root);
 
 /** A page left open for hours keeps running the old game. Check for a newer build when the tab comes back. */
 const BUILD = document.querySelector('meta[name="build"]')?.content;
@@ -92,7 +84,6 @@ function render() {
   const head = view.querySelector('header.topbar');
   if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
   root.replaceChildren(...[updateBanner(), view].filter(Boolean));
-  fitBar();
   save();
 }
 

@@ -17,6 +17,9 @@ The rules are the rulebook's, with these changes for a hero who adventures alone
 - **Clotting salve** stops you bleeding out and puts you back on 1 HP, since nobody else is
   there to revive you.
 - **Ten minutes' rest** after each fight restores AP.
+- **Descend minds the ceiling.** Outdoors, or under a lofty ceiling, a flying monster just flies
+  back down, so it isn't offered as a target; under an ordinary ceiling it hits the ceiling. Everything
+  else falls for 6d6.
 - **Running doesn't heal monsters.** Run from a fight and come back, and the monsters have the
   HP you left them on; the dead stay dead.
 - **Turn undead**, the newest rulebook rule, is a fight action and a choice in the vault.

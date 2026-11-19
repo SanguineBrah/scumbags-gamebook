@@ -61,7 +61,7 @@ export const SECTIONS = {
   tiddles_fight: {
     on: [{ flag: 'tiddlesAngry' }],
     text: ['Tiddles stretches, which takes a while, and then pounces, which doesn’t.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Tiddles', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
       win: 'tiddles_win', flee: { to: 'cottage', label: 'Dive back out through the flap' },
     },
@@ -246,7 +246,7 @@ export const SECTIONS = {
   baby_cries: {
     on: [NOISE(2), { flag: 'babyUpset' }],
     text: ['Your singing voice is not what it was. The baby’s lip wobbles, and then it starts to cry: a sound like a herd of cattle falling down a well. Outside, the humming stops dead.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'The baby', lvl: 4, hp: 20, range: 'engaged', feats: ['topple', 'coward'], note: 'Infant hill giant (20 HP); falls over at the end of each turn; gives up at half health' }],
       win: 'baby_stops', flee: { to: 'kitchen', label: 'Run for the kitchen' },
     },
@@ -265,7 +265,7 @@ export const SECTIONS = {
   },
   louse_fight: {
     text: ['Out of the hairbrush clambers a head louse the size of a pig, with a shell like a cart roof and an appetite for anything warm.'],
-    fight: { monsters: [louse], win: 'louse_win', flee: { to: 'kitchen', label: 'Run downstairs' } },
+    fight: { ceiling: 'high', monsters: [louse], win: 'louse_win', flee: { to: 'kitchen', label: 'Run downstairs' } },
   },
   louse_win: {
     on: [{ flag: 'louse' }, { gold: 40, msg: 'In the hairbrush: three of Mother’s gold hairpins, each worth 40GP. You can carry one without looking ridiculous. You take one.' }], onceOnly: true,

@@ -314,7 +314,7 @@ function spellActions(g, f, targets) {
     if (fs.undead && !targets.some((m) => has(m, 'undead'))) continue;
     if (fs.ranged && !targets.some((m) => m.range !== 'engaged')) continue;
     if (fs.weapon && c.weapon.magic) continue;
-    if (fs.t === 'one') { for (const m of targets) if (alive(m)) out.push({ id: 'cast', spell: id, target: m.uid, label: `${name} on ${the(m)} (level ${sp.lvl})` }); }
+    if (fs.t === 'one') { for (const m of targets) if (alive(m) && !(id === 'descend' && has(m, 'flies') && (f.def.outdoors || f.def.ceiling === 'high'))) out.push({ id: 'cast', spell: id, target: m.uid, label: `${name} on ${the(m)} (level ${sp.lvl})` }); }
     else out.push({ id: 'cast', spell: id, label: `${name} (level ${sp.lvl}: ${sp.text.charAt(0).toLowerCase()}${sp.text.slice(1)})${id === 'fireball' && f.distance === 0 ? ' — you’re standing in it' : ''}` });
   }
   return out;
@@ -385,7 +385,16 @@ function spellEffect(g, f, id, m) {
       f.monsters.push(makeMonster(rng, { name: 'Snake that was your weapon', lvl: 3, range: 'engaged' }));
       break;
     }
-    case 'descend': if (resist(m)) break; if (has(m, 'flies')) { note(f, `${The(m)} ${verb(m, 'goes', 'go')} up, and ${verb(m, 'stays', 'stay')} up. ${verb(m, 'It flies', 'They fly')}.`); break; } note(f, `${The(m)} ${verb(m, 'is', 'are')} flung into the sky, and comes down again.`, 'good'); hurtMonster(g, f, m, rollExpr(rng, '6d6'), { noBonus: true, crit: true }); break;
+    case 'descend': {
+      // Up, then down. Outdoors that means the sky; indoors, the ceiling, unless it's a lofty one.
+      if (resist(m)) break;
+      const flies = has(m, 'flies'), ceiling = !f.def.outdoors && f.def.ceiling !== 'high';
+      if (flies && !ceiling) { note(f, `${The(m)} ${verb(m, 'shoots', 'shoot')} straight up, ${verb(m, 'rights itself', 'right themselves')} and ${verb(m, 'flies', 'fly')} back down, unhurt.`); break; }
+      note(f, f.def.outdoors ? `${The(m)} ${verb(m, 'is', 'are')} flung into the sky, and ${verb(m, 'comes', 'come')} down again.`
+        : ceiling ? `${The(m)} ${verb(m, 'is', 'are')} flung into the ceiling${flies ? ', hard' : ', and then the floor'}.`
+          : `${The(m)} ${verb(m, 'is', 'are')} flung up into the rafters, and ${verb(m, 'drops', 'drop')} back to the floor.`, 'good');
+      hurtMonster(g, f, m, rollExpr(rng, '6d6'), { noBonus: true, crit: true }); break;
+    }
     case 'ascend': if (resist(m)) break; if (!has(m, 'flies')) { m.feats.push('flies'); m.floating = true; } note(f, `${The(m)} ${verb(m, 'floats', 'float')} gently up off the ground, and ${verb(m, 'flies', 'fly')} now.`, 'bad'); break;
     case 'pillar': if (resist(m)) break; m.hp = 0; m.dormant = 0; note(f, `${The(m)} ${verb(m, 'turns', 'turn')} into a pillar of salt.`, 'good'); break;
     case 'immortalise': if (resist(m)) break; m.maxHp *= 2; m.hp *= 2; note(f, `${The(m)}’s skin turns to stone (${m.hp}/${m.maxHp} HP).`, 'bad'); break;

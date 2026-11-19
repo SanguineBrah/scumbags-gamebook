@@ -48,10 +48,10 @@ export const SECTIONS = {
     text: ['Bruno’s arm goes down with a crash that shakes the tent. He looks at it, then at you, with deep respect. “Free entry,” he says. “And a tip. The ape hates the smell of onions. Never stand downwind of the ape.”'],
     choices: [{ text: 'Go into the big top', to: 'big_top' }],
   },
-  bruno_fight: { outdoors: true,
+  bruno_fight: {
     on: [{ flag: 'brunoAngry' }],
     text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
-    fight: { monsters: [{ name: 'Bruno', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
+    fight: { outdoors: true, monsters: [{ name: 'Bruno', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
   },
   bruno_down: {
     text: ['Bruno sits down in the sawdust and decides you can go in for free.'],
@@ -92,10 +92,10 @@ export const SECTIONS = {
     text: ['“ACCEPTABLE,” says the Visitor. “BRING THE APE TO MY CRAFT. I SHALL PAY YOU IN ANY QUANTITY OF YOUR YELLOW METAL. I HAVE A GREAT DEAL OF IT. IT IS USELESS.”'],
     choices: [{ text: 'Go back to the tent', to: 'gate' }],
   },
-  visitor_fight: { outdoors: true,
+  visitor_fight: {
     on: [{ flag: 'visitorAngry' }, { unflag: 'visitorDeal' }],
     text: ['The Visitor raises its hairdryer. “HOSTILE,” it says sadly. “AS PREDICTED.”'],
-    fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
+    fight: { outdoors: true, monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
   },
   visitor_down: {
     on: [{ flag: 'visitorGone' }, { gold: 100, msg: 'Inside the craft: a sack of useless yellow metal. 100GP.' }], onceOnly: true,
@@ -193,7 +193,7 @@ export const SECTIONS = {
   },
   ostrich_fight: {
     text: ['Something invisible and seven feet tall comes down off the platform at you, kicking.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [{ name: 'Invisible ostrich', lvl: 4, range: 'engaged', feats: ['invisible'], note: 'Invisible; kicks like a horse; very protective of its egg' }],
       win: 'egg', flee: { to: 'big_top', label: 'Run for it' },
       special: [
@@ -227,7 +227,7 @@ export const SECTIONS = {
   },
   ape_fight: {
     text: ['Something huge and invisible hits the bars from the inside, and the cage door bursts open. You smell it before anything else.'],
-    fight: {
+    fight: { ceiling: 'high',
       monsters: [ape], distance: 1, win: 'ape_down', flee: { to: 'big_top', label: 'Run into the crowd' },
       special: [
         { label: 'Throw flour at the smell', if: { flag: 'flour' }, flag: 'apeFloured', text: 'A white, ape-shaped cloud appears, roaring. Now you can see what you’re hitting.', reveal: true },

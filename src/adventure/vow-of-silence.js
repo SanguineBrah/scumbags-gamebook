@@ -163,10 +163,10 @@ export const SECTIONS = {
     on: [{ damage: '2', from: 'A penance' }],
     choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
   },
-  octavius_fight: { outdoors: true,
+  octavius_fight: {
     on: [{ flag: 'octaviusCame' }],
     text: ['Brother Octavius comes at you without a sound, all eight hands open, and the air fills with slaps.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [octavius], win: 'octavius_down', flee: { to: 'clatter', label: 'Run for the gate' },
       special: [{ label: 'Glue two of his hands together', if: { item: 'glue' }, flag: 'octavusGlued', text: 'You slap a dollop of glue into his nearest palm while he slaps you. Two hands stick together. He looks at them, appalled, and spends a whole turn trying to pull them apart.', stun: 1 }],
     },

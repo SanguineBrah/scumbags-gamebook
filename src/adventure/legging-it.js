@@ -92,10 +92,10 @@ export const SECTIONS = {
       : 'You bring a pair of legs down and get the boots off, which takes a lot of pulling. The legs sit down in the grass and stop, as if somebody had cut their strings.'],
     choices: [{ text: 'Back to the fair', to: 'fair' }],
   },
-  legs_fight: { outdoors: true,
+  legs_fight: {
     on: [{ add: ['tackled', 1] }],
     text: ['You grab a pair of legs in hobnail boots. They do not want to be grabbed.'],
-    fight: { monsters: [legs], win: 'legs_down', flee: { to: 'fair', label: 'Let go and back off' } },
+    fight: { outdoors: true, monsters: [legs], win: 'legs_down', flee: { to: 'fair', label: 'Let go and back off' } },
   },
   legs_down: {
     on: [BOOTS()],
@@ -155,9 +155,9 @@ export const SECTIONS = {
       { text: 'Get the boots off before they find their feet', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], mods: [{ if: { flag: 'knowsLaces' }, dd: 4 }] }, pass: 'seven_league', fail: 'leader_fight' },
     ],
   },
-  leader_fight: { outdoors: true,
+  leader_fight: {
     text: ['The legs in the seven-league boots turn on you. They don’t run away. They kick, and every kick lands like a falling cart.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Legs in seven-league boots', plural: true, lvl: 2, hp: 12, range: 'engaged', feats: ['relentless'], note: 'Relentless; seven-league boots (kicks hard, 12 HP)' }],
       win: 'seven_league', flee: { to: 'fair', label: 'Run back to the fair' },
       special: [{ label: 'Tickle them with your quill', if: { item: 'quill' }, flag: 'leaderTickled', text: 'They collapse, kicking with laughter. You get both boots off.', win: true }],
