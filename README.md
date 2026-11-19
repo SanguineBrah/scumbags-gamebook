@@ -23,9 +23,9 @@ things get dicey. Fights, light, spells, loot and levelling all follow the Scumb
 
 - Stat tests roll under your stat on a d20 plus a difficulty die. Skilled tests roll twice and
   keep the better result, and your profession decides when you're skilled.
-- Melee attacks are tested against a d8 and ranged attacks against a die for the distance. You
+- Melee attacks usually use a d8 difficulty die, and ranged attacks a die for the distance. You
   defend with Str or Dex against the monster's die. Armour soaks damage before your HP.
-- Dark places use up torches and oil. Every 50 gold takes up an item slot.
+- Dark places use up torches and oil. Every 50 gold takes up a significant item slot.
 - You level up by squandering 200 gold on a pointless endeavour when you get home.
 
 Nearly everything in your pack is useful somewhere. A rope, a rat or a pot of glue will often
@@ -36,9 +36,10 @@ get you past things a sword won't.
 ## Adventures
 
 Each adventure is a short, self-contained job. Survivors return to Scumbag Town, where they can
-heal, restock, buy and sell, and squander their takings. Finishing any job in a level band reveals
-every job in the next band on the notice board, so there's always a choice. Nobody gets to do the same job twice, and later adventures remember what you
-did in earlier ones.
+heal, restock, buy and sell, and squander their takings. Finishing any job in a level band
+reveals every job in the next band on the notice board, so after the first job there's always a
+choice. Nobody gets to do the same job twice, and later adventures remember what you did in
+earlier ones.
 
 | Band | Adventure | Level | The job |
 |---|---|---|---|
