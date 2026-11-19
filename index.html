@@ -20,21 +20,22 @@
     --sheet-w: 320px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
+  html, body { margin: 0; }
   body {
     background: var(--paper); color: var(--ink); font-family: var(--serif);
     font-size: clamp(17px, 1.05rem + 0.2vw, 20px); line-height: 1.55;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* The top inset goes on the bar itself, so the notch area is the bar's colour, not a pale strip. */
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-text-size-adjust: 100%;
   }
   button, input, select, textarea { font: inherit; color: inherit; }
-  #app { min-height: 100%; }
+  #app { min-height: 100vh; min-height: 100dvh; }
 
   /* ---------- layout ---------- */
   .topbar {
     position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: .6rem;
-    padding: .45rem .9rem; background: var(--ink); color: var(--paper);
-    font-size: .9rem; min-height: 48px;
+    padding: calc(.45rem + env(safe-area-inset-top)) .9rem .45rem; background: var(--ink); color: var(--paper);
+    font-size: .9rem; min-height: calc(48px + env(safe-area-inset-top));
   }
   .topbar .brand { font-family: var(--display); font-size: 1.15rem; letter-spacing: .02em; margin-right: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chip { display: inline-flex; align-items: baseline; gap: .25rem; padding: .1rem .5rem; border: 1px solid #ffffff33; border-radius: 99px; white-space: nowrap; }
