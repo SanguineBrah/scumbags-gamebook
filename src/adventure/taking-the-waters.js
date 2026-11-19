@@ -19,6 +19,7 @@ export const SECTIONS = {
   great_bath: {
     text: (c) => [
       c.flags.blobGone ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. The blob has gone down the drain, and it is just a bath again.'
+        : c.flags.dropped ? 'The Great Bath is a Roman pool the size of a ballroom, steaming, with a hole in the glass roof above it. The blob lies on the tiles beside it where it fell, a great quivering heap, shrinking.'
         : c.flags.drained ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. It is empty of water now, and the blob lies on the tiles at the bottom, a great quivering heap the size of a haycart, shrinking.'
         : c.flags.salted ? 'The Great Bath is a Roman pool the size of a ballroom, steaming. The water is cloudy with salt, and the blob is in trouble: a milky, shrinking lump at the deep end.'
         : `The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, ${c.flags.tiaraTaken ? '' : 'a tiara, '}a set of false teeth and a pair of boots. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.`,
@@ -27,10 +28,13 @@ export const SECTIONS = {
       { text: 'Go to the pump room, to see about draining it', to: 'pump_room', show: { notFlag: 'drained' } },
       { text: 'Look in the treatment rooms', to: 'treatments', show: { notFlag: 'saltsFound' } },
       { text: 'Pour the Epsom salts into the bath', to: 'salt_bath', if: { flag: 'saltsFound', flagText: 'the Epsom salts' }, show: { notFlag: 'salted' } },
-      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
-      { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', show: { none: [{ flag: 'drained' }, { flag: 'salted' }, { flag: 'polluted' }] } },
+      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Telekinesis, and lift the tiara out of the blob from the side of the bath', cast: 'telekinesis', pass: 'fished_tk', fail: 'blob_fight', show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Aqualung on yourself, and swim into the blob after Lord Whitlow', cast: 'aqualung', pass: 'blob_swim', fail: 'blob_fight', show: { none: [{ flag: 'whitlow' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Descend on the blob', cast: 'descend', pass: 'blob_dropped', fail: 'blob_fight', critFail: 'blob_ascends', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', critFail: 'blob_blessed', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }] } },
       { text: 'Wade in and fight it', to: 'blob_fight', show: { notFlag: 'blobGone' } },
-      { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'salted' }], notFlag: 'blobGone' } },
+      { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }], notFlag: 'blobGone' } },
       { text: 'Report to Mr Bubbleby', to: 'season' },
     ],
   },
@@ -146,6 +150,29 @@ export const SECTIONS = {
         : 'The season opens on Saturday with the blob still in the bath. The Duchess of Fenwick goes in, and does not come out for six months. When she does, she says it was the best rest she’s ever had, and the Royal Spa becomes the most fashionable place in the land.',
       `You leave Sludgeby with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  blob_blessed: {
+    text: ['Your god scorns you. Instead of oil, the Great Bath turns to holy water, faintly glowing. The blob has never been so clean. It rises out of the bath, sparkling, refreshed, and in the mood for company.'],
+    choices: [{ text: 'Brace yourself', to: 'blob_fight' }],
+  },
+  fished_tk: {
+    on: [{ flag: 'fished' }, { flag: 'tiaraTaken' }, { item: 'tiara', msg: 'The tiara floats into your hand. It’s worth 120GP, and covered in jelly.' }],
+    text: ['You point at the tiara, and it slides slowly up through the middle of something invisible, out of the water, and across the bath to your hand. The water shivers, but doesn’t notice. Not yet.'],
+    choices: [{ text: 'Back to the Great Bath', to: 'great_bath' }],
+  },
+  blob_swim: {
+    on: [{ flag: 'whitlow' }, { flag: 'fished' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'You bring out the tiara too: 120GP of diamonds.' }, { flag: 'tiaraTaken' }],
+    text: ['You take a breath you don’t need, and wade in. Inside the blob it is warm, and green, and very quiet, like being inside a gooseberry. Lord Whitlow is floating in the middle, asleep, with a smile on his face. You take him by the collar and tow him out, and the blob, which has never been entered on purpose before, lets you go out of sheer surprise.', 'Lord Whitlow sits on the steps of the bath, wrapped in a towel, wrinkled as a walnut. “Six months,” he says. “It was very relaxing, actually.”'],
+    choices: [{ text: 'Back to the Great Bath', to: 'great_bath' }],
+  },
+  blob_dropped: {
+    on: [{ flag: 'dropped' }],
+    text: ['The blob is launched straight up out of the Great Bath, through the glass roof of the spa and into the sky over the town, where it hangs for a moment, glittering in the sun. Then it comes down again, onto the tiles, from a great height. It spreads. It is a great deal smaller when it pulls itself together, and it is very cross.'],
+    choices: [{ text: 'Finish it off', to: 'blob_weak' }],
+  },
+  blob_ascends: {
+    text: ['Your god scorns you. Instead of being flung into the sky and dropped, the blob can fly. It lifts out of the bath, dripping, and floats over to you, like a jellyfish the size of a haycart, with a thoughtful air.'],
+    choices: [{ text: 'Brace yourself', to: 'blob_fight' }],
   },
 };
 

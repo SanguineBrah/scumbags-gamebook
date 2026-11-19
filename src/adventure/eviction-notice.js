@@ -29,6 +29,7 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Ask him why the kobolds are here', test: { stat: 'Cha', dd: 8, skill: ['social'] }, pass: 'grimsby_talks', fail: 'grimsby_huffs' },
+      { text: 'Cast Confession on Lord Grimsby, here in the square', cast: 'confession', pass: 'grimsby_confesses', fail: 'grimsby_huffs', critFail: 'grimsby_wiped' },
       { text: 'Walk up to the pyramid', to: 'pyramid' },
       { text: 'Ask around the square', to: 'square' },
     ],
@@ -57,6 +58,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Tempt the dog off the records with your rations', to: 'dog_moved', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Move the dog', test: { stat: 'Str', dd: 8, skill: ['bruteforce', 'survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'dog_moved', fail: 'dog_bite' },
+      { text: 'Cast Command on the dog: “Move”', cast: 'command', pass: 'dog_moved', fail: 'dog_bite' },
+      { text: 'Cast Telekinesis, and slide the copy out from under the dog', cast: 'telekinesis', pass: 'dog_moved', fail: 'dog_bite' },
       { text: 'Forge a new copy with your quill', test: { stat: 'Int', dd: 8, skill: ['skulduggery', 'analysis'], why: 'forgery is a kind of skulduggery' }, pass: 'deed_forged', fail: 'forge_smudge', if: { item: 'quill' } },
       { text: 'Back to the square', to: 'square' },
     ],
@@ -94,7 +97,7 @@ export const SECTIONS = {
   },
   bailiffs: {
     text: ['“Oi!” Two of Grimsby’s bailiffs, built like coal sheds and smelling worse, drag you out of the carriage by your ankles.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Bailiff', lvl: 2, range: 'engaged', note: 'Never bathes; takes things that aren’t his' }, { name: 'Bailiff', lvl: 2, range: 'engaged', note: 'Never bathes; takes things that aren’t his' }],
       win: 'bailiffs_win', flee: { to: 'pyramid', label: 'Run for the pyramid' },
     },
@@ -111,13 +114,15 @@ export const SECTIONS = {
     choices: [
       { text: 'Knock on the door', to: 'door' },
       { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
+      { text: 'Cast Chosen on yourself, then climb the outside while the sling stones swerve', cast: 'chosen', pass: 'apex', fail: 'slingers', critFail: 'pariah_climb' },
+      { text: 'Cast Hellfire on it', cast: 'hellfire', pass: 'hellfire', fail: 'pyramid', critFail: 'pyramid_sanctuary' },
       { text: 'Set fire to it', to: 'burn', if: { fire: true } },
       { text: 'Shoot back at the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
   },
   slingers: {
     text: ['A volley of sling stones rattles off the cobbles around you. Three kobolds pop up along the slits, reloading.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [slinger, slinger, slinger], distance: 1, cornered: true,
       win: 'slingers_win', flee: { to: 'start', label: 'Retreat across the square' },
     },
@@ -131,6 +136,8 @@ export const SECTIONS = {
     text: ['A hatch opens at knee height. A kobold in a hard hat looks up at you. “If you’re from Grimsby,” it says, “you can tell him we’re not moving until we’ve got somewhere to move to. And we want our deposit back.”'],
     choices: [
       { text: 'Tell it you’re here to help', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'inside', fail: 'sapper_fight' },
+      { text: 'Cast Tongues, and talk to it in perfect Kobold', cast: 'tongues', pass: 'inside', fail: 'sapper_fight', critFail: 'door_silent' },
+      { text: 'Cast Command on it: “Open the door”', cast: 'command', pass: 'inside', fail: 'sapper_fight' },
       { text: 'Show it the deed to the square', to: 'deed_shown', if: { item: 'deed' } },
       { text: 'Kick the door in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 4 }] }, pass: 'sapper_fight', fail: 'door_ouch' },
     ],
@@ -275,8 +282,8 @@ export const SECTIONS = {
   },
   burn: {
     text: (c) => [c.flags.kobsBeaten
-      ? `You strike a light. The empty pyramid goes up like a haystack. The kobolds, trudging out of town with their buckets, stop on the hill to watch their home burn, and then keep walking. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`
-      : `You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
+      ? `${c.flags.hellfire ? 'Hellfire takes hold.' : 'You strike a light.'} The empty pyramid goes up like a haystack. The kobolds, trudging out of town with their buckets, stop on the hill to watch their home burn, and then keep walking. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`
+      : `${c.flags.hellfire ? 'Hellfire takes hold.' : 'You strike a light.'} The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
     on: [{ flag: 'burnt' }],
     choices: [{ text: 'Go and collect your fee', to: 'payday' }],
   },
@@ -299,6 +306,33 @@ export const SECTIONS = {
               : 'The pyramid is still in the square, and the kobolds are still in it. Lord Grimsby pays you nothing, and says so, loudly, from a safe distance.',
       `You walk away from Middle Whelping with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
+  },
+  grimsby_confesses: {
+    on: [{ flag: 'heardDeed' }, { flag: 'knowsWarren' }],
+    text: ['Lord Grimsby stops in the middle of the square, handkerchief raised, and relives his most recent sins where everybody can see them: filling in the kobolds’ warren, raising the rents, and, twelve years ago, taking the deed to the square out of the town hall “for framing” and hiding it in his carriage, under the scented handkerchiefs. The crowd turns to look at the carriage. So does Grimsby.'],
+    choices: [{ text: 'Get to the carriage before he does', to: 'deed' }, { text: 'Walk up to the pyramid', to: 'pyramid' }],
+  },
+  grimsby_wiped: {
+    on: [{ flag: 'knowsWarren' }],
+    text: ['Your god scorns you, and wipes the last day’s worries from Lord Grimsby’s mind. He beams at you, relaxed. “Kobolds? Oh, they lived in a warren under Grimsby Common. I filled it in. I’m building a hunting lodge. Lovely day, isn’t it?”'],
+    choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }, { text: 'Ask around the square', to: 'square' }],
+  },
+  pariah_climb: {
+    text: ['Your god scorns you. Instead of being Chosen, you become a Pariah: for five rounds, every ranged attack in the square comes to you. Every kobold slinger on the pyramid stands up to see why.'],
+    choices: [{ text: 'Defend yourself', to: 'slingers' }],
+  },
+  pyramid_sanctuary: {
+    text: ['Your god scorns you. Instead of fire, the pyramid is enclosed in shining walls of law. For a few minutes it is the safest building in the county. A kobold looks out of a window and waves.'],
+    choices: [{ text: 'Try something else', to: 'pyramid' }],
+  },
+  door_silent: {
+    text: ['Your god scorns you. Instead of speaking Kobold, you can’t make a sound at all. You open and shut your mouth at the hatch like a fish. The kobold watches with interest, then closes the hatch.'],
+    choices: [{ text: 'Try something else', to: 'door' }],
+  },
+  hellfire: {
+    on: [{ flag: 'hellfire' }],
+    text: ['The ground under the pyramid bursts into flame, and the flames start to climb.'],
+    choices: [{ text: 'Watch', to: 'burn' }],
   },
 };
 

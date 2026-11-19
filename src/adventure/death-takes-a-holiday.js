@@ -28,6 +28,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Study the footprints with your jeweller’s loupe', to: 'prints', if: { item: 'loupe' }, show: { notFlag: 'hutClue' } },
       { text: 'Follow the footprints', test: { stat: 'Wis', dd: 10, skill: ['survival'], profs: ['Hunter'], why: 'you can track anything' }, pass: 'prints', fail: 'prints_lost', show: { notFlag: 'hutClue' } },
+      { text: 'Cast Scry, and look for the scythe wherever it is now', cast: 'scry', pass: 'scried', fail: 'hut', show: { notFlag: 'hutClue' } },
       { text: 'Back to the beach', to: 'prom' },
     ],
   },
@@ -76,7 +77,7 @@ export const SECTIONS = {
       { text: 'Back to the promenade', to: 'prom' },
     ],
   },
-  gull_fight: {
+  gull_fight: { outdoors: true,
     text: ['The seagulls come down on you in a shrieking cloud, and they don’t stop coming, because they can’t.'],
     fight: {
       monsters: [gull], win: 'gulls_down', flee: { to: 'prom', label: 'Run back along the pier' },
@@ -105,6 +106,9 @@ export const SECTIONS = {
       { text: 'Tell him Death is a nice chap, really, and sunburnt', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'mortimer_talks', fail: 'mortimer_fight', show: { flag: 'hutClue' } },
       { text: 'Wave your smelling salts under his nose, and grab the scythe while he sneezes', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'scythe_got', fail: 'mortimer_fight', if: { item: 'salts' } },
       { text: 'Hook the scythe out of his hands with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery', 'athletics'] }, pass: 'scythe_got', fail: 'mortimer_fight', if: { item: 'pole' } },
+      { text: 'Cast Telekinesis, and draw the scythe gently out of his hands', cast: 'telekinesis', pass: 'scythe_got', fail: 'mortimer_fight' },
+      { text: 'Cast Vivify on him, and ease that heart of his', cast: 'vivify', pass: 'mortimer_eased', fail: 'mortimer_fight', critFail: 'mortimer_afflicted' },
+      { text: 'Cast Wipe on him, so he forgets what frightened him', cast: 'wipe', pass: 'mortimer_wiped', fail: 'mortimer_fight', critFail: 'mortimer_confesses' },
       { text: 'Check his heart with your healer’s kit, and tell him the truth about it', test: { stat: 'Wis', dd: 6, skill: ['medicine'], profs: ['Bodyguard', 'Alchemist'], why: 'you know your way round a patient' }, pass: 'mortimer_talks', fail: 'mortimer_fight', if: { item: 'healerskit' } },
       { text: 'Take it from him', to: 'mortimer_fight' },
     ],
@@ -164,6 +168,28 @@ export const SECTIONS = {
           : 'You leave Brinemouth without the scythe. Nobody dies there for a year. It is the most popular resort in the kingdom, until it isn’t.',
       `You leave Brinemouth-on-Sea with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  scried: {
+    on: [{ flag: 'hutClue' }],
+    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the front car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
+    choices: [{ text: 'Back to the beach', to: 'prom' }],
+  },
+  mortimer_eased: {
+    on: [{ flag: 'gaveUp' }],
+    text: ['You lay a hand on Old Mortimer’s chest and pray. His breathing eases. Colour comes into his face. He looks at you, astonished. “I haven’t felt this well in twenty years,” he says. He looks at the scythe across his knees, and then, after a long time, he holds it out to you. “I suppose I’ve got a bit longer now,” he says. “I’d rather spend it outside.”'],
+    choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
+  },
+  mortimer_afflicted: {
+    text: ['Your god scorns you. Instead of easing his heart, your prayer squeezes it. Old Mortimer goes grey and clutches his chest, and would certainly have died, except that nobody can die while he holds the scythe. He just feels dreadful, and he knows exactly whose fault it is.'],
+    choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
+  },
+  mortimer_wiped: {
+    text: ['Old Mortimer blinks, and forgets the last day: the fear, the beach hut, the long walk out along the pier in his slippers. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
+    choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
+  },
+  mortimer_confesses: {
+    text: ['Your god scorns you. Instead of forgetting, Old Mortimer relives his most recent sins: the beach hut, the scythe, the long walk out along the pier, and the moment he realised that nobody in the world could die while he held it, and how glad he was. He stands up in the car with the scythe in both hands.'],
+    choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
   },
 };
 

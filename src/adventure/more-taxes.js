@@ -40,6 +40,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Forge yourself a staff pass with your quill', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], profs: ['Envoy'], why: 'you know your way round paperwork' }, pass: 'forms', fail: 'caught', if: { item: 'quill' } },
       { text: 'Tell the clerk you’re from the Auditor-General’s office', test: { stat: 'Cha', dd: 10, skill: ['lying'] }, pass: 'forms', fail: 'caught' },
+      { text: 'Cast Invisibility on yourself, and walk past the clerk', cast: 'invisibility', pass: 'forms', fail: 'caught' },
       { text: 'Wait your turn', to: 'wait' },
     ],
   },
@@ -74,6 +75,7 @@ export const SECTIONS = {
       { text: 'Go to the Archive', to: 'archive' },
       { text: 'Go to the Vault', to: 'vault', show: { notFlag: 'vaultDone' } },
       { text: 'Climb the stairs to the Auditor-General', to: 'auditor_door' },
+      { text: 'Cast Create portal, and step through any door into the vault you marked', cast: 'portal', pass: 'vault_in', fail: 'forms', show: { flag: 'vaultSeen', notFlag: 'vaultDone' } },
     ],
   },
   archive: {
@@ -120,9 +122,11 @@ export const SECTIONS = {
     ],
   },
   vault: {
+    on: [{ flag: 'vaultSeen' }],
     text: ['The Exchequer vault is behind a steel door with three locks and a clerk. The clerk is asleep. The locks are not.'],
     choices: [
       { text: 'Pick the locks', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'vault_in', fail: 'vault_alarm', if: { item: 'tools' } },
+      { text: 'Cast Insubstantiate on yourself, and walk through the vault wall', cast: 'insubstantiate', pass: 'vault_in', fail: 'vault', critFail: 'enfeebled_self', show: { notFlag: 'vaultDone' } },
       { text: 'Melt the locks with acid', to: 'vault_in', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
       { text: 'Show the clerk Vane’s golden abacus, and say you’ve come to make a deposit', to: 'abacus', if: { item: 'abacus' } },
       { text: 'Back to the Hall of Forms', to: 'forms' },
@@ -171,6 +175,9 @@ export const SECTIONS = {
       { text: 'Take the Master Seal', to: 'seal', show: { flag: 'auditorOut', notFlag: 'seal' } },
       { text: 'Offer to pay him', to: 'pay', if: { gold: 200 }, show: { notFlag: 'auditorOut' } },
       { text: 'Argue that your income was not taxable', test: { stat: 'Int', dd: 12, skill: ['analysis', 'languages'], profs: ['Envoy'], why: 'you know your way round a regulation' }, pass: 'argued', fail: 'auditor_fight', show: { notFlag: 'auditorOut' } },
+      { text: 'Cast Freeze time, and strike out your name while he sits there, mid-blink', cast: 'freeze', pass: 'frozen', fail: 'auditor_fight', show: { notFlag: 'auditorOut' } },
+      { text: 'Cast Clone, and leave your copy arguing with him while you see to the ledger', cast: 'clone', pass: 'cloned', fail: 'auditor_fight', show: { notFlag: 'auditorOut' } },
+      { text: 'Cast Confession on the Auditor-General', cast: 'confession', pass: 'auditor_confesses', fail: 'auditor_fight', critFail: 'auditor_wiped', show: { notFlag: 'auditorOut' } },
       { text: 'Fight him', to: 'auditor_fight', show: { notFlag: 'auditorOut' } },
       { text: 'Leave', to: 'free' },
     ],
@@ -224,6 +231,32 @@ export const SECTIONS = {
       c.flags.sold_seal ? 'Within a week, every thief in Grimchester has a stamped licence to steal, approved.' : '',
       `You leave Grimchester with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),
+  },
+  enfeebled_self: {
+    text: ['Your god scorns you. Instead of turning to mist, you turn fragile: for five minutes, everything that hits you will hurt more than usual. Nothing does. You stand by the vault door, feeling breakable, until it wears off.'],
+    choices: [{ text: 'Back to the vault door', to: 'vault' }],
+  },
+  cloned: {
+    on: [{ flag: 'struckOut' }],
+    text: ['A copy of you appears beside you, a little vaguer around the eyes, and launches into an argument with the Auditor-General about whether a turnip is income. He is drawn in at once; it is a very stupid argument. While they shout, you walk round behind him, find your name in the Great Ledger and remove it. Three minutes later, your copy dissolves mid-sentence. He keeps arguing with the chair.'],
+    choices: [{ text: 'Leave', to: 'free' }],
+  },
+  auditor_confesses: {
+    on: [{ flag: 'struckOut' }, { flag: 'settled' }],
+    text: ['The Auditor-General goes rigid, and relives his most recent sins, which you watch with him: an expense claim for a second desk, a third desk and a horse, and forty years of never once paying his own taxes. When it’s over he takes off his spectacles. Without a word, he draws a line through your name in the Great Ledger. “We will say no more about it,” he says.'],
+    choices: [{ text: 'Leave', to: 'free' }],
+  },
+  auditor_wiped: {
+    text: ['Your god scorns you, and wipes the last day’s worries from the Auditor-General’s mind. He doesn’t have any. He has never had a worry in his life. He looks at you exactly as he did before. “In arrears,” he says.'],
+    choices: [{ text: 'Back to the office', to: 'office' }],
+  },
+  frozen: {
+    on: [{ flag: 'struckOut' }],
+    text: ['Time stops. The Auditor-General hangs over his desk in mid-blink, a speck of dust stopped in the air beside his ear. You walk round him, find your name in the Great Ledger and remove it. A thousand gold of debt goes with it. Time is coming back; you can feel it, like a tide.'],
+    choices: [
+      { text: 'Take the Master Seal on your way past', to: 'seal' },
+      { text: 'Leave while you can', to: 'free' },
+    ],
   },
 };
 

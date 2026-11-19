@@ -95,7 +95,7 @@ export const SECTIONS = {
     text: ['He tells you about his company for an hour. It is a company that sells nothing to nobody, and it is worth a billion of something. When you finally escape, the sun has moved noticeably.'],
     choices: [{ text: 'Climb Gallows Hill', to: 'hill' }],
   },
-  traveller_fight: {
+  traveller_fight: { outdoors: true,
     text: ['He backs away, fumbling at his belt, and produces a small black crossbow with no string. “I don’t want to use this,” he says, and then uses it. It goes BANG.'],
     fight: {
       monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture-capitalist; iPad; handgun (2d6+lvl damage)' }],
@@ -115,7 +115,7 @@ export const SECTIONS = {
       { text: 'Knock at the front door', to: 'front_door' },
       { text: 'Climb down the chimney', to: 'chimney' },
       { text: 'Try the sewer grate', to: 'sewer' },
-      { text: 'Cast Divine light on your holy symbol', cast: 'light', pass: 'hill_lit', fail: 'hill_fizzle', show: { notFlag: 'lit' } },
+      { text: 'Cast Divine light on your holy symbol', cast: 'light', pass: 'hill_lit', fail: 'hill_fizzle', critFail: 'hill_shroud', show: { notFlag: 'lit' } },
     ],
   },
   hill_lit: {
@@ -139,7 +139,7 @@ export const SECTIONS = {
       { text: 'Tell him you’re the new auditor', test: { stat: 'Cha', dd: 8, skill: 'lying' }, pass: 'front_lie_win', fail: 'front_lie_fail', show: { notFlag: 'bureaucratDead' } },
       { text: 'Hand him the time-traveller’s business card', to: 'front_card', if: { item: 'card' }, show: { notFlag: 'bureaucratDead' } },
       { text: 'Pick the lock while he looks for a form', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'front_picked', fail: 'front_fight', if: { item: 'tools' }, show: { notFlag: 'bureaucratDead' } },
-      { text: 'Cast Shroud and slip in under a cloak of darkness', cast: 'shroud', pass: 'front_shroud', fail: 'front_door', show: { notFlag: 'bureaucratDead' } },
+      { text: 'Cast Shroud and slip in under a cloak of darkness', cast: 'shroud', pass: 'front_shroud', fail: 'front_door', critFail: 'front_glow', show: { notFlag: 'bureaucratDead' } },
       { text: 'Kick the door in', test: { stat: 'Str', dd: 12, skill: 'bruteforce' }, pass: 'front_fight', fail: 'front_kick_fail', show: { notFlag: 'bureaucratDead' } },
       { text: 'Go round the back', to: 'hill' },
     ],
@@ -178,7 +178,7 @@ export const SECTIONS = {
     text: ['The iron door doesn’t notice. Your foot does. The moustache writes something down.'],
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
-  front_fight: {
+  front_fight: { outdoors: true,
     text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
     fight: {
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
@@ -263,8 +263,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Offer her some of your rations', to: 'fishwife_fed', if: { item: 'rations' } },
       { text: 'Sneak along the wall', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'a hunter knows how to stalk' }, pass: 'cellar', fail: 'fishwife_fight' },
-      { text: 'Cast Abundance and offer her the food', cast: 'abundance', pass: 'fishwife_fed', fail: 'fishwife_fight' },
-      { text: 'Cast Pollute and turn her cistern to oil', cast: 'pollute', pass: 'pollute_win', fail: 'fishwife_fight' },
+      { text: 'Cast Abundance and offer her the food', cast: 'abundance', pass: 'fishwife_fed', fail: 'fishwife_fight', critFail: 'fishwife_locusts' },
+      { text: 'Cast Pollute and turn her cistern to oil', cast: 'pollute', pass: 'pollute_win', fail: 'fishwife_fight', critFail: 'fishwife_holy' },
       { text: 'Attack her while she’s busy', to: 'fishwife_ambush' },
       { text: 'Back out of the tunnel', to: 'hill' },
     ],
@@ -321,7 +321,7 @@ export const SECTIONS = {
       { text: 'Go into the gallery', to: 'gallery' },
       { text: 'Open the Chief Clerk’s door', to: 'office' },
       { text: 'Take the stair down', to: 'vault_stairs' },
-      { text: 'Cast Bless on the water in your rations', cast: 'bless', pass: 'hall_bless', fail: 'hall', if: { item: 'rations' }, show: { notFlag: 'blessed' } },
+      { text: 'Cast Bless on the water in your rations', cast: 'bless', pass: 'hall_bless', fail: 'hall', critFail: 'hall_oil', if: { item: 'rations' }, show: { notFlag: 'blessed' } },
       { text: 'Leave with what you’ve got', to: 'town' },
     ],
   },
@@ -620,7 +620,7 @@ export const SECTIONS = {
       { text: 'Refuse', to: 'exit_fight', show: { none: [{ flag: 'bureaucratDead' }, { flag: 'appointment' }, { flag: 'auditor' }, { flag: 'sneaked' }] } },
     ],
   },
-  exit_fight: {
+  exit_fight: { outdoors: true,
     text: ['“Refusal noted,” he says, and reaches for his stamps.'],
     fight: {
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
@@ -633,6 +633,27 @@ export const SECTIONS = {
       'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
       'But gold in your pocket is no use to a scumbag. To become a better, more experienced scumbag, you must squander it. Every 200GP you waste on a pointless endeavour gains you a level.',
     ],
+  },
+  hill_shroud: {
+    text: ['Your god scorns you. Instead of light, your holy symbol pours out darkness, like a hole cut in the afternoon. It takes ten minutes to clear, during which a crow walks into you.'],
+    choices: [{ text: 'Back to the hillside', to: 'hill' }],
+  },
+  front_glow: {
+    text: ['Your god scorns you. Instead of darkness, light pours out of your sleeves, and you stand on the doorstep glowing like a lamppost. “Ah,” says the moustache. “A visitor.” He makes a note.'],
+    choices: [{ text: 'Try something else', to: 'front_door' }],
+  },
+  fishwife_locusts: {
+    text: ['Your god scorns you. Instead of food, a swarm of locusts pours out of your sleeves and all over the fishwife. She eats a good number of them, but it doesn’t improve her mood.'],
+    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+  },
+  fishwife_holy: {
+    text: ['Your god scorns you. Instead of oil, the cistern turns to holy water, faintly glowing. The fishwife comes up out of it pink, clean and absolutely furious.'],
+    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+  },
+  hall_oil: {
+    on: [{ lose: 'rations' }, { item: 'oil', msg: 'Your rations are soaked through with lamp oil. You throw them away, and keep the oil.' }],
+    text: ['Your god scorns you. The water in your rations turns to lamp oil. You’ll know at lunch.'],
+    choices: [{ text: 'Back to the great hall', to: 'hall' }],
   },
 };
 

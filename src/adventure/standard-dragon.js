@@ -40,6 +40,8 @@ export const SECTIONS = {
       { text: 'Lasso the far post with your rope and swing across', test: { stat: 'Dex', dd: 10, skill: ['athletics'], profs: ['Hunter'], why: 'you can hit what you aim at' }, pass: 'cave', fail: 'fall', if: { item: 'rope' } },
       { text: 'Lay your pole across the narrowest part and shuffle over', test: { stat: 'Dex', dd: 8, skill: ['athletics'] }, pass: 'cave', fail: 'fall', if: { item: 'pole' } },
       { text: 'Climb down and up without any gear', test: { stat: 'Str', dd: 12, skill: ['athletics'] }, pass: 'cave', fail: 'fall' },
+      { text: 'Cast Step, and appear on the far side', cast: 'step', pass: 'cave', fail: 'path' },
+      { text: 'Cast Ascend, and float across', cast: 'ascend', pass: 'cave', fail: 'path', critFail: 'gorge_descend' },
       { text: 'Take the long way round, through the lower caves', to: 'lower' },
     ],
   },
@@ -59,6 +61,9 @@ export const SECTIONS = {
       { text: 'Dig a pit in the soft floor with your shovel, and lure it in', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'pit', fail: 'slug_fight', if: { anyItem: ['shovel', 'pick'] } },
       { text: 'Pour your oil down the trail and set it alight', to: 'slug_burn', if: { item: 'oil', fire: true } },
       { text: 'Sneak past it to the upper cave', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'], mods: [{ if: { light: true }, dd: 8 }] }, pass: 'lair', fail: 'slug_fight' },
+      { text: 'Cast Pillar of salt on it', cast: 'pillar', pass: 'slug_salted', fail: 'slug_fight', critFail: 'slug_stone' },
+      { text: 'Cast Judgement on it', cast: 'judgement', pass: 'slug_converts', fail: 'slug_fight', critFail: 'slug_deluge' },
+      { text: 'Cast Invisibility on yourself, and slide past it to the upper cave', cast: 'invisibility', pass: 'lair', fail: 'slug_fight' },
       { text: 'Attack it', to: 'slug_fight' },
     ],
   },
@@ -115,6 +120,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Ask what the form says', to: 'form', show: { notFlag: 'form' } },
       { text: 'Look at its leg with your healer’s kit', to: 'leg', if: { item: 'healerskit' }, show: { notFlag: 'legFixed' } },
+      { text: 'Cast Heal on its leg', cast: 'heal', pass: 'leg_healed', fail: 'lair', critFail: 'leg_harmed', show: { notFlag: 'legFixed' } },
       { text: 'Tell it about the slug, and offer a deal', to: 'deal', show: { notFlag: 'slugDead' } },
       { text: 'Tell it you’ve dealt with its slug', to: 'thanks', show: { flag: 'slugDead' } },
       { text: 'Fight it', to: 'dragon_fight' },
@@ -126,6 +132,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Forge a Form of Retirement with your quill', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], profs: ['Envoy'], why: 'you have filled in a great many forms' }, pass: 'retired', fail: 'forgery', if: { item: 'quill' } },
       { text: 'Pretend to be from the Dragon Licensing Board, and grant it retirement', test: { stat: 'Cha', dd: 12, skill: ['lying'] }, pass: 'retired', fail: 'forgery' },
+      { text: 'Cast Wish: “I wish this dragon were retired”', cast: 'wish', pass: 'wished', fail: 'lair' },
+      { text: 'Cast Judgement on it, and convert it to law', cast: 'judgement', pass: 'dragon_judged', fail: 'lair', critFail: 'dragon_deluge' },
       { text: 'Back', to: 'lair' },
     ],
   },
@@ -180,13 +188,58 @@ export const SECTIONS = {
   },
   epilogue: {
     end: 'victory',
-    on: [{ if: { item: 'scale' }, lose: 'scale' }, { if: { any: [{ flag: 'retired' }, { flag: 'dragonDead' }] }, gold: 1000, uncapped: true, msg: 'The standard dragon bounty: 1000GP.' }],
+    on: [{ if: { item: 'scale' }, lose: 'scale' }, { if: { any: [{ flag: 'retired' }, { flag: 'dragonDead' }], notFlag: 'wished' }, gold: 1000, uncapped: true, msg: 'The standard dragon bounty: 1000GP.' }, { if: { flag: 'wished' }, msg: 'The mayor can’t pay a bounty without proof of removal. There is no proof. There never was a dragon, officially.' }],
     text: (c) => [
       c.flags.retired
         ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
         : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
       `That’s ${COUNT((c.done || []).length + 1)} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
     ],
+  },
+  gorge_descend: {
+    on: [{ damage: '6d6', from: 'The fall' }],
+    text: ['Your god scorns you. Instead of floating across, you are launched straight up out of the gorge, high enough to see three counties, and then you come down again, into the bottom of it.'],
+    choices: [{ text: 'Follow the trail', to: 'lower' }],
+  },
+  slug_salted: {
+    on: [{ flag: 'slugDead' }],
+    text: ['Thirty feet of slug turns into thirty feet of salt, which, as far as the slug is concerned, is the worst thing that could possibly have happened. It stands in the tunnel, white and glittering, slowly crumbling. In the slime behind it lies everything it has eaten this year.'],
+    choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
+  },
+  slug_stone: {
+    text: ['Your god scorns you. Instead of salt, the slug’s skin turns to stone. It is now a thirty-foot slug made of granite, and it is very pleased about it.'],
+    fight: { monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
+  },
+  slug_converts: {
+    on: [{ flag: 'slugDead' }],
+    text: ['The slug stops. It considers the light of law for a long time. Then it turns round, very slowly, and slides off down the tunnel to find something useful to do with its life. It leaves behind, in a neat pile, everything it has eaten this year.'],
+    choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
+  },
+  slug_deluge: {
+    text: ['Your god scorns you. Instead of judgement, you get a flood. It roars down the tunnel, and washes the slug, which is a slug, perfectly happily up the cave towards you.'],
+    choices: [{ text: 'Brace yourself', to: 'slug_fight' }],
+  },
+  leg_healed: {
+    on: [{ flag: 'legFixed' }],
+    text: ['You lay your hands on the dragon’s leg and pray. Out of it, slowly, comes a thorn: a very big thorn, but a thorn. The wound closes behind it. The dragon flexes its leg. “Good heavens,” it says. “I could fly to the seaside on that. I’ve always wanted to retire to the seaside.”'],
+    choices: [{ text: 'Suggest it does exactly that', to: 'retired' }],
+  },
+  leg_harmed: {
+    text: ['Your god scorns you. Instead of healing, your prayer drives the thorn in deeper. The dragon screams, a noise like a forge exploding. When it stops, it takes off its glasses.'],
+    choices: [{ text: 'Brace yourself', to: 'dragon_fight' }],
+  },
+  wished: {
+    on: [{ flag: 'retired' }, { flag: 'wished' }],
+    text: ['You wish the dragon were retired. It is. In fact, it always was: the dragon looks at you, puzzled, and explains that it retired last year, with its whole hoard, and is only here to collect its post. It picks up a letter, and flies off to the seaside. There is no scale for the mayor, and no share of the hoard. Wishes are like that.'],
+    choices: [{ text: 'Back down to the village', to: 'epilogue' }],
+  },
+  dragon_judged: {
+    text: ['The light of law falls on the dragon. Nothing happens. The dragon looks at you over its glasses. “I am a perfectly standard dragon,” it says. “I follow procedure. I am already as lawful as it gets.” It turns a page.'],
+    choices: [{ text: 'Back', to: 'lair' }],
+  },
+  dragon_deluge: {
+    text: ['Your god scorns you. Instead of judgement, a flood bursts out of the cave wall and fills the lair to the knees. The dragon’s paperwork floats away. It watches it go.'],
+    choices: [{ text: 'Brace yourself', to: 'dragon_fight' }],
   },
 };
 

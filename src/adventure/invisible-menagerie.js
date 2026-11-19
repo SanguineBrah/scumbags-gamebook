@@ -39,6 +39,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Pay up (5GP)', to: 'big_top', if: { gold: 5 }, effects: [{ gold: -5 }] },
       { text: 'Challenge him to arm-wrestle for free entry', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Pit fighter', 'Sellsword'], why: 'you’ve done this in taverns' }, pass: 'bruno_beaten', fail: 'bruno_fight' },
+      { text: 'Cast Command on him: “Let me in”', cast: 'command', pass: 'bruno_commanded', fail: 'bruno_fight' },
       { text: 'Fight him', to: 'bruno_fight' },
     ],
   },
@@ -47,7 +48,7 @@ export const SECTIONS = {
     text: ['Bruno’s arm goes down with a crash that shakes the tent. He looks at it, then at you, with deep respect. “Free entry,” he says. “And a tip. The ape hates the smell of onions. Never stand downwind of the ape.”'],
     choices: [{ text: 'Go into the big top', to: 'big_top' }],
   },
-  bruno_fight: {
+  bruno_fight: { outdoors: true,
     on: [{ flag: 'brunoAngry' }],
     text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
     fight: { monsters: [{ name: 'Bruno', lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
@@ -91,7 +92,7 @@ export const SECTIONS = {
     text: ['“ACCEPTABLE,” says the Visitor. “BRING THE APE TO MY CRAFT. I SHALL PAY YOU IN ANY QUANTITY OF YOUR YELLOW METAL. I HAVE A GREAT DEAL OF IT. IT IS USELESS.”'],
     choices: [{ text: 'Go back to the tent', to: 'gate' }],
   },
-  visitor_fight: {
+  visitor_fight: { outdoors: true,
     on: [{ flag: 'visitorAngry' }, { unflag: 'visitorDeal' }],
     text: ['The Visitor raises its hairdryer. “HOSTILE,” it says sadly. “AS PREDICTED.”'],
     fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
@@ -128,6 +129,8 @@ export const SECTIONS = {
     text: ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
     choices: [
       { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' } },
+      { text: 'Cast True sight, and look at the pen as it really is', cast: 'truesight', pass: 'porcupine_seen', fail: 'porcupine' },
+      { text: 'Cast Dispel magic on the straw, and end its invisibility', cast: 'dispel', pass: 'porcupine_seen', fail: 'porcupine' },
       { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }] },
       { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' } },
       { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight' },
@@ -136,7 +139,7 @@ export const SECTIONS = {
   },
   porcupine_seen: {
     on: [{ flag: 'porcupineSeen' }],
-    text: ['A white, dusty, extremely annoyed porcupine appears in the straw, every quill outlined. It is the size of a pig. Now you can see it, you can walk round it. Underneath it, where it was sitting, is a ring of keys.'],
+    text: ['An extremely annoyed porcupine appears in the straw, every quill outlined. It is the size of a pig. Now you can see it, you can walk round it. Underneath it, where it was sitting, is a ring of keys.'],
     choices: [
       { text: 'Hook the keys out from under it with your pole', to: 'keys', if: { item: 'pole' } },
       { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
@@ -163,6 +166,7 @@ export const SECTIONS = {
       { text: 'Unlock the cage with the keys', to: 'aviary_in', if: { flag: 'keys', flagText: 'the keys' } },
       { text: 'Pick the lock', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'aviary_in', fail: 'aviary_noise', if: { item: 'tools' } },
       { text: 'Burn through the lock with acid', to: 'aviary_in', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Cast Knock on the lock', cast: 'knock', pass: 'aviary_in', fail: 'aviary_noise' },
       { text: 'Back to the ring', to: 'big_top' },
     ],
   },
@@ -176,6 +180,8 @@ export const SECTIONS = {
       { text: 'Feel around the platform for the egg', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'], mods: [{ if: { anyItem: ['pocketsand'] }, dd: 8 }, { if: { flag: 'flour' }, dd: 8 }] }, pass: 'egg', fail: 'ostrich_fight' },
       { text: 'Cast Throw voice to call it down, like a lady ostrich', cast: 'voice', pass: 'ostrich_lured', fail: 'ostrich_fight' },
       { text: 'Cast Ward on the platform, so it rings when the ostrich moves', cast: 'ward', pass: 'ostrich_lured', fail: 'ostrich_fight' },
+      { text: 'Cast True sight, and see where the egg really is', cast: 'truesight', pass: 'egg_seen', fail: 'aviary_in' },
+      { text: 'Cast Ascend, and float up to the platform', cast: 'ascend', pass: 'ascended', fail: 'aviary_in', critFail: 'descended' },
       { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Sweep the platform with your pole until something egg-shaped rolls off into your arms', test: { stat: 'Dex', dd: 6, save: true }, pass: 'egg', fail: 'ostrich_fight', if: { item: 'pole' } },
       { text: 'Climb up and take the egg by force', to: 'ostrich_fight' },
@@ -209,12 +215,14 @@ export const SECTIONS = {
     choices: [
       { text: 'Open the cage with the keys and lead it out to the Visitor', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals', mods: [{ if: { any: [{ flag: 'bruno' }, { item: 'rations' }, { item: 'rope' }, { item: 'chain' }] }, dd: 4 }] }, pass: 'ape_led', fail: 'ape_fight', if: { flag: 'keys', flagText: 'the keys' }, show: { flag: 'visitorDeal' } },
       { text: 'Rattle the bars', to: 'ape_fight' },
+      { text: 'Cast Pacify on it, then lead it out to the Visitor', cast: 'pacify', pass: 'ape_calm', fail: 'ape_fight', critFail: 'ape_galvanised', if: { flag: 'keys', flagText: 'the keys' }, show: { flag: 'visitorDeal' } },
+      { text: 'Cast Humble on it, and carry it out to the Visitor under your arm', cast: 'humble', pass: 'ape_shrunk', fail: 'ape_fight', critFail: 'ape_emboldened', if: { flag: 'keys', flagText: 'the keys' }, show: { flag: 'visitorDeal' } },
       { text: 'Back away', to: 'big_top' },
     ],
   },
   ape_led: {
     on: [{ flag: 'apeSold' }, { gold: 250, msg: 'The Visitor pays in useless yellow metal: 250GP.' }], onceOnly: true,
-    text: ['You walk an invisible ape out of the back of the tent, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
+    text: (c) => [`${c.flags.apeSmall ? 'You carry an invisible ape the size of a cat out of the back of the tent, under your arm, where it chatters crossly.' : c.flags.apeCalm ? 'You walk an invisible ape out of the back of the tent, as peaceful as a cow, holding its invisible hand.' : 'You walk an invisible ape out of the back of the tent, holding an invisible banana in front of it, which is harder than it sounds.'} The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.`],
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   ape_fight: {
@@ -237,6 +245,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Open the safe with the keys', to: 'safe', if: { flag: 'keys', flagText: 'the keys' }, show: { notFlag: 'safe' } },
       { text: 'Pick the safe', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'safe', fail: 'professor', if: { item: 'tools' }, show: { notFlag: 'safe' } },
+      { text: 'Cast Knock on the safe', cast: 'knock', pass: 'safe', fail: 'professor', show: { notFlag: 'safe' } },
       { text: 'Back to the ring', to: 'big_top' },
     ],
   },
@@ -272,6 +281,41 @@ export const SECTIONS = {
       c.flags.apeSold ? 'Far overhead, a silent green light crosses the stars. Somewhere up there, an invisible ape is having the time of its life.' : '',
       `You leave Upper Gloaming with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),
+  },
+  bruno_commanded: {
+    text: ['“Let me in,” you say. Bruno lifts the canvas for you like a curtain, bows, and holds it there until you’re through. Then he stands looking at his hand for a long time, wondering why he did that.'],
+    choices: [{ text: 'Go into the big top', to: 'big_top' }],
+  },
+  egg_seen: {
+    text: ['You see the aviary as it really is: a seven-foot ostrich glaring down from the platform, and under its feet, not in the nest at all, an egg the size of a man’s head, wedged in a crack in the planks where it rolled. You can reach it from the floor with one arm.'],
+    choices: [{ text: 'Take it, very carefully', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'egg', fail: 'ostrich_fight' }],
+  },
+  descended: {
+    on: [{ damage: '6d6', from: 'The fall' }],
+    text: ['Your god scorns you. Instead of floating up gently, you are launched straight up through the top of the aviary, the top of the big top and a passing flock of starlings, and then you come down again, through all of them in reverse order, into the sawdust. The ostrich looks down at you with interest.'],
+    choices: [{ text: 'Get up, if you can', to: 'aviary_in' }],
+  },
+  ape_galvanised: {
+    text: ['Your god scorns you. Instead of calm, the ape is filled with unholy vigour. The bars bend outwards in a third place.'],
+    choices: [{ text: 'Brace yourself', to: 'ape_fight' }],
+  },
+  ape_emboldened: {
+    text: ['Your god scorns you. Instead of shrinking, the ape grows to twice its size. The top of the cage comes off like the lid of a tin. It is still invisible, which somehow makes it worse.'],
+    choices: [{ text: 'Brace yourself', to: 'ape_fight' }],
+  },
+  ape_calm: {
+    on: [{ flag: 'apeCalm' }],
+    text: ['A great peace settles on the cage. Something huge and invisible sighs, and sits down in the straw, and lets you open the door.'],
+    choices: [{ text: 'Lead it out to the Visitor', to: 'ape_led' }],
+  },
+  ape_shrunk: {
+    on: [{ flag: 'apeSmall' }],
+    text: ['Something in the cage gives a surprised squeak, which is not a noise an ape that size could make. It isn’t that size any more. You open the door and feel around in the straw until you find it: warm, furious and about as big as a cat.'],
+    choices: [{ text: 'Carry it out to the Visitor', to: 'ape_led' }],
+  },
+  ascended: {
+    text: ['You float gently up off the sawdust to the top of the platform. The ostrich, which has never seen anything fly that wasn’t a bird, backs into the corner and stares at you. Under where it was sitting is the egg.'],
+    choices: [{ text: 'Take the egg', to: 'egg' }],
   },
 };
 

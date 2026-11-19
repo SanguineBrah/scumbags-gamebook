@@ -32,7 +32,7 @@ export const SECTIONS = {
     ].filter(Boolean),
     choices: [
       { text: 'Have the chaplain bless your weapon (20GP)', to: 'blessed', if: { gold: 20 }, show: { notFlag: 'blessedWeapon' } },
-      { text: 'Fill your bucket at the trough and bless the water', cast: 'bless', pass: 'bucket_blessed', fail: 'bucket_oil', if: { item: 'bucket' }, show: { notFlag: 'holyBucket' } },
+      { text: 'Fill your bucket at the trough and bless the water', cast: 'bless', pass: 'bucket_blessed', fail: 'bucket_fizzle', critFail: 'bucket_oil', if: { item: 'bucket' }, show: { notFlag: 'holyBucket' } },
       { text: 'Ask Grimsby exactly what the tenants want', to: 'grimsby_talk', show: { notFlag: 'knowsDeposits' } },
       { text: 'Set out across the moor', to: 'moor' },
     ],
@@ -48,7 +48,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the bar', to: 'start' }],
   },
   bucket_oil: {
-    text: ['The water in your bucket goes thick and black and starts to smell of lamps. It’s oil, now. Your god is in a mood.'],
+    text: ['Your god scorns you. The water in your bucket goes thick and black and starts to smell of lamps. It’s oil, now.'],
     choices: [{ text: 'Back to the bar', to: 'start' }],
   },
   grimsby_talk: {
@@ -72,12 +72,13 @@ export const SECTIONS = {
       { text: 'Feel ahead for the stones with your pole', to: 'bog_far', if: { item: 'pole' } },
       { text: 'Rope yourself to Grimsby and go first, so whoever sinks gets pulled out', to: 'bog_far', if: { item: 'rope' } },
       { text: 'Find the way across by eye', test: { stat: 'Wis', dd: 10, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know wet ground', mods: [{ if: { light: true }, dd: 6 }] }, pass: 'bog_far', fail: 'blob' },
+      { text: 'Cast Waterwalk on yourself and Grimsby, and walk across the top of the bog', cast: 'waterwalk', pass: 'bog_far', fail: 'bog', critFail: 'bog_burden' },
       { text: 'Turn back and take the road', to: 'gibbet' },
     ],
   },
   blob: {
     text: ['The bog in front of you stands up. It is the size of a haycart, it wobbles, and it has a boot inside it that isn’t yours. Grimsby screams in a very aristocratic register.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [blob], win: 'bog_far', flee: { to: 'moor', label: 'Drag Grimsby back the way you came' },
       special: [{ label: 'Set light to the marsh gas', if: { fire: true }, flag: 'gasLit', text: 'WHUMP. A ball of blue fire rolls up off the blob, and it boils and shrinks.', dmg: '3d6' }],
     },
@@ -99,7 +100,9 @@ export const SECTIONS = {
       { text: 'Write out an apology and three hundred years of receipts, and make Grimsby sign it', to: 'apology', if: { item: 'quill' }, show: { flag: 'knowsDeposits' } },
       { text: 'Talk to them', test: { stat: 'Cha', dd: 10, skill: ['social', 'languages'], profs: ['Envoy', 'Missionary'], why: 'you know how to talk to a crowd' }, pass: 'demands', fail: 'mob_fight' },
       { text: 'Turn them', turn: { dd: 10 }, pass: 'mob_flees', chaos: 'mob_obeys', fail: 'mob_fight', if: { magic: 'divine' } },
-      { text: 'Cast Shroud over yourself and Grimsby and sneak past', cast: 'shroud', pass: 'sneak', fail: 'mob_fight' },
+      { text: 'Cast Banish, and clear the road of the dead', cast: 'banish', pass: 'mob_flees', fail: 'mob_fight', critFail: 'mob_entreated' },
+      { text: 'Cast Labyrinth, and lose them in a maze', cast: 'labyrinth', pass: 'maze', fail: 'mob_fight', critFail: 'sundered' },
+      { text: 'Cast Shroud over yourself and Grimsby and sneak past', cast: 'shroud', pass: 'sneak', fail: 'mob_fight', critFail: 'mob_lit' },
       { text: 'Hand Grimsby over', to: 'betrayal' },
       { text: 'Pick up Grimsby and run', test: { stat: 'Str', dd: 10, skill: ['athletics'], profs: ['Bodyguard'], why: 'carrying clients out of trouble is your job' }, pass: 'gates', fail: 'mob_fight' },
       { text: 'Fight', to: 'mob_fight' },
@@ -144,7 +147,7 @@ export const SECTIONS = {
     text: (c) => [`${c.flags.thrown ? 'Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear, and the fight goes out of the mob at once.' : 'You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear.'} The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”`],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
-  mob_fight: {
+  mob_fight: { outdoors: true,
     on: [{ flag: 'mobAngry' }],
     text: (c) => [
       'The mob surges. Pitchforks you can see through still go into you.',
@@ -174,6 +177,8 @@ export const SECTIONS = {
       { text: 'Pick the lock', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'inside', fail: 'late', if: { item: 'tools' } },
       { text: 'Climb the wall and open it from inside', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'climbing' } },
       { text: 'Melt the lock with acid', to: 'inside', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Cast Knock on the lock', cast: 'knock', pass: 'inside', fail: 'late' },
+      { text: 'Cast Sundering horn, and bring down the wall', cast: 'sundering', pass: 'walls_down', fail: 'late', critFail: 'maze_hall' },
       { text: 'Lever the gate off its hinges', to: 'inside', if: { anyItem: ['prybar', 'pick'] } },
       { text: 'Throw your rope over the gatepost and climb', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'inside', fail: 'late', if: { item: 'rope' } },
       { text: 'Have your ghost army open it for you', to: 'inside', if: { flag: 'ghostArmy' } },
@@ -197,7 +202,7 @@ export const SECTIONS = {
   },
   last_stand: {
     text: ['The mob catches you at the gate. There’s no talking now.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ ...mob, hp: 24 }], distance: 1, win: 'inside', flee: { to: 'grimsby_hall', label: 'Leave Grimsby to them and run' },
       special: [{ label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' }],
     },
@@ -213,6 +218,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Open the strongroom with the skeleton’s key', to: 'strongroom', if: { item: 'strongkey' } },
       { text: 'Pick the strongroom lock while Grimsby is busy kissing the floor', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'strongroom', fail: 'strongroom_caught', if: { item: 'tools' }, show: { notItem: 'strongkey', notFlag: 'betrayed' } },
+      { text: 'Cast Knock on the strongroom while Grimsby is busy kissing the floor', cast: 'knock', pass: 'strongroom', fail: 'strongroom_caught', show: { notItem: 'strongkey', notFlag: 'betrayed' } },
       { text: 'Collect your fee and leave', to: 'grimsby_hall', show: { notFlag: 'betrayed' } },
       { text: 'Leave', to: 'grimsby_hall', show: { flag: 'betrayed' } },
     ],
@@ -245,6 +251,39 @@ export const SECTIONS = {
       c.flags.deposits && !c.flags.betrayed ? 'You may not have mentioned the strongroom.' : '',
       `You leave Blackmire Moor with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),
+  },
+  bucket_fizzle: {
+    text: ['You pray over the bucket. The water stays water. Your god is busy.'],
+    choices: [{ text: 'Back to the bar', to: 'start' }],
+  },
+  mob_lit: {
+    text: ['Your god scorns you. Instead of darkness, light pours out over you and Grimsby, and you stand in the middle of the road glowing like a pair of lanterns. A hundred ghosts turn to look. “That’s him,” says the skeleton in the gibbet.'],
+    choices: [{ text: 'Fight', to: 'mob_fight' }],
+  },
+  bog_burden: {
+    text: ['Your god scorns you. Instead of walking on the bog, you weigh twice what you did, and go into it up to the chest. While Grimsby is pulling you out, by the hair, the bog in front of you stands up.'],
+    choices: [{ text: 'Fight it', to: 'blob' }],
+  },
+  mob_entreated: {
+    text: ['Your god scorns you. Instead of fleeing, every dead thing on Blackmire Moor is drawn to the crossroads. The mob turns round. Behind it, more come over the bog: older tenants, and some that were never tenants of anybody.'],
+    choices: [{ text: 'Fight', to: 'mob_fight' }],
+  },
+  maze: {
+    on: [{ flag: 'turned' }],
+    text: ['The moor folds itself up into a maze of hedges that weren’t there a moment ago. The mob goes into it, torches bobbing, and doesn’t come out. You can hear them for a long time, arguing about left and right. You and Grimsby walk on up the road, which is the only straight line for a mile.'],
+    choices: [{ text: 'On to the hall', to: 'gates' }],
+  },
+  sundered: {
+    text: ['Your god scorns you. Instead of a maze, a great horn sounds across the moor and every wall for a mile falls down, including the back of the Tumbledown Inn. There are no walls at the crossroads to speak of. The mob, which has no walls either, comes on.'],
+    choices: [{ text: 'Fight', to: 'mob_fight' }],
+  },
+  walls_down: {
+    text: ['A horn sounds from nowhere, and the wall of Grimsby Hall falls down flat, all the way round, like the sides of a box. The gate stands on its own in the middle of nothing, still locked. You walk round it.'],
+    choices: [{ text: 'Inside', to: 'inside' }],
+  },
+  maze_hall: {
+    text: ['Your god scorns you. Instead of falling, the walls multiply. The grounds of Grimsby Hall fold into a maze, and it takes you a long time to find your way out of it, on the wrong side.'],
+    choices: [{ text: 'Find the gate again', to: 'late' }],
   },
 };
 

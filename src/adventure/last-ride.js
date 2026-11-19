@@ -45,6 +45,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Revive him with smelling salts', to: 'revived', if: { item: 'salts' }, show: { flag: 'heart' } },
       { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'revived', fail: 'dead_on_road', show: { flag: 'heart' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'revived', fail: 'leap', critFail: 'harm_road', show: { flag: 'heart' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'revived', fail: 'leap', critFail: 'harm_road', show: { flag: 'heart' } },
       { text: 'Let nature take its course', to: 'dead_on_road', show: { flag: 'heart' } },
       { text: 'Ride on', to: 'fen_edge', show: ALIVE },
     ],
@@ -87,6 +89,7 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Lead the horse along the sunken causeway', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you can read the ground', mods: [{ if: { item: 'pole' }, dd: 4 }] }, pass: 'causeway', fail: 'bog' },
+      { text: 'Cast Waterwalk on Thunder, and ride straight across the top of the fen', cast: 'waterwalk', pass: 'fen_walk', fail: 'fen_edge', critFail: 'fen_burden' },
       { text: 'Take the punt', to: 'punt' },
       { text: 'Let Sir Gristle charge straight across the mud', to: 'charge', show: { notFlag: 'propped' } },
     ],
@@ -105,6 +108,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'fen_revived', fail: 'hauled', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'fen_revived', fail: 'hauled', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Push on along the causeway', to: 'causeway', show: { notFlag: 'heart' } },
     ],
   },
@@ -114,6 +119,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'fen_revived', fail: 'fen_fizzle', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'fen_revived', fail: 'fen_fizzle', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Push on along the causeway', to: 'causeway', show: { notFlag: 'heart' } },
       { text: 'Push on along the causeway', to: 'causeway', show: { flag: 'propped' } },
     ],
@@ -150,7 +157,7 @@ export const SECTIONS = {
   },
   toads: {
     text: ['The toads swarm over the side of the punt, ticking.'],
-    fight: { monsters: [toad, toad, toad], win: 'farm_yard', flee: { to: 'fen_edge', label: 'Jump overboard and wade back' } },
+    fight: { outdoors: true, monsters: [toad, toad, toad], win: 'farm_yard', flee: { to: 'fen_edge', label: 'Jump overboard and wade back' } },
   },
   causeway: {
     text: (c) => [
@@ -169,6 +176,9 @@ export const SECTIONS = {
       { text: 'Climb up and spike his cannon with an iron spike', test: { stat: 'Dex', dd: 8, skill: ['athletics', 'skulduggery'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'spikes' } },
       { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' } },
       { text: 'Dazzle him with your hand mirror', to: 'dazzled', if: { item: 'mirror' } },
+      { text: 'Cast Chosen on yourself, and walk up to the cannon through the toads', cast: 'chosen', pass: 'chosen_walk', fail: 'cannon_fight', critFail: 'pariah_walk' },
+      { text: 'Cast Humble on the cannon', cast: 'humble', pass: 'cannon_shrunk', fail: 'cannon_fight', critFail: 'cannon_grown' },
+      { text: 'Cast Telekinesis, and turn the cannon round to face the fen', cast: 'telekinesis', pass: 'cannon_turned', fail: 'cannon_fight' },
       { text: 'Let Sir Gristle challenge him to single combat', to: 'duel', show: { notFlag: 'dead' } },
       { text: 'Send Sir Gristle, tied to Thunder, charging at the farmhouse', to: 'glory_charge', show: { flag: 'propped' } },
       { text: 'Attack', to: 'cannon_fight' },
@@ -191,6 +201,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
       { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'peace_revived', fail: 'peace_dead', show: { flag: 'heart' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'peace_revived', fail: 'truth', critFail: 'harm_peace', show: { flag: 'heart' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'peace_revived', fail: 'truth', critFail: 'harm_peace', show: { flag: 'heart' } },
       { text: 'Take him home', to: 'pension_office', show: { notFlag: 'heart' } },
     ],
   },
@@ -236,6 +248,8 @@ export const SECTIONS = {
       { text: 'Make sure he isn’t revived', to: 'glorious', show: { flag: 'heart' } },
       { text: 'Revive him with smelling salts', to: 'duel_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
       { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'duel_revived', fail: 'glorious', show: { flag: 'heart' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'duel_revived', fail: 'duel', critFail: 'harm_duel', show: { flag: 'heart' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'duel_revived', fail: 'duel', critFail: 'harm_duel', show: { flag: 'heart' } },
     ],
   },
   duel_revived: {
@@ -253,7 +267,7 @@ export const SECTIONS = {
     text: ['You kneel beside Sir Gristle, take off your hat, and wait until you’re sure.'],
     choices: [{ text: 'Take him home', to: 'pension_office' }],
   },
-  cannon_fight: {
+  cannon_fight: { outdoors: true,
     text: ['Croaker swings the cannon round and lights the fuse. A toad the size of a cat comes whistling down at you, glowing and ticking.'],
     fight: {
       monsters: [{ name: 'Old Croaker', lvl: 4, range: 'long', onHit: { stat: 'Dex', dd: 6, label: 'dodge the blast', text: 'The toad goes off at your feet.', effect: 'damage', amount: '2d6' }, note: 'Eccentric; launches burst toads from a cannon (on hit, d6 Dex save or 2d6 more)' }, toad],
@@ -286,6 +300,63 @@ export const SECTIONS = {
       c.flags.aimed ? 'In Lower Muckle, the exploding toads stop landing in the village pond. Nobody ever finds out why.' : '',
       `You come home with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),
+  },
+  harm_road: {
+    text: ['Your god scorns you. Instead of healing, your prayer lands on Sir Gristle’s heart like a dropped anvil. He gives a small sigh, and is still.'],
+    choices: [{ text: 'Kneel beside him', to: 'dead_on_road' }],
+  },
+  harm_fen: {
+    text: ['Your god scorns you. Instead of healing, your prayer lands on Sir Gristle’s heart like a dropped anvil. He gives a small sigh, and slides a little further into the mud.'],
+    choices: [{ text: 'Kneel beside him', to: 'fen_dead' }],
+  },
+  harm_peace: {
+    text: ['Your god scorns you. Instead of healing, your prayer lands on Sir Gristle’s heart like a dropped anvil. He gives a small sigh, with Croaker’s hand still in his.'],
+    choices: [{ text: 'Kneel beside him', to: 'peace_dead' }],
+  },
+  harm_duel: {
+    text: ['Your god scorns you. Instead of healing, your prayer lands on Sir Gristle’s heart like a dropped anvil. He gives a small sigh, sword still in his hand.'],
+    choices: [{ text: 'Kneel beside him', to: 'glorious' }],
+  },
+  fen_walk: {
+    text: ['Thunder steps out onto the mud, finds it as firm as a road, and trots across the top of Muckle Fen with Sir Gristle upright in the saddle and you running behind, sinking, holding on to the stirrup. The reeds part. The farmhouse comes up out of the mist.'],
+    choices: [{ text: 'Into the farmyard', to: 'farm_yard' }],
+  },
+  fen_burden: {
+    text: ['Your god scorns you. Instead of walking on water, Thunder suddenly weighs twice what he did, and sinks to the hocks where he stands. It takes an hour to dig him out.'],
+    choices: [{ text: 'Try another way', to: 'fen_edge' }],
+  },
+  chosen_walk: {
+    text: ['Croaker fires toad after toad at you, and every one of them swerves away at the last moment and bursts harmlessly in the reeds. You walk up to the farmhouse, climb the ladder, and stand beside him on the roof. He looks at the cannon, and at you, and puts down the slow match.'],
+    choices: [{ text: 'Ask him why he fires toads at the village', to: 'croaker_story' }],
+  },
+  pariah_walk: {
+    text: ['Your god scorns you. Instead of being Chosen, you become a Pariah. Every toad Croaker fires for the next five minutes is drawn to you, wherever he aims it, like iron filings to a magnet.'],
+    choices: [{ text: 'Brace yourself', to: 'cannon_fight' }],
+  },
+  cannon_shrunk: {
+    on: [{ flag: 'spiked' }],
+    text: ['The cannon shrinks to a quarter of its size. Croaker drops the next toad into it, and the toad sits in the muzzle, too big to go anywhere, looking out. Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
+    choices: [{ text: 'Ask him what he means', to: 'croaker_story' }, { text: 'Take Sir Gristle home', to: 'pension_office' }],
+  },
+  cannon_grown: {
+    text: ['Your god scorns you. Instead of shrinking, the cannon grows to twice its size. Croaker looks at it with love. Then he loads three toads at once.'],
+    choices: [{ text: 'Brace yourself', to: 'cannon_fight' }],
+  },
+  cannon_turned: {
+    on: [{ flag: 'spiked' }],
+    text: ['The cannon swings round on its own, under Croaker’s hands, until it points out over the fen, and stays there. He heaves at it. It won’t move. The next toad goes off into the reeds, where it frightens a heron. Croaker sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
+    choices: [{ text: 'Ask him what he means', to: 'croaker_story' }, { text: 'Take Sir Gristle home', to: 'pension_office' }],
+  },
+  fen_fizzle: {
+    text: ['Your prayer goes unanswered. Sir Gristle lies in the mud, breathing faintly, his moustache trembling.'],
+    choices: [
+      { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Heal on him', cast: 'heal', pass: 'fen_revived', fail: 'fen_fizzle', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Cast Vivify on him', cast: 'vivify', pass: 'fen_revived', fail: 'fen_fizzle', critFail: 'harm_fen', show: { flag: 'heart', notFlag: 'propped' } },
+      { text: 'Push on along the causeway', to: 'causeway', show: { notFlag: 'heart' } },
+      { text: 'Push on along the causeway', to: 'causeway', show: { flag: 'propped' } },
+    ],
   },
 };
 

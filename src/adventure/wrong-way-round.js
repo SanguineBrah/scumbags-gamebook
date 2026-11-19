@@ -50,10 +50,11 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Calm her down for the race', test: { stat: 'Wis', dd: 6, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'duchess_calm', fail: 'duchess_kick' },
+      { text: 'Cast Wipe on her, so she forgets whatever’s frightening her', cast: 'wipe', pass: 'duchess_wiped', fail: 'duchess_kick', critFail: 'duchess_confesses' },
       { text: 'Hide your hand mirror in her stall, so she sees a strange horse every time she turns', to: 'duchess_nobbled', if: { item: 'mirror' }, effects: [{ lose: 'mirror' }] },
       { text: 'Let your rat loose in her stall', to: 'duchess_nobbled', if: { item: 'rat' }, effects: [{ lose: 'rat' }] },
       { text: 'Glue her shoes to the floor', to: 'duchess_nobbled', if: { item: 'glue' }, effects: [{ lose: 'glue' }] },
-      { text: 'Put Famine on her oats', cast: 'famine', pass: 'duchess_nobbled', fail: 'duchess_kick' },
+      { text: 'Put Famine on her oats', cast: 'famine', pass: 'duchess_nobbled', fail: 'duchess_kick', critFail: 'duchess_oats' },
       { text: 'Back to the paddock', to: 'paddock' },
     ],
   },
@@ -82,6 +83,7 @@ export const SECTIONS = {
       { text: 'Give him a pep talk', test: { stat: 'Cha', dd: 6, skill: ['social'], profs: ['Bodyguard', 'Pit fighter'], why: 'you’ve been in a corner before' }, pass: 'neville_ready', fail: 'neville_nervous', show: { notFlag: 'nevilleAngry' } },
       { text: 'Give him your rations: he’s not been fed', to: 'neville_ready', if: { item: 'rations' }, effects: [{ lose: 'rations' }], show: { notFlag: 'nevilleAngry' } },
       { text: 'Tie his shoelaces together while he stretches', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'neville_nobbled', fail: 'neville_fight' },
+      { text: 'Cast Pestilence on him, and give him a streaming cold', cast: 'pestilence', pass: 'neville_sneezing', fail: 'neville', critFail: 'neville_cured' },
       { text: 'Back to the paddock', to: 'paddock' },
     ],
   },
@@ -99,7 +101,7 @@ export const SECTIONS = {
     text: ['You tie his laces together in a double knot while he’s touching his toes. He doesn’t notice. He has a very long way to look down.'],
     choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
-  neville_fight: {
+  neville_fight: { outdoors: true,
     on: [{ flag: 'nevilleAngry' }],
     text: ['Neville feels a tug on his laces, looks down the length of himself, and bites you.'],
     fight: { monsters: [neville], win: 'neville_beaten', flee: { to: 'paddock', label: 'Run back to the paddock' } },
@@ -114,12 +116,13 @@ export const SECTIONS = {
     choices: [
       { text: 'Blow your own whistle first, so the Duchess bolts early and leaves the field behind', to: 'race', if: { item: 'whistle' }, effects: [{ flag: 'falseStart' }] },
       { text: 'Scatter caltrops across the start, behind the Duchess', to: 'race', if: { item: 'caltrops' }, effects: [{ lose: 'caltrops' }, { flag: 'caltropsStart' }] },
+      { text: 'Cast Grease on the turf in Neville’s lane', cast: 'grease', pass: 'greased_start', fail: 'race' },
       { text: 'Watch the race', to: 'race' },
     ],
   },
   race: {
     redirect: [
-      { if: { any: [{ flag: 'nevilleNobbled' }, { flag: 'falseStart' }] }, to: 'race_duchess' },
+      { if: { any: [{ flag: 'nevilleNobbled' }, { flag: 'falseStart' }, { flag: 'nevilleGreased' }] }, to: 'race_duchess' },
       { if: { any: [{ flag: 'duchessNobbled' }, { flag: 'nevilleReady' }] }, to: 'race_neville' },
       { if: { flag: 'caltropsStart', notFlag: 'duchessCalm' }, to: 'race_neville' },
       { if: {}, to: 'race_duchess' },
@@ -139,7 +142,7 @@ export const SECTIONS = {
   race_duchess: {
     text: (c) => [
       c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. The Duchess, calm as a cow, doesn’t even look round.' : 'The whistle goes. The field thunders off.',
-      c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
+      c.flags.nevilleSick ? 'Neville sneezes at the start, sneezes at the first bend and sneezes all the way down the back straight, and finishes last, damp and miserable.' : c.flags.nevilleGreased ? 'Neville’s first stride lands on the grease. His legs go one way and his horse’s head goes the other, and he spends the race sliding gently down the course on his back, waving.' : c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
       'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
     ],
     choices: [{ text: 'Go round the back of the grandstand', to: 'collect' }],
@@ -161,7 +164,7 @@ export const SECTIONS = {
   },
   heavies: {
     text: ['Sid’s two large men step forward. One of them cracks his knuckles. The other cracks his.'],
-    fight: { monsters: [heavy, heavy], win: 'heavies_down', flee: { to: 'payout', label: 'Lose them in the crowd' } },
+    fight: { outdoors: true, monsters: [heavy, heavy], win: 'heavies_down', flee: { to: 'payout', label: 'Lose them in the crowd' } },
   },
   heavies_down: {
     text: ['The large men lie on the grass behind the grandstand. Honest Sid has gone, box and all, without paying anybody.'],
@@ -181,6 +184,36 @@ export const SECTIONS = {
         : 'That evening, the Duchess is retired to a field full of buttercups, and Honest Sid buys a new suit, even louder than the last one.',
       `You leave Muckmarket with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  duchess_oats: {
+    on: [{ flag: 'duchessCalm' }, { flag: 'duchessDone' }],
+    text: ['Your god scorns you. Instead of a swarm of locusts, a nosebag of the very best oats appears on the Duchess’s head. She eats the lot, sighs, and stops shaking. You have never seen a horse look so well.'],
+    choices: [{ text: 'Back to the paddock', to: 'paddock' }],
+  },
+  duchess_confesses: {
+    on: [{ damage: 'd6', from: 'The Duchess' }],
+    text: ['Your god scorns you. Instead of forgetting, the Duchess relives her most recent sins: two stable lads, a farrier and a small dog, all kicked. Remembering them puts her in the mood, and she kicks you as well.'],
+    choices: [{ text: 'Back to the paddock', to: 'paddock' }],
+  },
+  neville_sneezing: {
+    on: [{ flag: 'nevilleSick' }, { flag: 'nevilleNobbled' }, { flag: 'nevilleDone' }],
+    text: ['Neville sneezes. It is a horse’s sneeze, which comes out of a horse’s head on top of a man, and goes everywhere. “Oh dear,” he says thickly. “I think I’m coming down with something.”'],
+    choices: [{ text: 'Back to the paddock', to: 'paddock' }],
+  },
+  neville_cured: {
+    on: [{ flag: 'nevilleReady' }, { flag: 'nevilleDone' }],
+    text: ['Your god scorns you, and cures Neville of the sniffle he didn’t know he had. He takes a deep breath through both sets of nostrils, and his eyes light up. “I feel marvellous,” he says. “I feel like I could run all day.”'],
+    choices: [{ text: 'Back to the paddock', to: 'paddock' }],
+  },
+  greased_start: {
+    on: [{ flag: 'nevilleGreased' }],
+    text: ['The turf in Neville’s lane goes dark and shiny, like a fishmonger’s slab. Nobody notices but you.'],
+    choices: [{ text: 'Watch the race', to: 'race' }],
+  },
+  duchess_wiped: {
+    on: [{ flag: 'duchessCalm' }, { flag: 'duchessDone' }],
+    text: ['The Duchess forgets the last day: the crowds, the flags, the brass band. She lowers her head, looks round her stall as if she has just woken up in it, and starts to eat her hay. She’ll run straight today.'],
+    choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
 };
 

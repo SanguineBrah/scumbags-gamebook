@@ -42,9 +42,10 @@ for (const k of Object.keys(S)) {
   const s = S[k];
   for (const t of exits(k)) if (!S[t]) errors.push(`${k}: goes to missing section "${t}"`);
   if (!s.end && !exits(k).length) errors.push(`${k}: dead end`);
-  if (!s.end && !s.fight && !(s.choices || []).some((ch) => !ch.if && !ch.show)) {
-    // every exit is conditional: make sure the conditions can't all fail together
-    const free = (s.choices || []).filter((ch) => !ch.if);
+  for (const ch of s.choices || []) if (ch.cast && SPELLS[ch.cast] && SPELLS[ch.cast].list === 'divine' && !ch.critFail) errors.push(`${k}: divine spell "${ch.cast}" has no critFail section for its backfire`);
+  if (!s.end && !s.fight && !(s.choices || []).some((ch) => !ch.if && !ch.show && !ch.cast)) {
+    // every exit is conditional: make sure the conditions can't all fail together (spells are hidden from those who don't know them)
+    const free = (s.choices || []).filter((ch) => !ch.if && !ch.cast);
     if (!free.length) errors.push(`${k}: every choice needs something (possible soft lock)`);
   }
   if (!s.text) errors.push(`${k}: no text`);

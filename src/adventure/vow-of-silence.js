@@ -45,7 +45,11 @@ export const SECTIONS = {
   },
   wall: {
     text: ['The back wall of the abbey is old stone, ten feet high, mossy and quiet.'],
-    choices: [{ text: 'Climb it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'cloister', fail: 'wall_fall' }],
+    choices: [
+      { text: 'Climb it', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'cloister', fail: 'wall_fall' },
+      { text: 'Cast Step, and appear on the other side', cast: 'step', pass: 'cloister', fail: 'wall' },
+      { text: 'Cast Perambulate, and walk up it and over', cast: 'perambulate', pass: 'cloister', fail: 'wall' },
+    ],
   },
   wall_fall: {
     on: [{ damage: 'd4', from: 'The wall' }, NOISE()],
@@ -72,6 +76,7 @@ export const SECTIONS = {
     text: ['In the refectory, sixty monks eat soup in perfect silence. Not a slurp. Not a clink. A place is laid for you at the end of the bench. Next to it sits a very old monk who keeps looking at you, and then at the cellar door, and then at you, and winking.'],
     choices: [
       { text: 'Eat your soup without a sound', test: { stat: 'Dex', dd: 8, save: true }, pass: 'soup_quiet', fail: 'soup_slurp' },
+      { text: 'Cast Silence on yourself, then eat your soup', cast: 'silence', pass: 'soup_quiet', fail: 'soup_slurp', critFail: 'soup_tongues' },
       { text: 'Pass the old monk a note with your quill', to: 'old_monk', if: { item: 'quill' } },
       { text: 'Back to the cloister', to: 'cloister' },
     ],
@@ -131,6 +136,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Four fingers, flat, on the back of the hand', to: 'cellar', show: { flag: 'knowsSignal' } },
       { text: 'Guess a sign', test: { stat: 'Int', dd: 12, skill: ['languages'], profs: ['Envoy'], why: 'you know a lot of gestures' }, pass: 'cellar', fail: 'wrong_sign', show: { notFlag: 'knowsSignal' } },
+      { text: 'Cast Tongues on yourself, and read the monks’ sign language like a book', cast: 'tongues', pass: 'signs_read', fail: 'wrong_sign', critFail: 'signs_silent', show: { notFlag: 'knowsSignal' } },
+      { text: 'Throw your voice into the refectory, where nobody has spoken for forty years', cast: 'voice', pass: 'voice_lure', fail: 'wrong_sign' },
       { text: 'Wait till he dozes, oil the hinges with your flask of oil, and slip in without a creak', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'cellar', fail: 'wrong_sign', if: { item: 'oil' }, effects: [{ lose: 'oil' }], show: { notFlag: 'knowsSignal' } },
       { text: 'Back to the cloister', to: 'cloister' },
     ],
@@ -146,6 +153,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Fall to your knees and beg forgiveness in mime', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you know how to repent' }, pass: 'forgiven', fail: 'octavius_fight' },
       { text: 'Write him an apology with your quill', to: 'forgiven', if: { item: 'quill' } },
+      { text: 'Cast Wipe on him, so he forgets the noise', cast: 'wipe', pass: 'octavius_wiped', fail: 'octavius_fight', critFail: 'octavius_confesses' },
       { text: 'Fight', to: 'octavius_fight' },
       { text: 'Run for the gate', to: 'clatter' },
     ],
@@ -155,7 +163,7 @@ export const SECTIONS = {
     on: [{ damage: '2', from: 'A penance' }],
     choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
   },
-  octavius_fight: {
+  octavius_fight: { outdoors: true,
     on: [{ flag: 'octaviusCame' }],
     text: ['Brother Octavius comes at you without a sound, all eight hands open, and the air fills with slaps.'],
     fight: {
@@ -198,6 +206,33 @@ export const SECTIONS = {
         : 'You come back to Madame Clatter empty-handed. She has a great deal to say about it, at length, and at volume.',
       `You leave St Shush with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  soup_tongues: {
+    on: [NOISE(), { flag: 'refectoryDone' }],
+    text: ['Your god scorns you. Instead of falling silent, you find you can speak every language in the world, and to your horror you begin to, loudly, in all of them at once. Sixty spoons stop halfway to sixty mouths. The old monk beside you puts his face in his hands.'],
+    choices: [{ text: 'Back to the cloister, quickly', to: 'cloister' }],
+  },
+  signs_read: {
+    on: [{ flag: 'knowsSignal' }],
+    text: ['Suddenly the monks’ fingers make sense. The doorkeeper is telling the monk beside him that his feet hurt. Across the cloister, two novices are arguing about turnips. And the sign for the cellar, which the doorkeeper is waiting for, is four fingers, flat, on the back of the hand. You give it.'],
+    choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
+  },
+  signs_silent: {
+    text: ['Your god scorns you. Instead of speaking every language, you can’t make a sound at all for five minutes. In the Abbey of St Shush, nobody notices the difference.'],
+    choices: [{ text: 'Back to the cloister', to: 'cloister' }],
+  },
+  voice_lure: {
+    text: ['“Pass the salt,” says a voice in the refectory, clear as a bell. For a moment the whole abbey holds its breath. Then the doorkeeper is off across the cloister at a run, with every other monk in the place, to find out who spoke. You go down the cellar stairs alone.'],
+    choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
+  },
+  octavius_wiped: {
+    on: [{ flag: 'octaviusCame' }],
+    text: ['Brother Octavius stops. He looks round the cloister, frowning, like a man who has walked into a room and forgotten why. Whatever he came out to do, it has gone. He shrugs, very quietly, and goes back inside.'],
+    choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
+  },
+  octavius_confesses: {
+    text: ['Your god scorns you. Instead of forgetting, Brother Octavius relives his most recent sin, and you see it with him: forty years ago, he sneezed in chapel. He has never forgiven himself. He has never forgiven anyone. He comes at you in perfect silence.'],
+    choices: [{ text: 'Fight', to: 'octavius_fight' }],
   },
 };
 

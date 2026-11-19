@@ -35,8 +35,11 @@ export const SECTIONS = {
       { text: 'Go to the boathouse', to: 'boathouse', show: { notFlag: 'boatDone' } },
       { text: 'Shout up to the heads and start an argument', test: { stat: 'Cha', dd: 10, skill: ['social', 'lying'], profs: ['Envoy'], why: 'divide and rule is your trade' }, pass: 'quarrel', fail: 'heads_notice', show: { notFlag: 'quarrel' } },
       { text: 'Talk to the head that’s reading', to: 'reader', show: { notFlag: 'readerTalked' } },
-      { text: 'Cast Pollute on the reservoir, and then set it alight', cast: 'pollute', pass: 'oil_lake', fail: 'heads_notice', if: { fire: true }, show: { notFlag: 'cauterised' } },
+      { text: 'Cast Pollute on the reservoir, and then set it alight', cast: 'pollute', pass: 'oil_lake', fail: 'heads_notice', critFail: 'holy_lake', if: { fire: true }, show: { notFlag: 'cauterised' } },
       { text: 'Go down and fight it', to: 'hydra_fight' },
+      { text: 'Cast Fireball at the heads from the top of the dam', cast: 'fireball', pass: 'fireballed', fail: 'heads_notice', show: { notFlag: 'cauterised' } },
+      { text: 'Cast Hellfire on the water where it lies', cast: 'hellfire', pass: 'hellfired', fail: 'heads_notice', critFail: 'hydra_sanctuary', show: { notFlag: 'cauterised' } },
+      { text: 'Cast Humble on the hydra, then go down and fight it', cast: 'humble', pass: 'hydra_small', fail: 'heads_notice', critFail: 'hydra_big' },
       { text: 'Go down and finish it', to: 'hydra_weak', show: { any: [{ flag: 'drained' }, { flag: 'quarrel' }] } },
       { text: 'Give up and report to the council', to: 'council' },
     ],
@@ -69,6 +72,7 @@ export const SECTIONS = {
     text: ['The sluice house holds the gates that let water out of the reservoir into the river. A great iron wheel works them. It hasn’t been turned in years, and the hydra has been sleeping on the gates.'],
     choices: [
       { text: 'Turn the wheel', test: { stat: 'Str', dd: 10, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 6 }, { if: { item: 'oil' }, dd: 6 }] }, pass: 'drain', fail: 'wheel_stuck' },
+      { text: 'Cast Telekinesis on the wheel', cast: 'telekinesis', pass: 'drain', fail: 'wheel_stuck' },
       { text: 'Dig out the old overflow channel with your shovel', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'drain', fail: 'wheel_stuck', if: { anyItem: ['shovel', 'pick'] } },
       { text: 'Back to the dam', to: 'dam' },
     ],
@@ -106,7 +110,7 @@ export const SECTIONS = {
     text: ['You load the boat with oil, row it out towards the hydra, light it and dive over the side. The heads watch the burning boat come, interested, and then very interested. It hits the body, and the whole reservoir lights up. The hydra screams in eleven voices. Every head that burns, stays burnt.'],
     choices: [{ text: 'Swim back to the dam', to: 'dam' }],
   },
-  hydra_fight: {
+  hydra_fight: { outdoors: true,
     text: (c) => [c.flags.cauterised ? 'The hydra, scorched and smoking, comes up out of the water at you with every head it has left.' : 'The hydra comes up out of the water at you, eleven heads at once.'],
     fight: {
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
@@ -118,7 +122,7 @@ export const SECTIONS = {
   },
   hydra_weak: {
     text: (c) => [c.flags.drained ? 'You go down into the mud after it. The hydra, stranded, slow and furious, turns every head it has on you.' : 'You go down to the water’s edge. The hydra is so tangled up in itself that it can only spare three heads to fight you.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ ...hydra, hp: 20, regen: 2, note: 'Weakened hydra (20 HP); grows back 2 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Back off' },
       special: [{ label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
     },
@@ -141,6 +145,32 @@ export const SECTIONS = {
           : 'The hydra is still in the reservoir. The council doesn’t pay you. On calm nights, you can hear eleven voices singing all the way down in Floodmouth.',
       `You leave Floodmouth with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  holy_lake: {
+    text: ['Your god scorns you. Instead of oil, the reservoir turns to holy water, faintly glowing. The hydra dips all eleven heads and drinks deeply, and comes up shining, refreshed, and looking at you.'],
+    choices: [{ text: 'Back off along the dam', to: 'heads_notice' }],
+  },
+  fireballed: {
+    on: [{ flag: 'cauterised' }],
+    text: ['A bead of fire floats down from the dam towards the heads, which watch it come with great interest, all eleven of them leaning together for a better look. It blooms. When the smoke clears, every stump on the hydra is black and sealed, and the heads that are left are arguing about whose idea it was to look.'],
+    choices: [{ text: 'Back to the dam', to: 'dam' }],
+  },
+  hellfired: {
+    on: [{ flag: 'cauterised' }],
+    text: ['The water round the hydra bursts into flame and goes on burning, which water shouldn’t. The hydra thrashes in it for a long time. When the fire goes out, it lies in the shallows, steaming, every stump seared shut.'],
+    choices: [{ text: 'Back to the dam', to: 'dam' }],
+  },
+  hydra_sanctuary: {
+    text: ['Your god scorns you. Instead of fire, shining walls of law rise round the hydra, and it settles down inside them for a nap, perfectly safe. The heads look out at you through the walls, smug, all eleven of them.'],
+    choices: [{ text: 'Back to the dam', to: 'dam' }],
+  },
+  hydra_small: {
+    text: ['The hydra shrinks to a quarter of its size, which is still the size of a cart horse, with eleven heads the size of a dog’s. They look at each other in alarm. You go down to the water’s edge to meet them.'],
+    fight: { monsters: [{ ...hydra, hp: 10, regen: 1, note: 'A shrunken hydra (10 HP); grows back 1 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' }, outdoors: true },
+  },
+  hydra_big: {
+    text: ['Your god scorns you. Instead of shrinking, the hydra grows to twice its size. The reservoir is suddenly much too small for it. It climbs out.'],
+    choices: [{ text: 'Brace yourself', to: 'hydra_fight' }],
   },
 };
 

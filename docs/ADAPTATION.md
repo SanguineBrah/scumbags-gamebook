@@ -18,6 +18,19 @@ The rules are the rulebook's, with these changes for a hero who adventures alone
   there to revive you.
 - **Ten minutes' rest** after each fight restores AP.
 - **Turn undead**, the newest rulebook rule, is a fight action and a choice in the vault.
+- **Spells.** Magicians have the rulebook's whole spell list and a slot at every level. Where a
+  spell's effect is open to interpretation, the gamebook settles it:
+  - In fights, spells that hit a space hit every monster in the fight. Monsters don't make tests,
+    so where a spell asks for a monster's saving throw (Grease, Deluge), it works on a coin toss
+    or a d4. Lightning storm only works in fights marked as outdoors. Fireball cast while engaged
+    catches you in the blast too.
+  - Judgement converts a monster when its 8d8 would have killed it, and otherwise deals the damage.
+  - Divine light lights the next four dark places. A consecrated weapon stays magic (+1).
+    Conjuration makes a mundane item, which is yours to keep.
+  - A divine critical failure always casts the opposite spell at the same target, so a Heal on
+    yourself becomes a Harm on yourself. Every divine choice in the book has its own backfire.
+  - Spells with no use in a fight or from the adventure sheet are offered where the story gives
+    them one. A spell you don't know isn't offered at all, rather than shown locked.
 
 Fights with no way round them were tuned with `tools/duels.mjs` so a fresh level 1 scumbag
 wins roughly 9 in 10. The boss and the vault guards are harder, and each has peaceful

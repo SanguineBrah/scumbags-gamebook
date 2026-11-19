@@ -30,9 +30,13 @@ library: {
   `profs` (professions that justify it, per the rulebook's "anything that can be justified based on
   your profession") with an optional `why` shown to the player, `save: true` for saving throws, `knowledge: true` for things
   a Canny scumbag just knows, and `mods: [{ if, dd }]` or `[{ if, auto: true, text }]`.
-- **Spells and turning:** `{ cast: 'bless', pass, fail }`, `{ turn: { dd }, pass, chaos, fail }`.
+- **Spells and turning:** `{ cast: 'bless', pass, fail, critFail }`, `{ turn: { dd }, pass, chaos, fail }`.
+  Every divine cast needs a `critFail` section: the god casts the opposite spell (`SPELLS[id].opp`)
+  at the same target, and the section should say what that does. The check rejects divine casts
+  without one. Cast choices are hidden from scumbags who don't know the spell, so a section must
+  never rely on a cast as its only way out. Offer spells up to the top level of the adventure's band.
 - **Fights:** `fight: { monsters: [{ name, lvl, range, feats, hp, dmg, note }], win, flee: { to, label },
-  surprise, distance, cornered, unless, unlucky, special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
+  surprise, distance, cornered, unless, unlucky, outdoors (Lightning storm works), special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
   'prone' | 'gold' | 'damage', amount }`. Monster features: `brute`, `contract`, `exposed` (crits when
   engaged), `noEngaged` (pikes), `burst` (explodes when slain), `topple`, `coward`, `unluckyAura`,
   `critWide`,

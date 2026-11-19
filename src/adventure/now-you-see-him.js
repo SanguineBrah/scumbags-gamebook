@@ -53,7 +53,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Lay a trail of sausages to a corner and wait', test: { stat: 'Wis', dd: 6, skill: ['survival'], profs: ['Hunter'], why: 'you know how to bait a trap' }, pass: 'caught', fail: 'butcher_miss', if: { gold: 2 }, effects: [{ gold: -2 }] },
       { text: 'Hold out your rations and keep very still', to: 'caught', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
-      { text: 'Cast Abundance and conjure a heap of sausages at your feet', cast: 'abundance', pass: 'caught', fail: 'butcher_miss' },
+      { text: 'Cast Abundance and conjure a heap of sausages at your feet', cast: 'abundance', pass: 'caught', fail: 'butcher_miss', critFail: 'butcher_locusts' },
       { text: 'Drop your bucket over him the next time he lands on the counter', test: { stat: 'Dex', dd: 8, skill: ['athletics', 'skulduggery'] }, pass: 'caught', fail: 'butcher_miss', if: { item: 'bucket' } },
       { text: 'Back to the square', to: 'square' },
     ],
@@ -68,6 +68,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Ring the bell, so he jumps into your arms', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'caught', fail: 'bell_miss' },
       { text: 'Cast Ward on the bell rope, so it rings when he lands', cast: 'ward', pass: 'caught', fail: 'bell_miss' },
+      { text: 'Cast Step, and appear on the bell beam right beside him', cast: 'step', pass: 'caught', fail: 'bell_miss' },
+      { text: 'Cast Wipe on him, so he forgets whatever frightened him', cast: 'wipe', pass: 'biscuit_wiped', fail: 'bell_miss', critFail: 'biscuit_confesses' },
       { text: 'Talk him down, the way you’d talk to a sulking child', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Bodyguard', 'Cleric'], why: 'you’re good with difficult people' }, pass: 'caught', fail: 'bell_miss' },
       { text: 'Back down to the square', to: 'square' },
     ],
@@ -87,6 +89,7 @@ export const SECTIONS = {
       { text: 'Take her money, and stop looking', to: 'grudge_deal' },
       { text: 'Steal the whistle off the dog’s collar', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'whistle', fail: 'dogs_fight', show: { flag: 'knowsHabits' } },
       { text: 'Accuse her of scaring Sir Biscuit off', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'grudge_cracks', fail: 'dogs_fight' },
+      { text: 'Cast Confession on Mrs Grudge', cast: 'confession', pass: 'grudge_confesses', fail: 'dogs_fight', critFail: 'grudge_wiped' },
       { text: 'Back to the square', to: 'square' },
     ],
   },
@@ -105,7 +108,7 @@ export const SECTIONS = {
     text: ['A small silver whistle, too high to hear. Blink dogs come to it, the way other dogs come to their name.'],
     choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
-  dogs_fight: {
+  dogs_fight: { outdoors: true,
     text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
     fight: {
       monsters: [blinkdog, blinkdog],
@@ -150,6 +153,29 @@ export const SECTIONS = {
             : 'Mrs Grudge’s grey dogs take Best in Show. Sir Biscuit turns up at the Duke’s house two days later, sleeps for a week, and never forgives anybody.',
       `You leave Waggleton with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  butcher_locusts: {
+    on: [{ flag: 'butcherDone' }],
+    text: ['Your god scorns you. Instead of sausages, a swarm of locusts pours out of your sleeves and eats every sausage in the butcher’s window. The butcher chases you out with a cleaver. Sir Biscuit watches from the roof opposite, licking his lips.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  biscuit_wiped: {
+    text: ['Sir Biscuit blinks, and forgets the last day: the whistle, the fright, the running away. He looks round the bell chamber, puzzled, as if wondering how he got up there, then sees you and trots over to have his ears scratched.'],
+    choices: [{ text: 'Pick him up', to: 'caught' }],
+  },
+  biscuit_confesses: {
+    on: [{ flag: 'towerDone' }],
+    text: ['Your god scorns you. Instead of forgetting, Sir Biscuit relives his most recent sins in front of you: a cushion, a sausage, a postman. He is not sorry about any of them. When it’s over, he looks at you, insulted that you watched, and blinks away.'],
+    choices: [{ text: 'Back down to the square', to: 'square' }],
+  },
+  grudge_confesses: {
+    on: [{ flag: 'grudgeDone' }, { flag: 'knowsHabits' }],
+    text: ['Mrs Grudge’s needles stop. She relives her most recent sins, and you watch them with her: Mrs Grudge, at dawn, creeping up to the show tent with a silver dog whistle, and blowing it in Sir Biscuit’s ear. When it’s over she is quite pale. She takes the whistle off the grey dog’s collar and gives it to you without a word.'],
+    choices: [{ text: 'Take the whistle', to: 'whistle' }],
+  },
+  grudge_wiped: {
+    text: ['Your god scorns you, and wipes the last twenty-four hours from Mrs Grudge’s mind, along with any guilt. She looks up at you, cheerful and untroubled. “Can I help you, dear?” she says, and goes on knitting.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
   },
 };
 

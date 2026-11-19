@@ -34,6 +34,8 @@ export const SECTIONS = {
       { text: 'Haul yourself up on the builders’ hoist', test: { stat: 'Str', dd: 10, skill: ['athletics', 'bruteforce'], mods: [{ if: { item: 'rope' }, dd: 6 }] }, pass: 'clouds', fail: 'climb_fall' },
       { text: 'Hammer in iron spikes as footholds where the ladders are missing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'spikes' } },
       { text: 'Just climb', test: { stat: 'Str', dd: 12, skill: ['athletics'], profs: ['Woodcutter'], why: 'you climb for a living' }, pass: 'clouds', fail: 'climb_fall' },
+      { text: 'Cast Ascend, and float up through the cloud', cast: 'ascend', pass: 'clouds', fail: 'climb', critFail: 'climb_descend' },
+      { text: 'Cast Perambulate, and walk up the side of the Spire', cast: 'perambulate', pass: 'clouds', fail: 'climb' },
     ],
   },
   climb_fall: {
@@ -50,7 +52,7 @@ export const SECTIONS = {
       { text: 'Throw it your rations', to: 'hound_fed', if: { item: 'rations' }, show: { notFlag: 'houndGone' } },
       { text: 'Blow it away with your bellows', to: 'hound_blown', if: { item: 'bellows' }, show: { notFlag: 'houndGone' } },
       { text: 'Creep past it in the fog', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'], profs: ['Hunter'], why: 'you know how to stalk past a dog' }, pass: 'castle', fail: 'hound_fight', show: { notFlag: 'houndGone' } },
-      { text: 'Cast Shroud and walk past it in your own darkness', cast: 'shroud', pass: 'castle', fail: 'hound_fight', show: { notFlag: 'houndGone' } },
+      { text: 'Cast Shroud and walk past it in your own darkness', cast: 'shroud', pass: 'castle', fail: 'hound_fight', critFail: 'hound_lit', show: { notFlag: 'houndGone' } },
       { text: 'Fight it', to: 'hound_fight', show: { notFlag: 'houndGone' } },
       { text: 'Go into the castle', to: 'castle', show: { flag: 'houndGone' } },
     ],
@@ -65,7 +67,7 @@ export const SECTIONS = {
     text: ['You pump your bellows at it. It is made of cloud. It comes apart in a long grey streamer and blows away over the castle wall, whimpering.'],
     choices: [{ text: 'Go into the castle', to: 'castle' }],
   },
-  hound_fight: {
+  hound_fight: { outdoors: true,
     text: ['The cloud hound comes at you out of the fog, all teeth.'],
     fight: { monsters: [hound], win: 'hound_down', flee: { to: 'climb', label: 'Drop back down through the cloud' } },
   },
@@ -82,6 +84,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Climb the mantelpiece', test: { stat: 'Str', dd: 10, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 6 }] }, pass: 'mantel', fail: 'mantel_fall', show: { notFlag: 'longshanksFree' } },
       { text: 'Throw your voice so the giant thinks someone’s at the door', cast: 'voice', pass: 'giant_out', fail: 'giant_wakes', show: { notFlag: 'giantOut' } },
+      { text: 'Cast Freeze time, and climb the mantelpiece while the world stands still', cast: 'freeze', pass: 'mantel', fail: 'mantel_fall', show: { notFlag: 'longshanksFree' } },
+      { text: 'Cast Humble on Lord Nimbus while he sleeps', cast: 'humble', pass: 'giant_humbled', fail: 'giant_wakes', critFail: 'giant_emboldened', show: { notFlag: 'giantOut' } },
       { text: 'Get out, with Lord Longshanks', to: 'escape', show: { flag: 'longshanksFree' } },
       { text: 'Give up and go back down', to: 'escape', show: { notFlag: 'longshanksFree' } },
     ],
@@ -105,6 +109,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Pick the birdcage lock', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'freed', fail: 'harp_screams', if: { item: 'tools' } },
       { text: 'Melt the birdcage lock with acid', to: 'freed', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Cast Knock on the birdcage lock', cast: 'knock', pass: 'freed', fail: 'harp_screams' },
       { text: 'Bend the bars apart', test: { stat: 'Str', dd: 10, skill: ['bruteforce'], mods: [{ if: { item: 'prybar' }, dd: 6 }] }, pass: 'freed', fail: 'harp_screams' },
       { text: 'Steal the harp as well', to: 'harp', show: { notFlag: 'harp' } },
     ],
@@ -114,6 +119,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Stuff your glue in its strings', to: 'harp_got', if: { item: 'glue' }, effects: [{ lose: 'glue' }] },
       { text: 'Wrap it in your tent before it can scream', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'harp_got', fail: 'harp_screams', if: { item: 'tent' } },
+      { text: 'Cast Silence on it', cast: 'silence', pass: 'harp_got', fail: 'harp_screams', critFail: 'harp_tongues' },
       { text: 'Grab it and hope', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'harp_got', fail: 'harp_screams' },
       { text: 'Leave it', to: 'mantel' },
     ],
@@ -139,6 +145,8 @@ export const SECTIONS = {
     text: ['Lord Nimbus looks down at you from ninety feet up, rubbing his eyes. “ANOTHER TINY,” he says, delighted, and reaches for you.'],
     choices: [
       { text: 'Tell him you’ve come to buy Lord Longshanks', test: { stat: 'Cha', dd: 10, skill: ['social', 'lying'], profs: ['Envoy'], why: 'you can deal with anybody' }, pass: 'bought', fail: 'giant_fight' },
+      { text: 'Cast Tongues on yourself, and haggle with him in Cloud Giant', cast: 'tongues', pass: 'bought', fail: 'giant_fight', critFail: 'giant_silent' },
+      { text: 'Cast Command on him: “Put us down”', cast: 'command', pass: 'giant_commanded', fail: 'giant_fight' },
       { text: 'Throw pocket sand in his eyes and run', to: 'escape', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }] },
       { text: 'Fight him', to: 'giant_fight' },
       { text: 'Run', to: 'escape' },
@@ -169,6 +177,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Hack through the top of the scaffolding behind you', test: { stat: 'Str', dd: 8, skill: ['bruteforce'], mods: [{ if: { anyItem: ['pick', 'prybar'] }, dd: 4 }] }, pass: 'down', fail: 'hand', show: { none: [{ flag: 'bought' }, { flag: 'giantDown' }, { flag: 'giantOut' }] } },
       { text: 'Slide down the hoist rope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'down', fail: 'hand', show: { none: [{ flag: 'bought' }, { flag: 'giantDown' }, { flag: 'giantOut' }] } },
+      { text: 'Cast Ascend, and float down out of reach', cast: 'ascend', pass: 'down', fail: 'hand', critFail: 'escape_descend', show: { none: [{ flag: 'bought' }, { flag: 'giantDown' }, { flag: 'giantOut' }] } },
       { text: 'Climb down', to: 'down', show: { any: [{ flag: 'bought' }, { flag: 'giantDown' }, { flag: 'giantOut' }] } },
     ],
   },
@@ -189,6 +198,42 @@ export const SECTIONS = {
       c.flags.sold_harp ? 'The golden harp sings for the duke every night, and every night it sings about you, and none of it is complimentary.' : '',
       `You come down from the clouds with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),
+  },
+  hound_lit: {
+    text: ['Your god scorns you. Instead of darkness, light pours out of your sleeves, and you walk into the fog glowing like a lighthouse. The cloud hound lifts its head, and its tail, and comes to see.'],
+    choices: [{ text: 'Fight it', to: 'hound_fight' }],
+  },
+  climb_descend: {
+    on: [{ damage: '6d6', from: 'The fall' }],
+    text: ['Your god scorns you. Instead of floating up, you are launched up past the cloud, past the castle and into the thin blue air where the stars show by day, and then you come down again, all the way, onto the scaffolding.'],
+    choices: [{ text: 'Climb again', to: 'climb' }],
+  },
+  giant_humbled: {
+    on: [{ flag: 'bought' }, { flag: 'longshanksFree' }],
+    text: ['Lord Nimbus shrinks, in his sleep, to a quarter of his size, which is still twenty-two feet. He wakes up, looks down at himself, and then at Lord Longshanks in the birdcage, who is laughing at him. He doesn’t find it funny. He opens the cage with one finger and drops the Lord into your arms. “TAKE HIM,” he says, in a much smaller voice. “AND DON’T TELL ANYONE.”'],
+    choices: [{ text: 'Get down and get out', to: 'escape' }],
+  },
+  giant_emboldened: {
+    text: ['Your god scorns you. Instead of shrinking, Lord Nimbus grows to twice his size, in his sleep, and goes through the roof of his own castle. That wakes him.'],
+    choices: [{ text: 'Brace yourself', to: 'giant_wakes' }],
+  },
+  harp_tongues: {
+    text: ['Your god scorns you. Instead of falling silent, the golden harp can suddenly speak every language in the world, and does, at the top of its voice, beginning with Cloud Giant: “THIEF!”'],
+    choices: [{ text: 'Face the music', to: 'harp_screams' }],
+  },
+  giant_silent: {
+    text: ['Your god scorns you. Instead of Cloud Giant, you can’t make a sound at all. You mime an offer. Lord Nimbus watches with interest, and decides it is a dance, and that he would like to join in.'],
+    choices: [{ text: 'Brace yourself', to: 'giant_fight' }],
+  },
+  escape_descend: {
+    on: [{ damage: '6d6', from: 'The fall' }],
+    text: ['Your god scorns you. Instead of floating down, you are flung up out of the cloud like a cork, high enough to see the curve of the world, and then you come down the whole three miles at once, onto a haystack, which saves your life and nothing else.'],
+    choices: [{ text: 'Get up', to: 'down' }],
+  },
+  giant_commanded: {
+    on: [{ flag: 'longshanksFree' }, { flag: 'bought' }],
+    text: ['“Put us down,” you say. Lord Nimbus’s hand stops halfway to you. Then, slowly, as if somebody else were working it, it opens the birdcage with one finger, lifts Lord Longshanks out, and sets him down gently on the floor beside you. Lord Nimbus looks at his hand in astonishment. “HUH,” he says, and sits back down.'],
+    choices: [{ text: 'Get down and get out', to: 'escape' }],
   },
 };
 

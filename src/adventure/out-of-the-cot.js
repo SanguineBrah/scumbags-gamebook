@@ -39,7 +39,10 @@ export const SECTIONS = {
       { text: 'Blow your whistle at the baby', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'babyFollowing' } },
       { text: 'Give the baby the milk', to: 'milk_given', if: { flag: 'milk', flagText: 'a churn of milk' }, show: { notFlag: 'babyFollowing' } },
       { text: 'Give the baby the bell', to: 'bell_given', if: { flag: 'bell', flagText: 'the church bell' }, show: { notFlag: 'babyFollowing' } },
-      { text: 'Cast Abundance and set out a feast for it', cast: 'abundance', pass: 'feast', fail: 'grabbed', show: { notFlag: 'babyFollowing' } },
+      { text: 'Cast Abundance and set out a feast for it', cast: 'abundance', pass: 'feast', fail: 'grabbed', critFail: 'square_locusts', show: { notFlag: 'babyFollowing' } },
+      { text: 'Cast Command on the baby: “Come with me”', cast: 'command', pass: 'baby_commanded', fail: 'grabbed', show: { notFlag: 'babyFollowing' } },
+      { text: 'Cast Humble on the baby, and shrink it to a size you can manage', cast: 'humble', pass: 'baby_humbled', fail: 'grabbed', critFail: 'baby_emboldened', show: { notFlag: 'babyFollowing' } },
+      { text: 'Cast Embolden on yourself, and go and play with it as an equal', cast: 'embolden', pass: 'playmate', fail: 'grabbed', critFail: 'tiny_toy', show: { notFlag: 'babyFollowing' } },
       { text: 'Walk up to it and introduce yourself', to: 'grabbed', show: { notFlag: 'babyFollowing' } },
       { text: 'Lead the baby out of town and up the hill', to: 'hill_road', show: { flag: 'babyFollowing' } },
       { text: 'Give up and leave', to: 'home' },
@@ -118,7 +121,7 @@ export const SECTIONS = {
     text: ['The baby giggles, a noise like a landslide, and puts you down very gently. It wants to play now. It will follow you anywhere.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  baby_fight: {
+  baby_fight: { outdoors: true,
     text: ['The baby decides you are a squeaky toy, and squeezes.'],
     fight: {
       monsters: [baby], win: 'baby_cries', flee: { to: 'square', label: 'Squirm free and run' },
@@ -144,6 +147,7 @@ export const SECTIONS = {
       { text: 'Pour acid on the net while his back is turned', to: 'sabotaged', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
       { text: 'Spike the harpoon gun', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'spikes' } },
       { text: 'Glue the harpoon into the barrel', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'glue' } },
+      { text: 'Cast Invisibility on yourself, and wreck his gear while he’s looking right at it', cast: 'invisibility', pass: 'sabotaged', fail: 'snare_fight', show: { notFlag: 'snareFixed' } },
       { text: 'Tell him the council has cancelled the job', test: { stat: 'Cha', dd: 10, skill: ['lying'] }, pass: 'snare_leaves', fail: 'snare_fight' },
       { text: 'Back to the square', to: 'square' },
     ],
@@ -158,7 +162,7 @@ export const SECTIONS = {
     text: ['Captain Snare reads the letter you wave at him, which is a laundry list, very quickly. He packs up his net with a face like thunder and leaves, grumbling about councils.'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
-  snare_fight: {
+  snare_fight: { outdoors: true,
     text: ['Captain Snare catches you at it. “Giant-lover,” he says, and nods to the biggest of his men, who picks up a boathook.'],
     fight: { monsters: [snareman], distance: 1, win: 'snare_beaten', flee: { to: 'square', label: 'Run back to the square' } },
   },
@@ -185,7 +189,7 @@ export const SECTIONS = {
   },
   snare_fight_road: {
     text: ['Captain Snare swings his harpoon gun towards you.'],
-    fight: { monsters: [snare], distance: 1, win: 'arrive', flee: { to: 'mother_up', label: 'Shout for Mother' } },
+    fight: { outdoors: true, monsters: [snare], distance: 1, win: 'arrive', flee: { to: 'mother_up', label: 'Shout for Mother' } },
   },
   arrive: {
     on: [{ flag: 'delivered' }],
@@ -217,6 +221,33 @@ export const SECTIONS = {
           : 'The baby crawls up the last of the hill into Mother’s arms, and she squashes it to her apron and sobs. Lower Hogback is a bit flatter than it was, but standing. The church never gets its spire back. The baby keeps it.',
       `You leave Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  square_locusts: {
+    text: ['Your god scorns you. Instead of a feast, a swarm of locusts pours out over the square. The baby grabs at them, misses, grabs again, and gets you instead.'],
+    choices: [{ text: 'Wriggle', to: 'grabbed' }],
+  },
+  baby_commanded: {
+    on: [{ flag: 'babyFollowing' }],
+    text: ['“Come with me,” you say. The baby stops chewing the spire, looks at you, and comes, crawling across the square after you, flattening a fruit stall, chuckling. It has never done what anybody told it before, and it seems to find it very funny.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  baby_humbled: {
+    on: [{ flag: 'babyFollowing' }],
+    text: ['The baby shrinks to a quarter of its size, which makes it about as big as a carthorse. It looks at its hands, astonished, and then at you, now nearly its own height, and holds them up to be carried. You can’t carry it. But it toddles after you, holding your sleeve.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  baby_emboldened: {
+    text: ['Your god scorns you. Instead of shrinking, the baby grows to twice its size, and finds this very exciting, and then very frightening.'],
+    choices: [{ text: 'Duck', to: 'baby_cries' }],
+  },
+  playmate: {
+    on: [{ flag: 'babyFollowing' }],
+    text: ['You grow to twice your size, which is still small for a giant, and sit down in the square opposite the baby. It looks at you with enormous interest. You pull a face. It laughs, a noise like a rockfall, and when you get up and walk off, it crawls after you, to see what you’ll do next.'],
+    choices: [{ text: 'Back to the square', to: 'square' }],
+  },
+  tiny_toy: {
+    text: ['Your god scorns you. Instead of growing, you shrink to a quarter of your size. The baby sees you at once. You are the best toy it has ever seen.'],
+    choices: [{ text: 'Oh no', to: 'grabbed' }],
   },
 };
 

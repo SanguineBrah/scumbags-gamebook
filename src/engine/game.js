@@ -3,11 +3,13 @@
 import { Rng, rollExpr } from '../rules/dice.js';
 import { statTest, successChance } from '../rules/tests.js';
 import { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } from '../rules/data.js';
-import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots } from '../rules/character.js';
-import { check, hasItem, lightSource, itemName } from './conditions.js';
+import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots, knownSpells } from '../rules/character.js';
+import { check, hasItem, lightSource, itemName, canCast } from './conditions.js';
 import { startFight, act, actions } from './combat.js';
 
-const OPPOSITE = { light: 'Shroud', shroud: 'Divine light', abundance: 'Famine', famine: 'Abundance', bless: 'Pollute', pollute: 'Bless' };
+
+// Spells you can cast from the adventure sheet. Divine opposites (on a critical failure) are handled in sheetEffect.
+const SHEET_SPELLS = ['light', 'abundance', 'heal', 'vivify', 'hysteria', 'consecrate', 'conjuration'];
 
 export class Game {
   constructor(adventure, seed) {
@@ -165,6 +167,7 @@ export class Game {
     if (this.result) return [{ i: 'result', label: 'Carry on', to: this.result.to, num: this.number(this.result.to), ok: true }];
     return (s.choices || []).map((ch, i) => {
       if (ch.show && !check(c, ch.show).ok) return null;   // `show`: only listed when the condition holds
+      if (ch.cast && !knownSpells(c).some((k) => k.id === ch.cast)) return null;   // spells you don't know aren't offered
       const r = check(c, ch.cast ? { ...ch.if, spell: ch.cast } : ch.if);
       let to = ch.to;
       const num = to ? this.number(to) : null;
@@ -244,10 +247,10 @@ export class Game {
     let to = r.success ? ch.pass : ch.fail;
     if (ch.cast) {
       const sp = SPELLS[ch.cast];
-      if (r.success && r.ddRoll >= 4) { c.slots[sp.lvl] = false; lines.push('You rolled 4 or more on the difficulty die: the spell slot is spent.'); }
+      if (r.success && r.ddRoll >= 4) { c.slots[sp.lvl] = false; lines.push(`You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
       if (r.critFail) {
-        if (sp.list === 'divine') lines.push(`Your god scorns you and casts ${OPPOSITE[ch.cast]} instead.`);
-        else { const d = rng.die(4); lines.push(`Overwhelmed by ætheric currents, you take ${d} damage.`); this.damage(d, 'The backlash'); }
+        if (sp.list === 'divine') lines.push(`Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`);
+        else { const d = rng.roll(sp.lvl, 4); lines.push(`Overwhelmed by ætheric currents, you take ${sp.lvl}d4 damage.`); this.damage(d, 'The backlash'); }
       }
     }
     if (ch.turn && r.success && c.alignment === 'chaos' && ch.chaos) to = ch.chaos;
@@ -269,6 +272,54 @@ export class Game {
     c.hp = Math.min(c.maxHp, c.hp + h);
     return `Healer’s kit (d6 Wis test${isSkilled(c, 'medicine') ? ', skilled' : ''}): ${r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ')} — ${r.success ? `+${h} HP` : 'you only make it worse-looking'}. Once per day.`;
   }
+  /** Spells you can cast from the adventure sheet, outside fights. */
+  sheetSpells() {
+    const c = this.c; if (this.fight || this.dead || this.result) return [];
+    return SHEET_SPELLS.filter((id) => canCast(c, id) && (!['heal', 'vivify', 'hysteria'].includes(id) || c.hp < c.maxHp) && !(id === 'consecrate' && c.weapon.magic))
+      .map((id) => ({ id, name: SPELLS[id].name, lvl: SPELLS[id].lvl, text: SPELLS[id].text }));
+  }
+  /** Cast a spell from the adventure sheet. extra: the mundane item to conjure. Returns a line for the sheet. */
+  castFromSheet(id, extra) {
+    const c = this.c; const sp = SPELLS[id];
+    if (!this.sheetSpells().some((s) => s.id === id)) return null;
+    const stat = sp.list === 'divine' ? 'Wis' : 'Int';
+    const r = statTest(this.rng, { stat: c.stats[stat], dd: this.dark ? Math.max(sp.dd, DARK_DIE) : sp.dd, skilled: isSkilled(c, `cast:${sp.list}`), forceRoll: true });
+    let out = `Cast ${sp.name} (${stat} ${c.stats[stat]} vs d20+d${sp.dd}): ${r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ')} — `;
+    if (r.success) {
+      if (r.ddRoll >= 4) { c.slots[sp.lvl] = false; out += `your level ${sp.lvl} slot is spent. `; }
+      return out + this.sheetEffect(id, extra);
+    }
+    if (r.critFail && sp.list === 'divine') return `${out}critical failure. Your god scorns you, and casts ${SPELLS[sp.opp].name} instead. ${this.sheetEffect(sp.opp, extra)}`;
+    if (r.critFail) { const d = this.rng.roll(sp.lvl, 4); this.damage(d, 'The backlash'); return `${out}critical failure. Overwhelmed by ætheric currents, you take ${d} damage.`; }
+    return `${out}nothing happens.`;
+  }
+  sheetEffect(id, extra) {
+    const c = this.c; const lvl = c.level;
+    const heal = (h) => { c.hp = Math.min(c.maxHp, c.hp + h); return `+${h} HP (${c.hp}/${c.maxHp}).`; };
+    const hurt = (h, from) => { this.damage(h, from); return this.dead ? 'It kills you.' : ''; };
+    switch (id) {
+      case 'light': c.flags.lightCharges = (c.flags.lightCharges || 0) + 4; return 'Your holy symbol glows. It will light the next four dark places you enter.';
+      case 'shroud': { const had = c.flags.lightCharges; c.flags.lightCharges = 0; return `Your holy symbol pours out darkness instead${had ? ', and puts out your divine light' : ''}. It takes a while to clear.`; }
+      case 'abundance': if (this.giveQuiet('rations')) return 'A day’s rations appear in your pack.'; return 'A day’s rations appear, and you have nowhere to put them.';
+      case 'famine': { const had = hasItem(c, 'rations'); if (had) this.take('rations'); return `A swarm of locusts bursts out of your pack${had ? ' and eats your rations' : ''}, and leaves.`; }
+      case 'heal': return `You heal ${heal(this.rng.roll(2, 8) + lvl)}`;
+      case 'harm': return `It hurts. ${hurt(this.rng.roll(2, 8) + lvl, 'Harm')}`;
+      case 'vivify': return `You heal ${heal(this.rng.roll(3, 8) + lvl)}`;
+      case 'afflict': return `It hurts a great deal. ${hurt(this.rng.roll(3, 8) + lvl, 'Afflict')}`;
+      case 'hysteria': return `You laugh until you cry, and heal ${heal(this.rng.roll(2, 6) + lvl)}`;
+      case 'dirge': return `A dreadful singing starts up inside your head. ${hurt(this.rng.roll(2, 6) + lvl, 'Dirge')}`;
+      case 'consecrate': c.weapon = { ...c.weapon, magic: true, plus: 1, name: `Consecrated ${c.weapon.name.toLowerCase()}` }; return `Your weapon shines: it is magic now (+1).`;
+      case 'ophidia': { const was = c.weapon.name.toLowerCase(); c.weapon = { id: 'dagger', name: 'Dagger', weight: 1, ranged: false }; return `Your ${was} turns into a snake, bites you on the thumb and slithers off. You’ll have to make do with a dagger.`; }
+      case 'conjuration': {
+        const id2 = extra && MUNDANE[extra] ? extra : null;
+        if (!id2) return 'You conjure nothing in particular.';
+        return this.giveQuiet(id2) ? `A ${MUNDANE[id2].name.toLowerCase()} pops into existence in your hand.` : `A ${MUNDANE[id2].name.toLowerCase()} pops into existence, and you have no room for it.`;
+      }
+      default: return '';
+    }
+  }
+  giveQuiet(id) { const c = this.c; if (c.mundane.length >= MUNDANE_LIMIT) return false; c.mundane.push(makeItem(id)); return true; }
+
   canDrink() { return !this.fight && hasItem(this.c, 'potion') && this.c.hp < this.c.maxHp && !this.dead; }
   drinkPotion() {
     const c = this.c; if (!this.canDrink()) return null;

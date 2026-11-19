@@ -76,6 +76,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Give it your rations', to: 'oats', if: { item: 'rations' }, show: { notFlag: 'fed' } },
       { text: 'Dress the old wound under its armour with your healer’s kit', to: 'dressed', if: { item: 'healerskit' }, show: { notFlag: 'fed' } },
+      { text: 'Cast Heal on the old wound under its armour', cast: 'heal', pass: 'healed', fail: 'stable', critFail: 'harmed', show: { notFlag: 'fed' } },
       { text: 'Unbuckle its armour while it eats', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
       { text: 'Show it its reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrored' } },
       { text: 'Glue its shoes to the stable floor', to: 'glued', if: { item: 'glue' }, show: { notFlag: 'glued' } },
@@ -123,13 +124,16 @@ export const SECTIONS = {
       { text: 'Strew caltrops along its side of the tilt', to: 'caltrops', if: { item: 'caltrops' } },
       { text: 'Blow the cavalry retreat on your whistle as it charges', to: 'retreat', if: { item: 'whistle' }, show: { notFlag: 'retreated' } },
       { text: 'Lasso it from the barrier and bring it down', test: { stat: 'Str', dd: 10, skill: ['athletics'], profs: ['Hunter'], why: 'you’ve roped animals before' }, pass: 'roped', fail: 'trampled', if: { anyItem: ['rope', 'chain'] } },
+      { text: 'Cast Trip as it charges past', cast: 'trip', pass: 'roped_trip', fail: 'trampled' },
+      { text: 'Cast Pacify on it, and lead it off the lists', cast: 'pacify', pass: 'pacified', fail: 'lists', critFail: 'galvanised_horse' },
+      { text: 'Cast Galvanise on yourself, then joust', cast: 'galvanise', pass: 'joust_galv', fail: 'joust', critFail: 'pacified_self', show: { notFlag: 'galvanised' } },
       { text: 'Back to the stables', to: 'stable' },
       { text: 'Give up and leave', to: 'prize' },
     ],
   },
   joust: {
     text: (c) => [`You mount Bramble, take the lance and lower your visor, which doesn’t fit. The black horse bows. Then it charges${c.flags.armourOff ? ', without its armour, a little slower than you expected' : ''}.`],
-    choices: [{ text: 'Charge', test: { stat: 'Str', dd: 12, skill: ['attack:melee'], profs: ['Sellsword', 'Pit fighter', 'Bodyguard'], why: 'you know how to hit something coming at you', mods: [{ if: { flag: 'armourOff' }, dd: 8 }, { if: { flag: 'retreated' }, dd: 8 }] }, pass: 'joust_won', fail: 'unhorsed' }],
+    choices: [{ text: 'Charge', test: { stat: 'Str', dd: 12, skill: ['attack:melee'], profs: ['Sellsword', 'Pit fighter', 'Bodyguard'], why: 'you know how to hit something coming at you', mods: [{ if: { flag: 'armourOff' }, dd: 8 }, { if: { flag: 'retreated' }, dd: 8 }, { if: { flag: 'galvanised' }, dd: 8 }] }, pass: 'joust_won', fail: 'unhorsed' }],
   },
   unhorsed: {
     on: [{ damage: '2d6', from: 'The lance' }],
@@ -161,7 +165,7 @@ export const SECTIONS = {
     text: ['The rope tightens, and the black horse drags you the length of the lists, through the barrier and into the pie stall.'],
     choices: [{ text: 'Get up', to: 'lists' }],
   },
-  fight: {
+  fight: { outdoors: true,
     text: ['The black horse squares up to you, bows, and charges.'],
     fight: {
       monsters: [{ ...knightmare }], win: 'horse_down', flee: { to: 'lists', label: 'Dive over the barrier' },
@@ -183,6 +187,39 @@ export const SECTIONS = {
             : 'You leave the tourney with nothing. Behind you, the black horse wins again.',
       `You leave Clatterby with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  healed: {
+    on: [{ flag: 'fed' }],
+    text: ['Under the edge of its shoulder plate, the black horse has an old wound that has never healed properly, rubbed raw by forty years of armour. You lay a hand on it and pray, and the wound closes over, clean. The horse stands very still, and afterwards it lowers its head and leans it against your chest for a moment.'],
+    choices: [{ text: 'Back to the stall', to: 'stable' }],
+  },
+  harmed: {
+    on: [{ damage: 'd8', from: 'A warhorse' }],
+    text: ['Your god scorns you. Instead of closing, the old wound under the shoulder plate tears open. The black horse kicks you across the stall, once, and then stands with its head down, trembling, in a way that is worse than the kick.'],
+    choices: [{ text: 'Get up', to: 'stable' }],
+  },
+  roped_trip: {
+    on: [{ flag: 'roped' }],
+    text: ['The black horse’s forelegs fold mid-charge. It goes down on its knees in a crash of plate and slides the last ten yards of the lists on its breastplate, sparking. It doesn’t get up. It lies there, breathing hard, an old horse in heavy armour.'],
+    choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
+  },
+  pacified: {
+    on: [{ flag: 'roped' }],
+    text: ['The black horse stops halfway through its charge, lowers its head and stands there, at peace, for the first time in forty years. You take its bridle and lead it off the lists. It comes as quietly as a pony.'],
+    choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
+  },
+  galvanised_horse: {
+    text: ['Your god scorns you. Instead of peace, the black horse is filled with unholy vigour. Steam comes out of its visor. It finishes its charge, turns at the end of the lists, and comes back for you on foot.'],
+    fight: { outdoors: true, monsters: [{ ...knightmare, name: 'The Knightmare (galvanised)', feats: [...(knightmare.feats || []), 'dealD6'], note: `${knightmare.note}; galvanised: +d6 damage` }], win: 'horse_down', flee: { to: 'stable', label: 'Vault the barrier and run' } },
+  },
+  joust_galv: {
+    on: [{ flag: 'galvanised' }],
+    text: ['Unholy vigour floods your arms. Your lance feels like a twig.'],
+    choices: [{ text: 'Joust', to: 'joust' }],
+  },
+  pacified_self: {
+    text: ['Your god scorns you. Instead of vigour, a great peace comes over you. You look at the lance, and the horse, and the crowd, and can’t think why anyone would want to knock anyone else off anything. It takes you half an hour to get over it.'],
+    choices: [{ text: 'Back to the lists', to: 'lists' }],
   },
 };
 

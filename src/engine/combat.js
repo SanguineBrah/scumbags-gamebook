@@ -2,9 +2,9 @@
 // The UI calls act(fight, action); every roll is written to fight.log so the player can see the dice.
 import { statTest } from '../rules/tests.js';
 import { rollExpr } from '../rules/dice.js';
-import { MONSTER_DD, MELEE_DIE, RANGED_DIE, DARK_DIE, BANDS } from '../rules/data.js';
-import { isSkilled, hasFeature, weaponPenalty, armourPenalty, weaponDamageDie, maxAp, magicType } from '../rules/character.js';
-import { hasItem, check } from './conditions.js';
+import { MONSTER_DD, MELEE_DIE, RANGED_DIE, DARK_DIE, BANDS, SPELLS, MUNDANE_LIMIT } from '../rules/data.js';
+import { isSkilled, hasFeature, weaponPenalty, armourPenalty, weaponDamageDie, maxAp, makeItem, magicType } from '../rules/character.js';
+import { hasItem, check, canCast } from './conditions.js';
 
 let uid = 1;
 export function makeMonster(rng, def) {
@@ -86,9 +86,10 @@ function playerAttack(g, f, m, opts = {}) {
   if (has(m, 'exposed') && f.distance === 0 && hit && !ranged) { crit = true; note(f, `The ${m.name}’s back is exposed: a critical hit.`); }
   if (!ranged && (m.prone || m.dormant > 0) && !hit) { hit = true; note(f, `The ${m.name} is down: melee attacks against prone opponents always hit.`); }
   if (!hit) { note(f, 'You miss.'); return false; }
-  let dmg = rng.die(weaponDamageDie(w)) + c.level;
+  let dmg = rng.die(weaponDamageDie(w)) + c.level + ((w && w.plus) || 0);
+  if (f.galv > 0) { const x = rng.die(6); dmg += x; note(f, `Galvanised: +${x} damage.`); }
   if (crit) dmg *= hasFeature(c, 'tripleCrit') ? 3 : 2;
-  hurtMonster(g, f, m, dmg, { crit, pulp: m.dormant > 0 });
+  hurtMonster(g, f, m, dmg, { crit, pulp: m.dormant > 0, magicWeapon: !!(w && w.magic) });
   if (!alive(m) && !m.dormant && hasFeature(c, 'cleave') && !opts.free) {
     const next = f.monsters.find(alive);
     if (next) { note(f, 'Sellsword: a free attack after slaying an opponent.'); playerAttack(g, f, next, { ...opts, free: true }); }
@@ -102,8 +103,10 @@ function playerAttack(g, f, m, opts = {}) {
 
 export function hurtMonster(g, f, m, dmg, o = {}) {
   if (o.magic && has(m, 'magicImmune')) { note(f, `The ${m.name} is immune to magic.`); return; }
-  if (has(m, 'ghostly') && !o.magic && !o.holy && !g.c.flags.blessedWeapon) { note(f, `It passes straight through the ${m.name}. It ignores non-magical damage.`); return; }
+  if (f.sanctMon > 0) { note(f, `It stops dead against the wall of the sanctuary around the ${m.name}.`); return; }
+  if (has(m, 'ghostly') && !o.magic && !o.holy && !o.magicWeapon && !g.c.flags.blessedWeapon) { note(f, `It passes straight through the ${m.name}. It ignores non-magical damage.`); return; }
   if (has(m, 'takeD6') && !o.noBonus) { const x = g.rng.die(6); dmg += x; note(f, `The ${m.name} receives +${x} damage.`); }
+  if (m.enfeebled) { const x = g.rng.die(8); dmg += x; note(f, `Enfeebled: the ${m.name} receives +${x} damage.`); }
   if (m.ap > 0) { const a = Math.min(m.ap, dmg); m.ap -= a; dmg -= a; note(f, `Its armour soaks up ${a}${m.ap ? ` (${m.ap} AP left)` : ' — the armour is wrecked'}.`); }
   m.hp -= dmg;
   note(f, `${dmg} damage to the ${m.name}${m.hp > 0 ? ` (${m.hp}/${m.maxHp} HP)` : ''}.`, 'hit');
@@ -146,6 +149,7 @@ function monsterAttack(g, f, m) {
   if (has(m, 'handgun') && rng.chance(1, 3)) { note(f, `The ${m.name} fumbles with the safety catch.`); return; }
   if (has(m, 'noEngaged') && f.distance === 0) { note(f, `You’re too close for the ${m.name} to do anything but shout.`); return; }
   const melee = m.range === 'engaged';
+  if (!melee && f.chosen > 0) { note(f, `The ${m.name}’s attack swerves round you. You are Chosen.`); return; }
   let crit = false;
   if (c.prone && melee) { note(f, 'You’re on the floor: the attack can’t miss.'); }
   else {
@@ -160,6 +164,7 @@ function monsterAttack(g, f, m) {
   }
   let dmg = m.dmg ? rollExpr(rng, m.dmg, { lvl: m.lvl }) : rng.die(m.dd) + m.lvl;
   if (has(m, 'dealD6')) dmg += rng.die(6);
+  if (m.galv > 0) { const x = rng.die(6); dmg += x; note(f, `Galvanised, the ${m.name} deals +${x} damage.`, 'bad'); }
   if (crit) dmg *= 2;
   hurtPlayer(g, f, dmg, m.name);
   if (m.onHit && c.hp > 0) {
@@ -189,7 +194,13 @@ function monsterAttack(g, f, m) {
 }
 
 function monstersTurn(g, f) {
-  const { c } = g;
+  const { c, rng } = g;
+  if (f.fireMon > 0) { f.fireMon--; for (const m of f.monsters) if (alive(m)) { note(f, `Hellfire burns the ${m.name}.`); hurtMonster(g, f, m, rng.die(8), { magic: true, fire: true, noBonus: true }); } }
+  if (f.fireSelf > 0) { f.fireSelf--; hurtPlayer(g, f, rng.die(8), 'hellfire around you'); if (f.over) return; }
+  if (!active(f).length) return;
+  if (f.sanctMon > 0) { f.sanctMon--; note(f, `The monsters sit inside their sanctuary${f.sanctMon ? '' : ', and then the walls fade'}.`); return; }
+  if (f.sanctSelf > 0) { f.sanctSelf--; note(f, `Nothing can reach you inside your sanctuary${f.sanctSelf ? '' : '. Then its walls fade'}.`); return; }
+  if (f.chosen > 0) f.chosen--;
   for (const m of f.monsters) {
     if (f.over) return;
     if (m.dormant > 0) {
@@ -198,7 +209,7 @@ function monstersTurn(g, f) {
     }
     if (!alive(m)) continue;
     if (m.unaware) continue;
-    if (m.stunned > 0) { m.stunned--; note(f, `The ${m.name} loses its turn.`); continue; }
+    if (m.stunned > 0) { m.stunned--; note(f, m.dancing ? `The ${m.name} dances.` : `The ${m.name} loses its turn.`); if (!m.stunned) m.dancing = false; continue; }
     if (m.prone) { m.prone = false; }
     if (has(m, 'approval')) { m.tick ^= 1; if (m.tick) { note(f, `The ${m.name} waits for the action to be approved.`); continue; } }
     if (m.range === 'engaged' && f.distance > 0) {
@@ -213,7 +224,9 @@ function monstersTurn(g, f) {
       continue;
     }
     for (let i = 0; i < attacksOf(m) && !f.over; i++) monsterAttack(g, f, m);
+    if (m.galv > 0) m.galv--;
     if (has(m, 'topple')) { m.prone = true; note(f, `The ${m.name} falls over.`); }
+    if (m.greased > 0 && alive(m)) { m.greased--; if (!has(m, 'flies') && rng.chance(1, 2)) { m.prone = true; note(f, `The ${m.name} slips on the grease and falls over.`, 'good'); } }
   }
   for (const m of f.monsters) if (alive(m) && m.regen && !(m.regenStop && c.flags[m.regenStop])) {
     const h = Math.min(m.regen, m.maxHp - m.hp); if (h > 0) { m.hp += h; note(f, `The ${m.name} heals ${h} HP.`, 'bad'); }
@@ -238,10 +251,7 @@ export function actions(g, f) {
   if (!canMelee && !out.some((a) => a.id === 'shoot')) out.push({ id: 'advance', label: 'Advance' });
   // nothing to hit them with: fists
   if (canMelee && !out.some((a) => ['attack', 'sidearm', 'shoot'].includes(a.id))) for (const m of targets) out.push({ id: 'unarmed', target: m.uid, label: `Punch the ${m.name} (unarmed, d4)` });
-  if (c.slots[1]) {
-    if (magicType(c) === 'arcane') for (const m of targets) if (alive(m)) out.push({ id: 'bolt', target: m.uid, label: `Cast Arcane bolt at the ${m.name}` });
-    if (magicType(c) === 'divine' && c.alignment === 'chaos' && hasItem(c, 'holysymbol')) out.push({ id: 'famine', label: 'Cast Famine (summon a swarm of locusts)' });
-  }
+  out.push(...spellActions(g, f, targets));
   if (magicType(c) === 'divine') for (const m of targets) if (has(m, 'undead') && alive(m)) out.push({ id: 'turn', target: m.uid, label: `Turn the ${m.name}` });
   if (hasItem(c, 'potion') && c.hp < c.maxHp) out.push({ id: 'potion', label: 'Drink a healing potion' });
   if (hasItem(c, 'caltrops')) out.push({ id: 'caltrops', label: 'Scatter caltrops' });
@@ -251,7 +261,117 @@ export function actions(g, f) {
   if (c.shield && !c.blocking) out.push({ id: 'block', label: `Block with your ${c.shield.name.toLowerCase()}` });
   for (const sp of f.def.special || []) if (!(sp.flag && c.flags[sp.flag]) && check(c, sp.if).ok) out.push({ id: 'special', sp, label: sp.label });
   if (f.def.flee) out.push({ id: 'flee', label: f.def.flee.label || 'Run for it' });
+  // Pacified, or shut in a sanctuary: no fighting, only waiting, healing, blocking or running.
+  const calm = f.pacified > 0 || f.sanctSelf > 0;
+  const kept = calm ? out.filter((a) => PEACEFUL.has(a.id) || (a.id === 'cast' && FIGHT_SPELLS[a.spell].t === 'self' && FIGHT_SPELLS[a.spell].heal)) : out;
+  if (calm || !kept.length) kept.push({ id: 'wait', label: f.sanctSelf > 0 ? 'Wait inside your sanctuary' : 'Wait' });
+  return kept;
+}
+const PEACEFUL = new Set(['potion', 'block', 'flee', 'turn']);
+
+// Spells with a use in a fight. t: 'one' (a monster), 'all' (every monster in the target space) or 'self'.
+// heal: only offered when you're hurt. Opposites cast on a divine critical failure use the same target.
+const FIGHT_SPELLS = {
+  bolt: { t: 'one' }, trip: { t: 'one' }, grease: { t: 'all' }, shock: { t: 'one', engaged: true }, command: { t: 'one' },
+  choreomania: { t: 'all' }, lightning: { t: 'all', outdoors: true }, freeze: { t: 'all' }, fireball: { t: 'all' },
+  famine: { t: 'all' }, harm: { t: 'one' }, heal: { t: 'self', heal: true }, banish: { t: 'all', undead: true }, pacify: { t: 'one' },
+  galvanise: { t: 'self' }, sanctuary: { t: 'self' }, hellfire: { t: 'all' }, vivify: { t: 'self', heal: true }, afflict: { t: 'one' },
+  enfeeble: { t: 'one' }, chosen: { t: 'self', ranged: true }, consecrate: { t: 'self', weapon: true }, hysteria: { t: 'self', heal: true },
+  dirge: { t: 'all' }, descend: { t: 'one' }, pillar: { t: 'one' }, judgement: { t: 'all' }, deluge: { t: 'all' },
+};
+const DIVINE_RANGE = 2;   // divine spells are medium range
+
+function spellActions(g, f, targets) {
+  const { c } = g; const out = [];
+  const known = Object.keys(FIGHT_SPELLS).filter((id) => canCast(c, id));
+  for (const id of known) {
+    const sp = SPELLS[id]; const fs = FIGHT_SPELLS[id];
+    const name = `Cast ${sp.name}`;
+    if (sp.list === 'divine' && fs.t !== 'self' && f.distance > DIVINE_RANGE) continue;
+    if (fs.engaged && f.distance > 0) continue;
+    if (fs.outdoors && !f.def.outdoors) continue;
+    if (fs.heal && c.hp >= c.maxHp) continue;
+    if (fs.undead && !targets.some((m) => has(m, 'undead'))) continue;
+    if (fs.ranged && !targets.some((m) => m.range !== 'engaged')) continue;
+    if (fs.weapon && c.weapon.magic) continue;
+    if (fs.t === 'one') { for (const m of targets) if (alive(m)) out.push({ id: 'cast', spell: id, target: m.uid, label: `${name} on the ${m.name} (level ${sp.lvl})` }); }
+    else out.push({ id: 'cast', spell: id, label: `${name} (level ${sp.lvl}: ${sp.text.charAt(0).toLowerCase()}${sp.text.slice(1)})${id === 'fireball' && f.distance === 0 ? ' — you’re standing in it' : ''}` });
+  }
   return out;
+}
+
+function castInFight(g, f, id, m) {
+  const { c, rng } = g; const sp = SPELLS[id];
+  const stat = sp.list === 'divine' ? 'Wis' : 'Int';
+  const t = test(g, f, { stat, dd: sp.dd, skill: `cast:${sp.list}`, label: `Cast ${sp.name} (${stat})` });
+  if (t.success) {
+    if (t.ddRoll >= 4) { c.slots[sp.lvl] = false; note(f, `You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
+    spellEffect(g, f, id, m);
+  } else if (t.critFail && sp.list === 'divine') {
+    note(f, `Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`, 'bad');
+    spellEffect(g, f, sp.opp, m);
+  } else if (t.critFail) {
+    const d = rng.roll(sp.lvl, 4); note(f, `Overwhelmed by ætheric currents, you take ${sp.lvl}d4 damage.`, 'bad'); hurtPlayer(g, f, d, 'backlash');
+  } else note(f, 'The spell fizzles. Nothing happens.');
+}
+
+/** What a spell does in a fight. m is the monster targeted (if any); self-targeted spells (and their opposites) hit you. */
+function spellEffect(g, f, id, m) {
+  const { c, rng } = g;
+  const all = () => f.monsters.filter(alive);
+  const resist = (x) => { if (has(x, 'magicImmune')) { note(f, `The ${x.name} is immune to magic.`); return true; } return false; };
+  const healYou = (h) => { c.hp = Math.min(c.maxHp, c.hp + h); note(f, `You heal ${h} HP (${c.hp}/${c.maxHp}).`, 'good'); };
+  const healIt = (x, h) => { if (resist(x)) return; x.hp = Math.min(x.maxHp, x.hp + h); note(f, `The ${x.name} heals ${h} HP (${x.hp}/${x.maxHp}).`, 'bad'); };
+  const lvl = c.level;
+  switch (id) {
+    // ----- arcane
+    case 'bolt': hurtMonster(g, f, m, 2 * lvl, { magic: true }); break;
+    case 'trip': if (resist(m)) break; if (has(m, 'flies')) note(f, `The ${m.name} is flying. There is nothing to trip over.`); else { m.prone = true; note(f, `The ${m.name} goes flat on its face.`, 'good'); } break;
+    case 'grease': note(f, 'The floor under them turns slick as a fishmonger’s slab.', 'good'); for (const x of all()) if (!resist(x)) x.greased = 5; break;
+    case 'shock': { const ts = [m, ...all().filter((x) => x !== m)].slice(0, 2); for (const x of ts) if (alive(x)) hurtMonster(g, f, x, rng.roll(lvl, 4), { magic: true }); break; }
+    case 'command': if (resist(m)) break; m.stunned = Math.max(m.stunned, 1); note(f, `“Sit down,” you say. The ${m.name} sits down.`, 'good'); break;
+    case 'choreomania': for (const x of all()) if (!resist(x)) { x.stunned = Math.max(x.stunned, rng.die(4)); x.dancing = true; note(f, `The ${x.name} starts to dance (${x.stunned} round${x.stunned === 1 ? '' : 's'}).`, 'good'); } break;
+    case 'lightning': { const n = rng.die(4); const ts = [...all()].sort(() => rng.die(2) - 1.5).slice(0, n); note(f, `The sky splits. ${n} bolt${n === 1 ? '' : 's'} of lightning come down.`, 'good'); for (const x of ts) hurtMonster(g, f, x, rng.roll(lvl, 6), { magic: true }); break; }
+    case 'freeze': note(f, 'Time stops. Everything but you hangs in the air like dust in a sunbeam.', 'good'); for (const x of all()) x.stunned = Math.max(x.stunned, 1); break;
+    case 'fireball': note(f, 'A bead of fire floats over to them and blooms.', 'good'); for (const x of all()) hurtMonster(g, f, x, rng.roll(lvl, 8), { magic: true, fire: true }); if (f.distance === 0 && !f.over) hurtPlayer(g, f, rng.roll(lvl, 8), 'fireball you were standing in'); break;
+    // ----- divine
+    case 'famine': note(f, 'A swarm of locusts pours out of your sleeves.', 'good'); for (const x of all()) hurtMonster(g, f, x, rng.die(6), { magic: true, noBonus: true }); break;
+    case 'abundance': {
+      if (c.mundane.length < MUNDANE_LIMIT) { c.mundane.push(makeItem('rations')); note(f, 'A day’s rations appear in your arms, neatly wrapped. Lovely.', 'bad'); }
+      else note(f, 'A day’s rations appear in the air, and fall on the floor. Lovely.', 'bad');
+      break;
+    }
+    case 'harm': if (m) hurtMonster(g, f, m, rollExpr(rng, '2d8') + lvl, { magic: true, noBonus: true }); else hurtPlayer(g, f, rollExpr(rng, '2d8') + lvl, 'Harm spell'); break;
+    case 'heal': if (m) healIt(m, rollExpr(rng, '2d8') + lvl); else healYou(rollExpr(rng, '2d8') + lvl); break;
+    case 'afflict': if (m) hurtMonster(g, f, m, rollExpr(rng, '3d8') + lvl, { magic: true, noBonus: true }); else hurtPlayer(g, f, rollExpr(rng, '3d8') + lvl, 'Afflict spell'); break;
+    case 'vivify': if (m) healIt(m, rollExpr(rng, '3d8') + lvl); else healYou(rollExpr(rng, '3d8') + lvl); break;
+    case 'dirge': if (m === 'all' || !m) { if (m === 'all') for (const x of all()) hurtMonster(g, f, x, rollExpr(rng, '2d6') + lvl, { magic: true, noBonus: true }); else hurtPlayer(g, f, rollExpr(rng, '2d6') + lvl, 'Dirge'); } break;
+    case 'hysteria': if (m === 'all') for (const x of all()) healIt(x, rollExpr(rng, '2d6') + lvl); else healYou(rollExpr(rng, '2d6') + lvl); break;
+    case 'banish': { const u = all().filter((x) => has(x, 'undead')); for (const x of u) { x.fled = true; c.flags.undeadFled = true; note(f, `The ${x.name} flees from the light of law.`, 'good'); } if (!u.length) note(f, 'Nothing here is dead enough to care.'); break; }
+    case 'entreat': { const u = all().filter((x) => has(x, 'undead')); if (u.length) { f.distance = 0; note(f, 'Every dead thing in the place turns towards you, interested.', 'bad'); } else note(f, 'Somewhere far off, something dead sits up and takes an interest.', 'bad'); break; }
+    case 'pacify': if (m) { if (resist(m)) break; m.stunned = Math.max(m.stunned, 3); note(f, `The ${m.name} lowers its guard, and won’t fight for 3 rounds.`, 'good'); } else { f.pacified = 3; note(f, 'A great calm comes over you. You won’t fight for 3 rounds.', 'bad'); } break;
+    case 'galvanise': if (m) { if (resist(m)) break; m.galv = 6; note(f, `The ${m.name} swells with unholy vigour: +d6 damage for 6 rounds.`, 'bad'); } else { f.galv = 6; note(f, 'Unholy vigour floods your arms: +d6 damage for 6 rounds.', 'good'); } break;
+    case 'sanctuary': { const n = rollExpr(rng, '2d6'); if (m) { f.sanctMon = n; note(f, `Shining walls rise around them. For ${n} rounds nothing gets in or out.`, 'bad'); } else { f.sanctSelf = n; note(f, `Shining walls rise around you. For ${n} rounds nothing gets in or out.`, 'good'); } break; }
+    case 'hellfire': { const n = rollExpr(rng, '2d6'); if (m) { f.fireMon = n; note(f, `The ground under them bursts into flame, for ${n} rounds.`, 'good'); } else { f.fireSelf = n; note(f, `The ground under you bursts into flame, for ${n} rounds.`, 'bad'); } break; }
+    case 'enfeeble': if (resist(m)) break; m.enfeebled = true; note(f, `The ${m.name} looks suddenly fragile: it takes +d8 damage from every hit.`, 'good'); break;
+    case 'insubstantiate': if (resist(m)) break; if (!has(m, 'ghostly')) m.feats.push('ghostly'); note(f, `The ${m.name} turns to mist. Ordinary weapons pass straight through it now.`, 'bad'); break;
+    case 'chosen': f.chosen = 5; note(f, 'You are Chosen: for 5 rounds, ranged attacks can’t touch you.', 'good'); break;
+    case 'pariah': note(f, 'You are a Pariah: every arrow for a mile around takes an interest in you.', 'bad'); break;
+    case 'consecrate': c.weapon = { ...c.weapon, magic: true, plus: 1, name: c.weapon.name.startsWith('Consecrated') ? c.weapon.name : `Consecrated ${c.weapon.name.toLowerCase()}` }; note(f, `Your ${c.weapon.name.toLowerCase()} shines: it is magic now (+1).`, 'good'); break;
+    case 'ophidia': {
+      note(f, `Your ${c.weapon.name.toLowerCase()} turns into a snake (level 3), and it does not like you. You draw your dagger.`, 'bad');
+      c.weapon = { id: 'dagger', name: 'Dagger', weight: 1, ranged: false };
+      f.monsters.push(makeMonster(rng, { name: 'Snake that was your weapon', lvl: 3, range: 'engaged' }));
+      break;
+    }
+    case 'descend': if (resist(m)) break; if (has(m, 'flies')) { note(f, `The ${m.name} goes up, and stays up. It can fly.`); break; } note(f, `The ${m.name} is flung into the sky, and comes down again.`, 'good'); hurtMonster(g, f, m, rollExpr(rng, '6d6'), { noBonus: true, crit: true }); break;
+    case 'ascend': if (resist(m)) break; if (!has(m, 'flies')) m.feats.push('flies'); note(f, `The ${m.name} floats gently up off the ground. It can fly now.`, 'bad'); break;
+    case 'pillar': if (resist(m)) break; m.hp = 0; m.dormant = 0; note(f, `The ${m.name} turns into a pillar of salt.`, 'good'); break;
+    case 'immortalise': if (resist(m)) break; m.maxHp *= 2; m.hp *= 2; note(f, `The ${m.name}’s skin turns to stone (${m.hp}/${m.maxHp} HP).`, 'bad'); break;
+    case 'judgement': for (const x of all()) { const d = rollExpr(rng, '8d8'); if (has(x, 'magicImmune')) { resist(x); continue; } if (d >= x.hp) { x.obeys = true; note(f, `The ${x.name} drops to its knees and converts to law. It won’t fight you now.`, 'good'); } else hurtMonster(g, f, x, d, { magic: true, noBonus: true }); } break;
+    case 'deluge': note(f, 'A flood comes out of nowhere.', 'good'); for (const x of all()) { if (resist(x)) continue; x.stunned = Math.max(x.stunned, 3); if (!has(x, 'flies') && rng.chance(1, 4)) { x.fled = true; note(f, `The ${x.name} is washed away.`, 'good'); } else note(f, `The ${x.name} is tumbled about, and can’t act for 3 rounds.`, 'good'); } break;
+    default: note(f, 'Nothing obvious happens.');
+  }
 }
 
 function useUp(c, id) {
@@ -289,23 +409,8 @@ export function act(g, f, a) {
       break;
     }
     case 'advance': f.distance = Math.max(0, f.distance - 1); note(f, `You advance (${BANDS[f.distance].toLowerCase()} range).`); break;
-    case 'bolt': {
-      const t = test(g, f, { stat: 'Int', dd: 4, skill: 'cast:arcane', label: 'Cast Arcane bolt (Int)' });
-      if (t.success) { if (t.ddRoll >= 4) { c.slots[1] = false; note(f, 'You rolled 4 on the difficulty die: the spell slot is spent.'); } hurtMonster(g, f, m, 2 * c.level, { magic: true }); }
-      else if (t.critFail) { const d = rng.die(4); note(f, `Overwhelmed by ætheric currents, you take ${d} damage.`, 'bad'); hurtPlayer(g, f, d, 'backlash'); }
-      else note(f, 'The spell fizzles.');
-      break;
-    }
-    case 'famine': {
-      const t = test(g, f, { stat: 'Wis', dd: 4, skill: 'cast:divine', label: 'Cast Famine (Wis)' });
-      if (t.success) {
-        if (t.ddRoll >= 4) { c.slots[1] = false; note(f, 'The spell slot is spent.'); }
-        note(f, 'A swarm of locusts pours out of your sleeves.', 'good');
-        for (const x of f.monsters) if (alive(x)) hurtMonster(g, f, x, rng.die(6), { magic: true, noBonus: true });
-      } else if (t.critFail) { note(f, 'Your god scorns you: the locusts turn into a single day’s rations. Abundance. Lovely.', 'bad'); }
-      else note(f, 'Nothing happens.');
-      break;
-    }
+    case 'cast': castInFight(g, f, a.spell, FIGHT_SPELLS[a.spell].t === 'one' ? m : FIGHT_SPELLS[a.spell].t === 'all' ? 'all' : null); break;
+    case 'wait': note(f, 'You wait.'); break;
     case 'turn': {
       const t = test(g, f, { stat: 'Wis', dd: m.dd, skill: 'cast:divine', label: `Turn the ${m.name} (Wis)` });
       if (t.success) {
@@ -357,6 +462,8 @@ export function act(g, f, a) {
   if (!f.over) monstersTurn(g, f);
   if (!f.over && !active(f).length) { f.over = true; f.won = true; }
   f.round++;
+  if (f.galv > 0) f.galv--;
+  if (f.pacified > 0) f.pacified--;
   return finish(g, f);
 }
 

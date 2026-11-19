@@ -66,6 +66,7 @@ export const SECTIONS = {
       { text: 'Hand over your invitation and stand very still', test: { stat: 'Dex', dd: 4, save: true }, pass: 'admitted', fail: 'wobble', if: { item: 'invitation' }, show: { item: 'stilts', notFlag: 'doormanAngry' } },
       { text: 'Compliment his height', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry', show: { notFlag: 'doormanAngry' } },
       { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }], show: { notFlag: 'doormanAngry' } },
+      { text: 'Throw your voice down from the balcony: “Let that one in, Doorman. He’s my cousin.”', cast: 'voice', pass: 'cousin', fail: 'doorman_angry', show: { notFlag: 'doormanAngry' } },
       { text: 'Have it out with him', to: 'doorman_angry', show: { flag: 'doormanAngry' } },
       { text: 'Go round to the kitchen door', to: 'kitchen_door' },
     ],
@@ -86,7 +87,7 @@ export const SECTIONS = {
   doorman_angry: {
     on: [{ flag: 'doormanAngry' }],
     text: ['“Short,” he announces to the queue. “SHORT!” The guests gasp. Two pikemen turn, very slowly, because their pikes are twenty feet long.'],
-    fight: { monsters: [{ name: 'Doorman', lvl: 1, range: 'engaged', note: 'Measuring stick; very tall; very offended' }, pikeman], distance: 1, win: 'doorman_win', flee: { to: 'kitchen_door', label: 'Run round the side of the house' } },
+    fight: { outdoors: true, monsters: [{ name: 'Doorman', lvl: 1, range: 'engaged', note: 'Measuring stick; very tall; very offended' }, pikeman], distance: 1, win: 'doorman_win', flee: { to: 'kitchen_door', label: 'Run round the side of the house' } },
   },
   doorman_win: {
     on: [{ gold: 8, msg: 'The doorman’s tips: 8GP.' }], onceOnly: true,
@@ -269,6 +270,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Throw them your rations', to: 'hounds_fed', if: { item: 'rations' }, show: { notFlag: 'houndsGone' } },
       { text: 'Let your rat go', to: 'hounds_rat', if: { item: 'rat' }, show: { notFlag: 'houndsGone' } },
+      { text: 'Cast Abundance and set down a dish of dinner at floor level', cast: 'abundance', pass: 'hounds_dinner', fail: 'hounds_fight', critFail: 'hounds_locusts', show: { notFlag: 'houndsGone' } },
+      { text: 'Cast Burden on them, so their long legs buckle', cast: 'burden', pass: 'hounds_buckled', fail: 'hounds_fight', critFail: 'hounds_light', show: { notFlag: 'houndsGone' } },
       { text: 'Calm them the way you calm any animal', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'hounds_calm', fail: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Fight your way through', to: 'hounds_fight', show: { notFlag: 'houndsGone' } },
       { text: 'Go on to the vault door', to: 'vault_door', show: { flag: 'houndsGone' } },
@@ -337,6 +340,7 @@ export const SECTIONS = {
       { text: 'Tell him the Lord says he can go home', test: { stat: 'Cha', dd: 8, skill: ['lying'] }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' }, if: { notFlag: 'truthful', notFlagText: 'being able to lie (you’re telling the truth tonight)' } },
       { text: 'Ask him whether he’s happy here', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you listen to people' }, pass: 'ned_home', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Manacle him to the mannequin while he’s being furniture', to: 'ned_chained', if: { anyItem: ['manacles', 'chain'] }, show: { notFlag: 'nedGone' } },
+      { text: 'Cast Trip, and fell him like a tree', cast: 'trip', pass: 'ned_felled', fail: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Fight him', to: 'ned_fight', show: { notFlag: 'nedGone' } },
       { text: 'Take the hat', to: 'hat', show: { flag: 'nedGone' } },
     ],
@@ -371,6 +375,7 @@ export const SECTIONS = {
       { text: 'Climb down the dumbwaiter shaft', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'out_kitchen', fail: 'shaft_drop' },
       { text: 'Climb up to the roof', to: 'roof_escape' },
       { text: 'Walk out of the front door wearing it', test: { stat: 'Cha', dd: 12, skill: ['lying', 'social'] }, pass: 'front_walk', fail: 'front_caught', if: STILTS },
+      { text: 'Cast Haste on yourself, and leave by the front door very quickly indeed', cast: 'haste', pass: 'hasted', fail: 'front_caught' },
     ],
   },
   shaft_drop: {
@@ -424,6 +429,38 @@ export const SECTIONS = {
       c.flags.sold_hat ? '“Well, well,” she says, trying the hat on. It comes down to her knees. “You did it. Don’t do it again. They’ll be looking for somebody tall.”' : '“No hat?” she says, and holds out her hand for her thirty gold. Whatever you can’t pay goes on your tab. You didn’t have a tab before. You do now.',
       'Every 200GP you squander on a pointless endeavour gains you a level.',
     ],
+  },
+  cousin: {
+    on: [{ flag: 'guest' }],
+    text: ['“Let that one in, Doorman,” says a voice from somewhere high above, in a passable impression of a lord. “He’s my cousin.” The doorman looks up at the balcony, sees nobody, and assumes that the Lord has gone in again. He looks at you with new respect, which is to say less contempt, and waves you through.'],
+    choices: [{ text: 'Go inside', to: 'long_hall' }],
+  },
+  hounds_dinner: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['A dish of steaming dinner appears on the landing, at floor level. A stilt-hound eating from the floor has to do the splits to reach it, so they’ll be busy for a while.'],
+    choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
+  },
+  hounds_locusts: {
+    text: ['Your god scorns you. Instead of dinner, a swarm of locusts pours out across the landing. The hounds snap at them, eat a few, and then decide you are the larger snack.'],
+    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+  },
+  hounds_buckled: {
+    on: [{ flag: 'houndsGone' }],
+    text: ['The stilt-hounds suddenly weigh twice what they did. Their long thin legs bow, wobble and fold, one after another, like deckchairs. They lie on the landing in a heap of knees, unable to get up, looking at you reproachfully.'],
+    choices: [{ text: 'Step over them to the vault door', to: 'vault_door' }],
+  },
+  hounds_light: {
+    text: ['Your god scorns you. Instead of getting heavier, the hounds can walk on water for ten minutes. There is no water on the landing, so it makes no difference at all, except that they’ve noticed you.'],
+    fight: { monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+  },
+  ned_felled: {
+    on: [{ flag: 'nedGone' }],
+    text: ['Big Ned’s feet go out from under him, and he comes down across the vault like a felled pine, taking a shelf of hats with him. He lies there with his eyes shut. “Timber,” he says, sadly, and doesn’t get up.'],
+    choices: [{ text: 'Take the hat', to: 'hat' }],
+  },
+  hasted: {
+    text: ['You go down the Grand Staircase three steps at a time, which is nine feet a stride, and through the Long Hall at a speed that makes the candles gutter. By the time anybody has looked down, you are gone, and so is the Lofty Hat.'],
+    choices: [{ text: 'Run to Mother Grubb’s', to: 'grubb' }],
   },
 };
 

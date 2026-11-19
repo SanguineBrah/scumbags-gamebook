@@ -42,7 +42,7 @@ export const SECTIONS = {
       { text: 'Give up and go back to the Guild', to: 'festival' },
     ],
   },
-  flies_fight: {
+  flies_fight: { outdoors: true,
     text: ['The fruit flies come at you in a cloud, up your nose and in your ears and, you suspect, in your soul.'],
     fight: { monsters: [flies], win: 'flies_gone', flee: { to: 'orchard', label: 'Run out of the cloud' } },
   },
@@ -66,8 +66,10 @@ export const SECTIONS = {
       { text: 'Chase the villagers off', test: { stat: 'Cha', dd: 8, skill: ['social', 'bruteforce'], profs: ['Bodyguard', 'Pit fighter'], why: 'you know how to clear a room' }, pass: 'villagers_gone', fail: 'villagers_angry', show: { notFlag: 'villagersGone' } },
       { text: 'Talk to the golem', test: { stat: 'Cha', dd: 6, skill: ['social', 'languages'], profs: ['Missionary', 'Cleric'], why: 'you know how to calm the frightened' }, pass: 'golem_talk', fail: 'golem_panics', show: { notFlag: 'golemTrusts' } },
       { text: 'Offer it the shelter of your tent', to: 'golem_talk', if: { item: 'tent' }, show: { notFlag: 'golemTrusts' } },
+      { text: 'Cast Tongues on the golem, so it can say what it wants', cast: 'tongues', pass: 'golem_speaks', fail: 'golem_panics', critFail: 'golem_silent', show: { notFlag: 'golemTrusts' } },
+      { text: 'Cast Command on it: “Come with me”', cast: 'command', pass: 'golem_commanded', fail: 'golem_panics' },
       { text: 'Lead it to the Duke’s hothouse, over the hill', to: 'road', show: { flag: 'golemTrusts' } },
-      { text: 'Cast Famine on it, so it smells rotten and nobody wants to eat it', cast: 'famine', pass: 'famine', fail: 'golem_panics', show: { notFlag: 'villagersGone' } },
+      { text: 'Cast Famine on it, so it smells rotten and nobody wants to eat it', cast: 'famine', pass: 'famine', fail: 'golem_panics', critFail: 'custard', show: { notFlag: 'villagersGone' } },
       { text: 'Attack it', to: 'golem_fight' },
       { text: 'Rope it and drag it back to the Guild', test: { stat: 'Str', dd: 10, skill: ['athletics'] }, pass: 'dragged', fail: 'golem_fight', if: { anyItem: ['rope', 'chain'] } },
     ],
@@ -79,7 +81,7 @@ export const SECTIONS = {
   },
   villagers_angry: {
     text: ['The villagers do not want to be chased off. They want custard. A large woman with a ladle explains this to you, firmly.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [{ name: 'Hungry villager', lvl: 1, hp: 4, range: 'engaged', feats: ['coward'], note: 'Spoon; custard on the brain; gives up at half health' }, { name: 'Woman with a ladle', lvl: 2, hp: 6, range: 'engaged', feats: ['coward'], note: 'Ladle; gives up at half health' }],
       win: 'villagers_gone', flee: { to: 'orchard', label: 'Retreat into the trees' },
     },
@@ -96,12 +98,12 @@ export const SECTIONS = {
   },
   golem_panics: {
     text: ['You say something that sounds to the golem, unfortunately, like “peel”. It panics and lashes out.'],
-    fight: {
+    fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [{ label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
-  golem_fight: {
+  golem_fight: { outdoors: true,
     text: ['The golem draws itself up to its full nine feet, and comes at you swinging bunches.'],
     fight: {
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
@@ -143,12 +145,13 @@ export const SECTIONS = {
       { text: 'Hide it in the hedge', test: { stat: 'Dex', dd: 8, skill: ['skulduggery', 'survival'] }, pass: 'hothouse', fail: 'grocers' },
       { text: 'Tell them it’s a different golem, made of plantains', test: { stat: 'Cha', dd: 8, skill: ['lying'] }, pass: 'hothouse', fail: 'grocers' },
       { text: 'Throw your caltrops under the cart', to: 'hothouse', if: { item: 'caltrops' }, effects: [{ lose: 'caltrops' }] },
+      { text: 'Cast Burden on the cart', cast: 'burden', pass: 'cart_stuck', fail: 'grocers', critFail: 'cart_light' },
       { text: 'Fight them', to: 'grocers' },
     ],
   },
   grocers: {
     text: ['The greengrocers pile out of the cart with marrows. The golem hides behind you, which doesn’t work.'],
-    fight: { monsters: [grocer, grocer], win: 'hothouse', flee: { to: 'clearing', label: 'Run back with the golem' } },
+    fight: { outdoors: true, monsters: [grocer, grocer], win: 'hothouse', flee: { to: 'clearing', label: 'Run back with the golem' } },
   },
   hothouse: {
     on: [{ flag: 'saved' }],
@@ -169,6 +172,37 @@ export const SECTIONS = {
             : 'The golem is still loose at sunset. The mayor sees it, is chased round the market by it, and revokes the Guild’s charter on the spot.',
       `You leave Pippin-on-Wye with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  custard: {
+    text: ['Your god scorns you. Instead of locusts, a vast bowl of hot custard appears at the golem’s feet. The villagers cheer and come running with their spoons. The golem looks at the custard, and at the villagers, and at itself, and understands exactly what is going on.'],
+    choices: [{ text: 'Brace yourself', to: 'golem_panics' }],
+  },
+  golem_speaks: {
+    on: [{ flag: 'golemTrusts' }],
+    text: ['The golem opens a mouth it didn’t have a moment ago. “I DON’T WANT TO BE CUSTARD,” it says, in every language in the world at once, and then, more quietly, in yours: “There is a glass house over the hill. Warm. Nobody eats anything in there except the Duke, and he only eats pineapples.” It looks at you, hopefully.'],
+    choices: [{ text: 'Back to the golem', to: 'clearing' }],
+  },
+  golem_silent: {
+    text: ['Your god scorns you, and makes the golem unable to make a sound for five minutes. As it has no mouth, this makes no difference whatsoever. It looks at you, puzzled.'],
+    choices: [{ text: 'Back to the golem', to: 'clearing' }],
+  },
+  golem_commanded: {
+    on: [{ flag: 'golemTrusts' }],
+    text: ['“Come with me,” you say, and the golem does, every bunch of it, before it has decided whether it wants to.'],
+    choices: [{ text: 'Lead it to the Duke’s hothouse, over the hill', to: 'road' }, { text: 'Lead it back to the Guild', to: 'led_back' }],
+  },
+  cart_stuck: {
+    text: ['The greengrocers’ cart suddenly weighs twice what it did. The axle groans and the wheels sink into the lane up to the hubs. The greengrocers get out and push, and swear, and push, while you and the golem walk on over the hill.'],
+    choices: [{ text: 'On to the hothouse', to: 'hothouse' }],
+  },
+  cart_light: {
+    text: ['Your god scorns you. Instead of growing heavy, the cart can drive on water. There isn’t any water in the lane, so it just drives on, straight at you.'],
+    choices: [{ text: 'Fight them', to: 'grocers' }],
+  },
+  led_back: {
+    on: [{ flag: 'dragged' }],
+    text: ['The golem follows you back down the hill to the market, as meek as a lamb, with an expression, if bananas can have one, of growing horror. The Guild is waiting.'],
+    choices: [{ text: 'Hand it over', to: 'festival' }],
   },
 };
 

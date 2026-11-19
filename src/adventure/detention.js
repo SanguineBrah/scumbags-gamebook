@@ -66,6 +66,8 @@ export const SECTIONS = {
       { text: 'Pay him (20GP)', to: 'inside', if: { gold: 20 }, effects: [{ gold: -20 }, { flag: 'lookoutGone' }], show: { notFlag: 'lookoutGone' } },
       { text: 'Hand him the Headmistress’s detention slip', to: 'slip', if: { item: 'slip' }, show: { notFlag: 'lookoutGone' } },
       { text: 'Blow your watchman’s whistle like a truant officer', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'lookoutGone' } },
+      { text: 'Cast Invisibility on yourself and walk straight past him', cast: 'invisibility', pass: 'inside', fail: 'lookout_fight', show: { notFlag: 'lookoutGone' } },
+      { text: 'Cast Command on him: “Go home”', cast: 'command', pass: 'lookout_sent', fail: 'lookout_fight', show: { notFlag: 'lookoutGone' } },
       { text: 'Deal with him', to: 'lookout_fight', show: { notFlag: 'lookoutGone' } },
       { text: 'Go in', to: 'inside', show: { flag: 'lookoutGone' } },
     ],
@@ -80,7 +82,7 @@ export const SECTIONS = {
     text: ['You blow a long blast on your whistle and shout “TRUANCY!” The lookout drops his wand and runs. So, through the back door, do two more pointed hats. That leaves three inside, and they are very nervous.'],
     choices: [{ text: 'Go in', to: 'inside' }],
   },
-  lookout_fight: {
+  lookout_fight: { outdoors: true,
     text: ['The lookout raises his wand and grins, which is a mistake, because it means you know exactly when he’s going to cast.'],
     fight: { monsters: [{ ...delinquent, name: 'Lookout' }], distance: 1, win: 'lookout_down', flee: { to: 'muttering', label: 'Back off down the high street' } },
   },
@@ -100,6 +102,9 @@ export const SECTIONS = {
       { text: 'Tell them they’re all in detention', test: { stat: 'Cha', dd: 10, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you have an air of authority', mods: [{ if: { flag: 'oneInDetention' }, dd: 8 }] }, pass: 'surrender', fail: 'gang_fight' },
       { text: 'Offer them something better to do', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'], profs: ['Envoy'], why: 'you know what bored people want' }, pass: 'better_offer', fail: 'gang_fight' },
       { text: 'Throw your voice so it sounds like the Headmistress outside', cast: 'voice', pass: 'surrender', fail: 'gang_fight' },
+      { text: 'Cast Choreomania on them, and march them out while they dance', cast: 'choreomania', pass: 'danced', fail: 'gang_fight' },
+      { text: 'Cast Embolden on yourself, and loom over them like a headmistress', cast: 'embolden', pass: 'loomed', fail: 'gang_fight', critFail: 'humbled_self' },
+      { text: 'Cast Humble on Spike, in front of his gang', cast: 'humble', pass: 'spike_humbled', fail: 'gang_fight', critFail: 'spike_emboldened' },
       { text: 'Fight', to: 'gang_fight' },
     ],
   },
@@ -162,6 +167,35 @@ export const SECTIONS = {
             : 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Headmistress Grimble does not pay you, and puts you on a list.',
       `You leave Muttering with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  lookout_sent: {
+    on: [{ flag: 'lookoutGone' }],
+    text: ['“Go home,” you say. The lookout’s face goes blank, and he turns round and walks off up the high street towards his mother’s shop, wand in his pocket, without a word. He doesn’t look back.'],
+    choices: [{ text: 'Go in', to: 'inside' }],
+  },
+  danced: {
+    on: [{ flag: 'surrendered' }],
+    text: ['The gang start to dance: a horrible, jerking, knees-up sort of dance that none of them can stop, and all of them will remember at every party for the rest of their lives. You dance them out of the foundry and down the high street in a line, with the grimoire under your arm. Muttering comes out to watch. Muttering has not had such a good day in years.'],
+    choices: [{ text: 'Dance them back to the Collegium', to: 'headmistress' }],
+  },
+  loomed: {
+    on: [{ flag: 'surrendered' }],
+    text: ['You grow to twice your size, hunched under the foundry roof, and look down at them over imaginary spectacles. Nobody says a word. One by one, the wands go down, and Spike unchains the grimoire and hands it up to you without looking at you.'],
+    choices: [{ text: 'March them back to the Collegium, in a line', to: 'headmistress' }],
+  },
+  humbled_self: {
+    text: ['Your god scorns you. Instead of doubling, you shrink to a quarter of your size. Five teenage wizards look down at you. There is a short silence, and then a great deal of laughter, and then the wands come up.'],
+    choices: [{ text: 'Fight', to: 'gang_fight' }],
+  },
+  spike_humbled: {
+    on: [{ flag: 'surrendered' }],
+    text: ['Spike shrinks to a quarter of his size, in the middle of a sentence about how nobody tells him what to do. His gang look down at him. Somebody laughs. Then they all do. By the time he’s back to his proper size, the gang has gone over to you, and the grimoire is under your arm.'],
+    choices: [{ text: 'March them all back to the Collegium, in a line', to: 'headmistress' }],
+  },
+  spike_emboldened: {
+    on: [{ flag: 'offered' }],
+    text: ['Your god scorns you. Instead of shrinking, Spike grows to twice his size, and bumps his head on the foundry roof. His gang cheer. Spike looks down at you and grins.'],
+    choices: [{ text: 'Fight him', to: 'spike_fight' }],
   },
 };
 

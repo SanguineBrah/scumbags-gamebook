@@ -58,6 +58,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Give the hound some of Nan’s cough sweets', to: 'hound_sweets', if: { item: 'sweets' } },
       { text: 'Give the hound your rations', to: 'hound_fed', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
+      { text: 'Cast Command on the hound: “Sit”', cast: 'command', pass: 'hound_sits', fail: 'hound_fight' },
       { text: 'Step over it', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'], profs: ['Hunter'], why: 'you can move quietly round animals' }, pass: 'room', fail: 'hound_fight' },
       { text: 'Back to the inn', to: 'start_return' },
     ],
@@ -94,9 +95,10 @@ export const SECTIONS = {
     choices: [
       { text: 'Pick the lock while the guards doze', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'nan_out', fail: 'guards_fight', if: { item: 'tools' }, show: { notFlag: 'nanFree' } },
       { text: 'Melt the lock with acid', to: 'nan_out', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { notFlag: 'nanFree' } },
+      { text: 'Cast Knock on the lock while the guards doze', cast: 'knock', pass: 'nan_out', fail: 'guards_fight', show: { notFlag: 'nanFree' } },
       { text: 'Offer the guards some of Nan’s cough sweets', to: 'guards_asleep', if: { item: 'sweets' }, show: { notFlag: 'nanFree' } },
       { text: 'Bribe the guards (50GP)', to: 'nan_out', if: { gold: 50 }, effects: [{ gold: -50 }], show: { notFlag: 'nanFree' } },
-      { text: 'Cast Shroud, and pick the lock unseen in your own darkness', cast: 'shroud', pass: 'nan_out', fail: 'guards_fight', if: { item: 'tools' }, show: { notFlag: 'nanFree' } },
+      { text: 'Cast Shroud, and pick the lock unseen in your own darkness', cast: 'shroud', pass: 'nan_out', fail: 'guards_fight', critFail: 'lockup_glow', if: { item: 'tools' }, show: { notFlag: 'nanFree' } },
       { text: 'Back to the inn', to: 'start_return' },
     ],
   },
@@ -122,10 +124,13 @@ export const SECTIONS = {
     choices: [
       { text: 'Show the village the rennet and Gall’s ledger', to: 'exposed', if: { item: 'rennet' } },
       { text: 'Denounce Gall in front of the crowd', test: { stat: 'Cha', dd: 10, skill: ['social'], profs: ['Cleric', 'Missionary', 'Envoy'], why: 'you know how to work a crowd', mods: [{ if: { flag: 'milkClue' }, dd: 8 }] }, pass: 'exposed', fail: 'crowd_turns' },
-      { text: 'Cast Divine light over Nan, for a miracle', cast: 'light', pass: 'miracle', fail: 'crowd_turns', show: { notFlag: 'nanFree' } },
+      { text: 'Cast Divine light over Nan, for a miracle', cast: 'light', pass: 'miracle', fail: 'crowd_turns', critFail: 'nan_shrouded', show: { notFlag: 'nanFree' } },
+      { text: 'Cast Confession on Righteous Gall, in front of the whole village', cast: 'confession', pass: 'gall_confesses', fail: 'crowd_turns', critFail: 'gall_wiped' },
+      { text: 'Cast Intervention, and ask your god to do something about Gall', cast: 'intervention', pass: 'intervention', fail: 'crowd_turns', critFail: 'petition_answer', show: { notFlag: 'gallDown' } },
+      { text: 'Cast Telekinesis, and wedge a stone in the ducking stool’s pivot from across the pond', cast: 'telekinesis', pass: 'jammed', fail: 'jetty', show: { notFlag: 'nanFree' } },
       { text: 'Jam the ducking stool’s pivot with an iron spike', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'spikes' }, show: { notFlag: 'nanFree' } },
       { text: 'Glue the ducking stool’s pivot', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'glue' }, show: { notFlag: 'nanFree' } },
-      { text: 'Bless a bucket of millpond water and throw it over Nan, so the crowd sees she doesn’t burn', cast: 'bless', pass: 'holy_water', fail: 'crowd_turns', if: { item: 'bucket' }, show: { notFlag: 'nanFree' } },
+      { text: 'Bless a bucket of millpond water and throw it over Nan, so the crowd sees she doesn’t burn', cast: 'bless', pass: 'holy_water', fail: 'crowd_turns', critFail: 'nan_oiled', if: { item: 'bucket' }, show: { notFlag: 'nanFree' } },
       { text: 'Challenge Gall', to: 'gall_fight' },
     ],
   },
@@ -153,7 +158,7 @@ export const SECTIONS = {
     text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men come at you down the jetty.'],
     choices: [{ text: 'Fight', to: 'gall_fight' }],
   },
-  gall_fight: {
+  gall_fight: { outdoors: true,
     text: ['Righteous Gall throws off his black coat and comes down the jetty at you with his iron pricker.'],
     fight: {
       monsters: [gall], win: 'gall_down', flee: { to: 'dawn', label: 'Run' },
@@ -183,6 +188,40 @@ export const SECTIONS = {
                 : 'They duck Old Nan at sunrise. She floats, because she is very small and very light, and they call her a witch. She is still a witch, as far as Puddlecombe is concerned, when she dies in her own bed nine years later. Gall has moved on by then.',
       `You leave Puddlecombe with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  hound_sits: {
+    text: ['“Sit,” you say. The hound sits, and stays sitting, looking at you with an expression of deep betrayal, while you step over it and try the door.'],
+    choices: [{ text: 'Go in', to: 'room' }],
+  },
+  lockup_glow: {
+    text: ['Your god scorns you. Instead of darkness, light pours out of your sleeves, and you stand at the lock-up door with your tools out, glowing like a lantern. A guard opens one eye. Then the other.'],
+    choices: [{ text: 'Fight', to: 'guards_fight' }],
+  },
+  nan_shrouded: {
+    text: ['Your god scorns you. Instead of a holy light, darkness pours out over Old Nan and the ducking stool, thick as soot. The crowd falls back. “WITCHCRAFT,” cries Righteous Gall, delighted, and points at you.'],
+    choices: [{ text: 'Brace yourself', to: 'crowd_turns' }],
+  },
+  nan_oiled: {
+    text: ['Your god scorns you. Instead of holy water, your bucket is full of lamp oil, and you have already thrown it. Old Nan sits on the ducking stool, dripping, and asks if it’s raining. “An OILY witch,” says Gall, with deep satisfaction.'],
+    choices: [{ text: 'Brace yourself', to: 'crowd_turns' }],
+  },
+  gall_confesses: {
+    on: [{ flag: 'exposed' }],
+    text: ['Righteous Gall stops in the middle of a prayer, and relives his most recent sins in front of the whole of Puddlecombe, who see every one: Gall at the dairy at midnight, shaking rennet into the churns; Gall counting his witch money at the inn. The crowd goes quiet. Then the dairymaid says, quite loudly, “He went round all the churns.” Righteous Gall looks at the crowd, and the crowd looks at him.'],
+    choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
+  },
+  gall_wiped: {
+    text: ['Your god scorns you, and wipes the last day’s worries from Righteous Gall’s mind. He looks out at the crowd with perfect serenity, a man without a doubt in the world. “Duck her,” he says, and then, kindly, pointing at you: “And that one.”'],
+    choices: [{ text: 'Brace yourself', to: 'crowd_turns' }],
+  },
+  intervention: {
+    on: [{ flag: 'gallDown' }],
+    text: ['You ask your god to do something about Righteous Gall. Your god does. A single gust of wind comes across the millpond, lifts Gall’s hat, and while he is reaching for it, the plank under his feet decides it has had enough.'],
+    choices: [{ text: 'Watch', to: 'gall_down' }],
+  },
+  petition_answer: {
+    text: ['Your god scorns you. Instead of action, you get an answer. You asked what could be done about Righteous Gall, and your god tells you, at length, in a voice only you can hear, while the crowd watches you stand on the jetty nodding to yourself. The answer is “not much”.'],
+    choices: [{ text: 'Try something else', to: 'jetty' }],
   },
 };
 

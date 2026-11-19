@@ -37,6 +37,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Wake him with smelling salts', to: 'astronomer', if: { item: 'salts' } },
       { text: 'Shake him awake', test: { stat: 'Cha', dd: 8, skill: ['social', 'medicine'] }, pass: 'astronomer', fail: 'astro_asleep' },
+      { text: 'Cast Command on him: “Wake up”', cast: 'command', pass: 'astronomer', fail: 'astro_asleep' },
       { text: 'Read the tiny writing with your jeweller’s loupe', to: 'loupe_clue', if: { item: 'loupe' } },
       { text: 'Try to read the tiny writing anyway', test: { stat: 'Int', dd: 12, skill: ['analysis', 'languages'] }, pass: 'loupe_clue', fail: 'astro_asleep' },
       { text: 'Back down to the quad', to: 'quad' },
@@ -106,6 +107,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Pick the padlock', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'reading_room', fail: 'invigilator', if: { item: 'tools' } },
       { text: 'Melt the padlock with acid', to: 'reading_room', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
+      { text: 'Cast Knock on the padlock', cast: 'knock', pass: 'reading_room', fail: 'invigilator' },
       { text: 'Break the chain', test: { stat: 'Str', dd: 12, skill: ['bruteforce'], mods: [{ if: { anyItem: ['prybar', 'pick'] }, dd: 8 }] }, pass: 'invigilator', fail: 'chain_holds' },
       { text: 'Blow your watchman’s whistle: it sounds exactly like the end of an exam', to: 'whistle', if: { item: 'whistle' } },
       { text: 'Back to the quad', to: 'quad' },
@@ -139,6 +141,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Read it', test: { stat: 'Int', dd: 8, skill: ['languages', 'arcana', 'analysis'], profs: ['Missionary', 'Envoy'], why: 'you read difficult things for a living' }, pass: 'book_clue', fail: 'book_copy' },
       { text: 'Copy out the diagrams with your quill to puzzle over later', to: 'book_clue', if: { item: 'quill' } },
+      { text: 'Cast Tongues on yourself, and read the impossible words', cast: 'tongues', pass: 'book_clue', fail: 'book_copy', critFail: 'book_silent' },
       { text: 'Back to the quad', to: 'quad' },
     ],
   },
@@ -185,6 +188,9 @@ export const SECTIONS = {
     choices: [
       { text: 'Look at it in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrorClue' } },
       { text: 'Climb up and look at it from above, as the astronomer said', to: 'above', if: { flag: 'starClue', flagText: 'the astronomer’s clue' }, show: { notFlag: 'above' } },
+      { text: 'Cast True sight, and see it as it really is', cast: 'truesight', pass: 'cube_seen', fail: 'hall', show: { notFlag: 'cubeSeen' } },
+      { text: 'Cast Freeze time, and walk round it while it stands still', cast: 'freeze', pass: 'cube_frozen', fail: 'hall', show: { notFlag: 'cubeFrozen' } },
+      { text: 'Cast Petition, and ask your god how it turns', cast: 'petition', pass: 'cube_petition', fail: 'hall', critFail: 'cube_intervention', show: { notFlag: 'cubePetition' } },
       { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight' },
       { text: 'Back out of the hall', to: 'quad' },
     ],
@@ -238,6 +244,30 @@ export const SECTIONS = {
           : 'The cube still hums in the Great Hall. The Dean thanks you for trying, and starts sleeping in the Bursar’s office.',
       `You leave the university with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  book_silent: {
+    text: ['Your god scorns you. Instead of every language, you get none: you can’t make a sound for five minutes. In a library, this is considered good manners. The book stays unreadable.'],
+    choices: [{ text: 'Try again', to: 'reading_room' }, { text: 'Back to the quad', to: 'quad' }],
+  },
+  cube_seen: {
+    on: [{ flag: 'cubeSeen' }, CLUE, CLUE],
+    text: ['You see it as it really is, and immediately wish you hadn’t. It is not a cube. It is the corner of something enormous, poking into the Great Hall from somewhere else, like a knuckle through a sheet. And you can see, quite clearly, which way the knuckle bends.'],
+    choices: [{ text: 'Back', to: 'hall' }],
+  },
+  cube_frozen: {
+    on: [{ flag: 'cubeFrozen' }, CLUE],
+    text: ['Time stops. The cube stops turning, mid-turn, and for the first time you can walk all the way round it and look. On the far side, one corner is worn smooth, like the brass on a door handle that gets used. That’s where you take hold.'],
+    choices: [{ text: 'Back', to: 'hall' }],
+  },
+  cube_petition: {
+    on: [{ flag: 'cubePetition' }, CLUE],
+    text: ['You ask your god how it turns. Your god answers at once, in the voice of someone who has been waiting a long time to be asked: “Away from you. Always away from you.”'],
+    choices: [{ text: 'Back', to: 'hall' }],
+  },
+  cube_intervention: {
+    on: [{ flag: 'cubePetition' }],
+    text: ['Your god scorns you. Instead of an answer, you get action. A bolt of holy fire comes down through the roof of the Great Hall and hits the cube, which does not like it, and decides it was you.'],
+    choices: [{ text: 'Brace yourself', to: 'cube_fight' }],
   },
 };
 

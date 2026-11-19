@@ -44,6 +44,7 @@ export const SECTIONS = {
       { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight', show: { notFlag: 'tiddlesAngry' } },
       { text: 'Let your rat go as a distraction', to: 'tiddles_rat', if: { item: 'rat' } },
       { text: 'Offer it your rations', to: 'tiddles_fed', if: { item: 'rations' } },
+      { text: 'Cast Tongues on Tiddles, and talk things over', cast: 'tongues', pass: 'tiddles_talks', fail: 'tiddles_fight', critFail: 'tiddles_silent' },
       { text: 'Fight it', to: 'tiddles_fight' },
     ],
   },
@@ -83,6 +84,8 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Climb the table leg', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'table', fail: 'table_fall' },
+      { text: 'Cast Perambulate and walk up the table leg', cast: 'perambulate', pass: 'table', fail: 'kitchen' },
+      { text: 'Cast Perambulate and walk up the chimney breast to the mantelpiece', cast: 'perambulate', pass: 'mantel', fail: 'kitchen' },
       { text: 'Raid the larder', to: 'larder' },
       { text: 'Climb the dresser', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing', 'spikes'] }, dd: 4 }] }, pass: 'dresser', fail: 'dresser_fall', show: { notFlag: 'thimble' } },
       { text: 'Climb up to the mantelpiece', to: 'mantel_climb' },
@@ -101,6 +104,7 @@ export const SECTIONS = {
       { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
       { text: 'Drag a knitting needle to the edge of the table', to: 'needle', show: { notFlag: 'needle' } },
       { text: 'Cross the knitting needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall', show: { flag: 'needle' } },
+      { text: 'Cast Step, and teleport across to the mantelpiece', cast: 'step', pass: 'mantel', fail: 'table' },
       { text: 'Climb down', to: 'kitchen' },
     ],
   },
@@ -219,6 +223,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Give it its rattle', to: 'baby_rattle', if: { item: 'rattle' }, show: { notFlag: 'babyAsleep' } },
       { text: 'Sing it a lullaby', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you’ve sung people to sleep before' }, pass: 'baby_sleep', fail: 'baby_cries', show: { notFlag: 'babyAsleep' } },
+      { text: 'Cast Silence on the baby, just in case', cast: 'silence', pass: 'baby_silent', fail: 'nursery', critFail: 'baby_tongues', show: { notFlag: 'babySilent' } },
       { text: 'Pick up the rattle from the floor', to: 'rattle', show: { notFlag: 'rattle' } },
       { text: 'Back to the kitchen', to: 'kitchen' },
     ],
@@ -273,7 +278,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Throw your voice out of the window, like a lost lamb', cast: 'voice', pass: 'mother_out', fail: 'mother_finds' },
       { text: 'Hide under the dresser', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], profs: ['Hunter'], why: 'you know how to lie still' }, pass: 'mother_sits', fail: 'mother_finds' },
-      { text: 'Cast Shroud and hide in the darkness', cast: 'shroud', pass: 'mother_sits', fail: 'mother_finds' },
+      { text: 'Cast Shroud and hide in the darkness', cast: 'shroud', pass: 'mother_sits', fail: 'mother_finds', critFail: 'mother_glow' },
       { text: 'Run for the gap under the door', test: { stat: 'Dex', dd: 12, save: true }, pass: 'turnbull', fail: 'mother_finds' },
     ],
   },
@@ -294,6 +299,7 @@ export const SECTIONS = {
       { text: 'Unscrew the lid from the inside', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },
       { text: 'Lever the lid off with your pry bar', test: { stat: 'Str', dd: 6, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'prybar' } },
       { text: 'Pick the jar’s lid open', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jar_out', fail: 'jar_stuck', if: { item: 'tools' } },
+      { text: 'Cast Step, and teleport out through the glass onto the windowsill', cast: 'step', pass: 'jar_step', fail: 'jar_stuck' },
       { text: 'Wait for the vicar', to: 'vicar' },
     ],
   },
@@ -326,6 +332,33 @@ export const SECTIONS = {
       c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a pitchfork. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
       `You come down from Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
+  },
+  tiddles_talks: {
+    text: ['“Well,” says Tiddles, in a voice like a cello, licking a paw. “You’re very small, and you’re not a mouse, and frankly I’ve eaten.” It yawns, showing teeth like tent pegs. “The turnip’s on the mantelpiece. Mind the fire. And if the baby starts, I’d run.” It goes back to sleep.'],
+    choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
+  },
+  tiddles_silent: {
+    text: ['Your god scorns you. Instead of speaking every language, Tiddles can’t make a sound at all. It opens its mouth to hiss and nothing comes out, which annoys it very much. It comes at you in perfect silence.'],
+    choices: [{ text: 'Fight it', to: 'tiddles_fight' }],
+  },
+  baby_silent: {
+    on: [{ flag: 'babySilent' }],
+    text: ['The baby’s mouth goes on working, but no sound comes out. It looks surprised, then pleased, and starts trying to make the loudest noise it can. Nothing. For five minutes, it can cry all it likes.'],
+    choices: [{ text: 'Sing it a lullaby while it’s quiet', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'baby_sleep', fail: 'nursery' }, { text: 'Back to the kitchen', to: 'kitchen' }],
+  },
+  baby_tongues: {
+    on: [NOISE(2)],
+    text: ['Your god scorns you. Instead of being silent, the baby can speak every language in the world for five minutes. It uses them all to say the same thing, at the top of its voice: “MUM!”'],
+    choices: [{ text: 'Back to the kitchen, quickly', to: 'kitchen' }],
+  },
+  mother_glow: {
+    text: ['Your god scorns you. Instead of darkness, light pours out of your sleeves, and you stand in the middle of the kitchen floor glowing like a tiny lamp. Mother sees you at once. “Oh, look,” she says. “A glow-worm.”'],
+    choices: [{ text: 'Run', to: 'mother_finds' }],
+  },
+  jar_step: {
+    on: [{ flag: 'motherAsleep' }],
+    text: ['You look through the glass at the windowsill, and then you are on it, and the jar is empty behind you. Inside, Mother has fallen asleep in her rocking chair, knitting a sock you could live in.'],
+    choices: [{ text: 'Climb down into the kitchen', to: 'kitchen' }],
   },
 };
 

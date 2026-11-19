@@ -17,6 +17,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Go in through the kitchens, as a waiter', to: 'kitchen' },
       { text: 'Walk in through the front door, as a guest', test: { stat: 'Cha', dd: 10, skill: ['lying', 'social'], profs: ['Envoy'], why: 'you know how to work a door' }, pass: 'ballroom', fail: 'doorman' },
+      { text: 'Cast Invisibility on yourself, and walk in through the front door', cast: 'invisibility', pass: 'ballroom', fail: 'doorman' },
     ],
   },
   doorman: {
@@ -58,6 +59,8 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Get a closer look at the mug while you serve the top table', test: { stat: 'Wis', dd: 8, skill: ['skulduggery'], mods: [{ if: { item: 'loupe' }, dd: 4 }] }, pass: 'mug', fail: 'mug_miss', show: { notFlag: 'knowsMug' } },
+      { text: 'Cast True sight, and look at the top table as it really is', cast: 'truesight', pass: 'mug', fail: 'mug_miss', show: { notFlag: 'knowsMug' } },
+      { text: 'Cast Petition, and ask your god where the Archlich keeps his soul', cast: 'petition', pass: 'mug_petition', fail: 'mug_miss', critFail: 'lich_intervention', show: { notFlag: 'knowsMug' } },
       { text: 'Talk to Vexilla', to: 'vexilla', show: { notFlag: 'vexTalked' } },
       { text: 'Wait for the speeches', to: 'speech', show: { notFlag: 'speechOver' } },
       { text: 'Back to the kitchen', to: 'kitchen' },
@@ -90,6 +93,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Swap his mug for another one off your tray', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'swapped', fail: 'caught' },
       { text: 'Knock it into your pocket as you clear the table', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'swapped', fail: 'caught' },
+      { text: 'Cast Freeze time, and swap the mugs while the whole room stands still', cast: 'freeze', pass: 'swapped', fail: 'caught' },
+      { text: 'Cast Telekinesis, and float a mug off your tray into the place of his, and his into your pocket', cast: 'telekinesis', pass: 'swapped', fail: 'caught' },
       { text: 'Throw your voice so everybody looks at the stage', cast: 'voice', pass: 'swapped', fail: 'caught' },
       { text: 'Leave it, and clap', to: 'clap' },
     ],
@@ -117,6 +122,9 @@ export const SECTIONS = {
       { text: 'Give her the jar, as you agreed', to: 'vex_wins', show: { flag: 'vexDeal', any: [{ flag: 'jar' }] } },
       { text: 'Fight her', to: 'vex_fight' },
       { text: 'Hold up your hand mirror to her bolt', to: 'vex_mirror', if: { item: 'mirror' } },
+      { text: 'Cast Dispel magic on her wand', cast: 'dispel', pass: 'vex_dispelled', fail: 'vex_fight' },
+      { text: 'Cast Chosen on yourself, and let her bolts swerve', cast: 'chosen', pass: 'vex_swerve', fail: 'vex_fight', critFail: 'vex_pariah' },
+      { text: 'Cast Pillar of salt on her', cast: 'pillar', pass: 'vex_salt', fail: 'vex_fight', critFail: 'vex_stone' },
     ],
   },
   vex_mirror: {
@@ -162,6 +170,37 @@ export const SECTIONS = {
             : 'Morbidius retires to the seaside with his mug. Nine hundred years is a long time, and the seaside is very quiet. Everybody in the Blighted Marches knows he’ll be back.',
       `You leave the Blighted Marches with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
+  },
+  lich_intervention: {
+    on: [{ damage: '3d6', from: 'Holy fire' }],
+    text: ['Your god scorns you. Instead of an answer, you get action: a column of holy fire comes down through the ceiling onto the top table, misses the Archlich completely, and hits you. Morbidius looks up from his tea. “Is that the cake?” he says.'],
+    choices: [{ text: 'Back to the ballroom', to: 'ballroom' }],
+  },
+  vex_dispelled: {
+    text: ['Vexilla’s wand goes out like a blown candle. She shakes it. She points it. It is a stick. The guests nearest the top table begin, very politely, to laugh.'],
+    choices: [{ text: 'Finish it', to: 'vex_fight_weak' }],
+  },
+  vex_pariah: {
+    text: ['Your god scorns you. Instead of being Chosen, you become a Pariah. Every ranged attack in the ballroom wants you: Vexilla’s bolts, a thrown bread roll, and a canapé that a ghoul was saving for later.'],
+    choices: [{ text: 'Fight her', to: 'vex_fight' }],
+  },
+  vex_salt: {
+    on: [{ flag: 'vexDown' }],
+    text: ['Vexilla turns into a pillar of salt, wand raised, mid-shriek. The banshee sneezes. Morbidius looks at the pillar for a long time, then takes a pinch and puts it on his canapé.'],
+    choices: [{ text: 'Leave the party', to: 'goodbye' }],
+  },
+  vex_stone: {
+    text: ['Your god scorns you. Instead of salt, Vexilla’s skin turns to stone. She looks at her grey hands, and smiles, and is twice as hard to kill.'],
+    fight: { monsters: [{ ...vexilla, hp: vexilla.hp * 2, note: `${vexilla.note}; skin of stone (double HP)` }], win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the door' } },
+  },
+  vex_swerve: {
+    text: ['Vexilla’s bolt leaves her wand, comes at you, and swerves at the last moment, as if embarrassed, into the banshee, who hits a note that breaks every glass in the tower. Vexilla throws another. It swerves into the cake. She stares at her wand.'],
+    choices: [{ text: 'Finish it', to: 'vex_fight_weak' }],
+  },
+  mug_petition: {
+    on: [{ flag: 'knowsMug' }],
+    text: ['You ask your god where the Archlich keeps his soul. Your god says, quite clearly: “Look at what he’s drinking.” As you pour his tea, you see it: the mug has a false bottom. Under the tea, under a little glass lid, a faint green light. The phylactery isn’t near the mug. The phylactery is the mug.'],
+    choices: [{ text: 'Back to the ballroom', to: 'ballroom' }],
   },
 };
 

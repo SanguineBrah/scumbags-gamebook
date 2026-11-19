@@ -1,6 +1,6 @@
 // Shared bot logic for tools/simulate.mjs and tools/duels.mjs.
 import { rollOrigins, createCharacter, startingWeapons, levelUp } from '../src/rules/character.js';
-import { MUNDANE } from '../src/rules/data.js';
+import { MUNDANE, SPELLS } from '../src/rules/data.js';
 
 const POOL = Object.keys(MUNDANE);
 
@@ -30,8 +30,12 @@ export function fightMove(g, rng) {
   if (fire && g.fight.monsters.some((m) => m.lvl >= 2 || m.dormant)) return fire;
   if (pick('turn')) return pick('turn');
   if (c.hp < c.maxHp * 0.25 && pick('flee') && rng.chance(1, 2)) return pick('flee');
-  const bolt = acts.find((a) => a.id === 'bolt' && !g.fight.monsters.find((m) => m.uid === a.target).feats.includes('magicImmune'));
-  if (bolt) return bolt;
+  const casts = acts.filter((a) => a.id === 'cast');
+  const healing = casts.filter((a) => ['heal', 'vivify', 'hysteria'].includes(a.spell));
+  if (c.hp < c.maxHp * 0.4 && healing.length) return healing[healing.length - 1];
+  const immune = (a) => a.target && g.fight.monsters.find((m) => m.uid === a.target).feats.includes('magicImmune');
+  const attacking = casts.filter((a) => !['heal', 'vivify', 'hysteria', 'sanctuary', 'chosen', 'consecrate', 'banish'].includes(a.spell) && !(a.spell === 'fireball' && g.fight.distance === 0) && !immune(a));
+  if (attacking.length) { const best = Math.max(...attacking.map((a) => SPELLS[a.spell].lvl)); return rng.pick(attacking.filter((a) => SPELLS[a.spell].lvl === best)); }
   return pick('attack') || pick('fallback') || pick('shoot') || pick('sidearm') || pick('advance') || pick('block') || pick('flee') || acts[0];
 }
 
@@ -39,6 +43,7 @@ export function fightMove(g, rng) {
 /** Between sections: patch yourself up like a sensible player would. */
 export function tidyUp(g) {
   const c = g.c;
+  for (const id of ['vivify', 'heal', 'hysteria']) if (c.hp < c.maxHp * 0.6 && g.sheetSpells().some((s) => s.id === id)) g.castFromSheet(id);
   if (c.hp < c.maxHp * 0.6 && g.canHeal()) g.useHealersKit();
   if (c.hp < c.maxHp * 0.4 && g.canDrink()) g.drinkPotion();
 }

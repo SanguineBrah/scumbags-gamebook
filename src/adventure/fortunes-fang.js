@@ -33,6 +33,7 @@ export const SECTIONS = {
       { text: 'Tell him you’re a high roller from out of town', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'floor', fail: 'rex_fight' },
       { text: 'Finish his sentence for him', test: { stat: 'Cha', dd: 6, skill: ['social', 'languages'], profs: ['Cleric', 'Missionary', 'Bodyguard'], why: 'you know how to look after people' }, pass: 'rex_finished', fail: 'rex_fight' },
       { text: 'Fight him', to: 'rex_fight' },
+      { text: 'Cast Shroud and slip past him in your own darkness', cast: 'shroud', pass: 'floor', fail: 'rex_fight', critFail: 'rex_lit' },
     ],
   },
   rex_finished: {
@@ -140,6 +141,7 @@ export const SECTIONS = {
       { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
       { text: 'Play a hand with your hand mirror propped against the candlestick, angled under his cup (20GP)', test: { stat: 'Dex', dd: 4, skill: ['skulduggery'] }, pass: 'crab_win', fail: 'pinch_fight', if: { gold: 20, item: 'mirror' }, effects: [GAME], show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
       { text: 'Accuse him of cheating', to: 'pinch_fight', show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
+      { text: 'Cast Confession on Mr Pinch, so the whole table watches him relive his sins', cast: 'confession', pass: 'pinch_confesses', fail: 'pinch_fight', critFail: 'pinch_wiped', show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }, { flag: 'pinchConfessed' }] } },
       { text: 'Settle things with him', to: 'pinch_fight', show: { flag: 'pinchAngry', notFlag: 'pinchDown' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
@@ -192,6 +194,7 @@ export const SECTIONS = {
       { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' }, show: { notFlag: 'cashierDown' } },
       { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
       { text: 'Melt the cage lock with acid while it counts', to: 'cage_robbed', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
+      { text: 'Cast Knock on the cage lock while it counts', cast: 'knock', pass: 'cage_robbed', fail: 'cashier_fight', show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
       { text: 'Lever the bars apart while it counts', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { anyItem: ['prybar', 'pick'] }, show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
       { text: 'Help yourself to the strongbox', to: 'cage_robbed', show: { flag: 'cashierDown', notFlag: 'cageRobbed' } },
       { text: 'Back to the floor', to: 'floor' },
@@ -250,12 +253,14 @@ export const SECTIONS = {
       { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Cast Step, and teleport past the coffin into the bank', cast: 'step', pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
       { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
       { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
-      { text: 'Cast Divine light on the table: the nearest thing to dawn he’s seen in three hundred years', cast: 'light', pass: 'count_dazzled', fail: 'count_fight', show: { below: ['hour', 4] } },
+      { text: 'Cast Banish, so every undead thing flees the crypt', cast: 'banish', pass: 'count_flees', fail: 'count_fight', critFail: 'count_entreated', show: { below: ['hour', 4] } },
+      { text: 'Cast Divine light on the table: the nearest thing to dawn he’s seen in three hundred years', cast: 'light', pass: 'count_dazzled', fail: 'count_fight', critFail: 'count_shrouded', show: { below: ['hour', 4] } },
       { text: 'Attack him', to: 'count_fight', show: { below: ['hour', 4] } },
       { text: 'Go back upstairs', to: 'floor' },
     ],
@@ -368,6 +373,28 @@ export const SECTIONS = {
             : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That is none of your business.',
       `You leave with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
+  },
+  rex_lit: {
+    text: ['Your god scorns you. Instead of darkness, light pours out of your sleeves, and you walk up to Rex glowing like a shop window. “You’re—” says Rex, and doesn’t need anyone to finish it.'],
+    choices: [{ text: 'Fight him', to: 'rex_fight' }],
+  },
+  pinch_confesses: {
+    on: [{ flag: 'pinchConfessed' }, { gold: 60 }],
+    text: ['Mr Pinch freezes, claws raised, and relives his most recent sins in front of the whole table, which can see them as clearly as you can: the cup with the false bottom, the dice in his shell, the extra claw under the table. The punters stand up. Mr Pinch pays out every bet on the table, very fast, to keep them sitting down. You were on the table.'],
+    choices: [{ text: 'Back to the floor', to: 'floor' }],
+  },
+  pinch_wiped: {
+    on: [{ flag: 'pinchConfessed' }],
+    text: ['Your god scorns you, and wipes Mr Pinch’s memory of the last twenty-four hours, including everything that stressed him. He looks around the table, relaxed and happy, a crab without a care in the world, and goes on cheating out of pure habit.'],
+    choices: [{ text: 'Back to the table', to: 'crab_table' }],
+  },
+  count_shrouded: {
+    text: ['Your god scorns you. Instead of light, darkness pours out over the card table and puts out every candle in the crypt. Count Fortunato sighs with pleasure. “Ah,” he says, in the dark, very close. “That’s better.”'],
+    choices: [{ text: 'Fight him', to: 'count_fight' }],
+  },
+  count_entreated: {
+    text: ['Your god scorns you. Instead of fleeing the crypt, every undead thing in Fortune’s Fang is drawn to it. Count Fortunato looks round in surprise as the skeleton croupiers file down the stairs and stand behind his chair. He smiles. He likes a crowd.'],
+    choices: [{ text: 'Fight him', to: 'count_fight' }],
   },
 };
 

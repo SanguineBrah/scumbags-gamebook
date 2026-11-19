@@ -148,3 +148,73 @@ test('finishing an adventure remembers what happened in it', async () => {
   assert.ok(check(c, { past: ['eviction-notice', 'burnt'] }).ok);
   assert.ok(!check(c, { notPast: ['eviction-notice', 'burnt'] }).ok);
 });
+
+// A character of a given profession and level, built by bots, for magic tests.
+const caster = (prof, level, alignment) => {
+  for (let s = 1; s < 5000; s++) {
+    const r = new Rng(s); const c = botCharacter(r, level);
+    if (c.profession === prof && (!alignment || c.alignment === alignment)) return c;
+  }
+  throw new Error(`no ${prof}`);
+};
+// Force the next d20s: every die() call returns the next value in the list, then falls back to the real RNG.
+const rig = (g, values) => { const real = g.rng.die.bind(g.rng); const q = [...values]; g.rng.die = (n) => (q.length ? q.shift() : real(n)); };
+
+test('magicians get a spell slot at every level, and know every spell up to their level', async () => {
+  const { knownSpells } = await import('../src/rules/character.js');
+  const c = caster('Sorcerer', 3);
+  assert.deepEqual(Object.keys(c.slots), ['1', '2', '3']);
+  assert.deepEqual([...new Set(knownSpells(c).map((s) => s.lvl))], [1, 2, 3]);
+  const d = caster('Cleric', 5, 'chaos');
+  assert.ok(knownSpells(d).every((s) => s.align === 'chaos'));
+  assert.ok(knownSpells(d).some((s) => s.id === 'afflict'));
+});
+
+test('spells you don’t know aren’t offered; spells you know are', () => {
+  const mk = buildAdventure('fortunes-fang');
+  const g = new Game(mk, 1); g.c = caster('Sorcerer', 3); g.goto('cage');
+  assert.ok(g.choices().some((c) => c.label.startsWith('Cast Knock')));
+  const h = new Game(mk, 1); h.c = caster('Sorcerer', 2); h.goto('cage');
+  assert.ok(!h.choices().some((c) => c.label.startsWith('Cast Knock')));
+});
+
+test('a divine critical failure casts the opposite spell and goes to the backfire section', () => {
+  const g = new Game(adv, 1); g.c = caster('Cleric', 1, 'law');
+  if (!g.c.mundane.some((i) => i.id === 'holysymbol')) g.c.mundane.push({ id: 'holysymbol', name: 'Holy symbol' });
+  g.goto('hill');
+  const i = g.section().choices.findIndex((c) => c.cast === 'light');
+  rig(g, [20, 3, 20, 3]);
+  g.choose(i);
+  assert.equal(g.result.to, 'hill_shroud');
+  assert.match(g.result.lines.join(' '), /casts Shroud instead/);
+});
+
+test('an arcane critical failure deals a d4 per spell level, and a successful high roll spends that level’s slot', () => {
+  const mk = buildAdventure('fortunes-fang');
+  const g = new Game(mk, 1); g.c = caster('Sorcerer', 3); g.c.hp = 50; g.c.maxHp = 50; g.goto('cage');
+  const i = g.section().choices.findIndex((c) => c.cast === 'knock');
+  rig(g, [20, 1, 20, 1, 4, 4, 4]);
+  g.choose(i);
+  assert.equal(g.c.hp, 50 - 12);
+  const h = new Game(mk, 1); h.c = caster('Sorcerer', 3); h.goto('cage');
+  rig(h, [2, 6, 2, 6]);
+  h.choose(h.section().choices.findIndex((c) => c.cast === 'knock'));
+  assert.equal(h.result.success, true);
+  assert.equal(h.c.slots[3], false); assert.equal(h.c.slots[1], true);
+});
+
+test('higher-level spells turn up in fights, and divine backfires hit the caster', () => {
+  const mk = buildAdventure('higher-still');
+  const g = new Game(mk, 1); g.c = caster('Sorcerer', 9); g.goto('giant_fight');
+  const spells = new Set(g.fightActions().filter((a) => a.id === 'cast').map((a) => a.spell));
+  for (const s of ['bolt', 'grease', 'shock', 'freeze', 'fireball']) assert.ok(spells.has(s), s);
+  const h = new Game(mk, 2); h.c = caster('Cleric', 5, 'law');
+  if (!h.c.mundane.some((i) => i.id === 'holysymbol')) h.c.mundane.push({ id: 'holysymbol', name: 'Holy symbol' });
+  h.c.hp = h.c.maxHp - 1; h.goto('giant_fight');
+  const heal = h.fightActions().find((a) => a.spell === 'vivify');
+  assert.ok(heal);
+  const before = h.c.hp;
+  rig(h, [20, 1, 20, 1]);
+  h.fightAct(heal);
+  assert.ok(h.c.hp < before, 'Afflict hurts the caster');
+});

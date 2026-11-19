@@ -26,6 +26,8 @@ things get dicey. Fights, light, spells, loot and levelling all follow the Scumb
 - Melee attacks usually use a d8 difficulty die, and ranged attacks a die for the distance. You
   defend with Str or Dex against the monster's die. Armour soaks damage before your HP.
 - Dark places use up torches and oil. Every 50 gold takes up a significant item slot.
+- Magicians get a spell slot at every level and the rulebook's whole spell list, from Divine light
+  to Wish. When a divine spell goes critically wrong, your god casts the opposite one instead.
 - You level up by squandering 200 gold on a pointless endeavour when you get home.
 
 Nearly everything in your pack is useful somewhere. A rope, a rat or a pot of glue will often

@@ -41,6 +41,7 @@ export const SECTIONS = {
       { text: 'Tell them you’re from the wedding, to measure his Lordship for his suit', test: { stat: 'Cha', dd: 6, skill: ['lying', 'social'] }, pass: 'footmen_fooled', fail: 'footmen_fight', show: { notFlag: 'footmenGone' } },
       { text: 'Offer them a bath too', test: { stat: 'Cha', dd: 8, skill: ['social'], profs: ['Cleric', 'Missionary'], why: 'you’ve made converts before' }, pass: 'footmen_converted', fail: 'footmen_fight', show: { notFlag: 'footmenGone' } },
       { text: 'Push past them', to: 'footmen_fight', show: { notFlag: 'footmenGone' } },
+      { text: 'Throw your voice down the hall: “Footmen! Her Ladyship wants you in the drawing room!”', cast: 'voice', pass: 'footmen_called', fail: 'footmen_fight', show: { notFlag: 'footmenGone' } },
       { text: 'Go up to the east wing', to: 'bathroom', show: { flag: 'footmenGone' } },
       { text: 'Go down to the cellar', to: 'cellar', show: { flag: 'footmenGone' } },
       { text: 'Follow the grunting', to: 'sty', show: { flag: 'footmenGone', notFlag: 'lordWaiting' } },
@@ -99,6 +100,7 @@ export const SECTIONS = {
       { text: 'Squeeze it out of the bath', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'sponge_out', fail: 'sponge_fight', show: { notFlag: 'spongeGone' } },
       { text: 'Pour salt from your rations on it, to dry it out', to: 'sponge_out', if: { item: 'rations' }, effects: [{ lose: 'rations' }], show: { notFlag: 'spongeGone' } },
       { text: 'Burn it', to: 'sponge_burnt', if: { fire: true }, show: { notFlag: 'spongeGone' } },
+      { text: 'Cast Famine, and let the locusts eat it', cast: 'famine', pass: 'sponge_eaten', fail: 'sponge_fight', critFail: 'sponge_fed', show: { notFlag: 'spongeGone' } },
       { text: 'Fight it', to: 'sponge_fight', show: { notFlag: 'spongeGone' } },
       { text: 'Go down to the hall', to: 'hall' },
     ],
@@ -136,6 +138,9 @@ export const SECTIONS = {
       { text: 'Ask him whether Lady Primrose likes the smell', test: { stat: 'Cha', dd: 8, skill: ['social'] }, pass: 'lured', fail: 'lord_fight', show: { notFlag: 'lordAngry' } },
       { text: 'Clap your manacles on him while he’s busy with the pig', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'caught', fail: 'lord_fight', if: { item: 'manacles' } },
       { text: 'Lasso him with your rope', test: { stat: 'Dex', dd: 8, skill: ['athletics'], profs: ['Hunter'], why: 'you can rope an animal' }, pass: 'caught', fail: 'lord_fight', if: { item: 'rope' } },
+      { text: 'Cast Trip, so he goes face down in the mud', cast: 'trip', pass: 'tripped', fail: 'lord_fight' },
+      { text: 'Cast Burden on him, so he’s too heavy to run off', cast: 'burden', pass: 'burdened', fail: 'lord_fight', critFail: 'lord_waterwalks' },
+      { text: 'Cast Abundance, and lay out a trough of hot buttered crumpets up in the bathroom', cast: 'abundance', pass: 'crumpets', fail: 'lord_fight', critFail: 'sty_locusts' },
       { text: 'Wave your smelling salts under his nose, so he can smell himself', to: 'salted', if: { item: 'salts' } },
       { text: 'Grab him', to: 'lord_fight' },
     ],
@@ -152,7 +157,7 @@ export const SECTIONS = {
     text: ['Lord Mudlark is a lord, and has never been told no, and doesn’t know what to do when he’s tied up. He comes along, complaining, but he comes.'],
     choices: [{ text: 'Take him up to the bathroom', to: 'tub' }],
   },
-  lord_fight: {
+  lord_fight: { outdoors: true,
     on: [{ flag: 'lordAngry' }],
     text: ['Lord Mudlark comes out of the sty at you with his stick. The pig watches, with interest, from a safe distance.'],
     fight: {
@@ -213,6 +218,42 @@ export const SECTIONS = {
             : 'The wedding is called off. Lord Mudlark goes back to his sty, happier than he’s been all week. The Dowager pays you nothing.',
       `You leave Mudlark Manor with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}, and a smell that takes three days to wear off.`,
     ],
+  },
+  footmen_called: {
+    on: [{ flag: 'footmenGone' }],
+    text: ['“FOOTMEN!” bellows a voice from the far end of the hall, which sounds a great deal like the Dowager, if the Dowager had a cold. The footmen jump, straighten their wigs, and trot off to the drawing room. They’ll be there a while. Nobody has been in the drawing room for years.'],
+    choices: [{ text: 'Into the hall', to: 'hall' }],
+  },
+  sponge_eaten: {
+    on: [{ flag: 'spongeGone' }, { add: ['ready', 1] }],
+    text: ['A swarm of locusts pours out of your sleeves and settles on the sponge. Thirty years of sponge takes them about ten minutes. Then they fly out of the window, slowly, like men after a banquet.'],
+    choices: [{ text: 'Back to the bathroom', to: 'bathroom' }],
+  },
+  sponge_fed: {
+    text: ['Your god scorns you. Instead of locusts, a day’s rations fall into the bath. The sponge drinks them, grows a foot, and comes over the rim at you, wanting more.'],
+    fight: { monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }], win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' } },
+  },
+  tripped: {
+    text: ['Lord Mudlark’s feet go out from under him, and he goes face down in the mud with a noise like a cow sitting in custard. He comes up blowing bubbles, and by then you are sitting on him. He comes along, dripping, but he comes.'],
+    choices: [{ text: 'Take him up to the bathroom', to: 'tub' }],
+  },
+  burdened: {
+    text: ['Lord Mudlark suddenly weighs twice what he did, which was a lot. He sinks to the thighs in the sty and can’t get out. You wait until he’s stuck fast, then haul him out by the collar and roll him indoors like a barrel.'],
+    choices: [{ text: 'Roll him up to the bathroom', to: 'tub' }],
+  },
+  lord_waterwalks: {
+    on: [{ flag: 'lordAngry' }],
+    text: ['Your god scorns you. Instead of growing heavy, Lord Mudlark grows light, and steps up onto the surface of the sty as if it were a parquet floor. He walks across the top of the mud to you, delighted, and hits you with his stick.'],
+    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
+  },
+  crumpets: {
+    text: ['A trough of hot buttered crumpets appears in the bathroom, and the smell comes down the stairs and out into the sty. Lord Mudlark’s nose twitches. “Crumpets,” he says, and climbs out of the mud, and follows his nose indoors, past you, without a word.'],
+    choices: [{ text: 'Follow him up to the bathroom', to: 'tub' }],
+  },
+  sty_locusts: {
+    on: [{ flag: 'lordAngry' }],
+    text: ['Your god scorns you. Instead of crumpets, a swarm of locusts comes down on the sty. The pig eats a few. Lord Mudlark, covered in insects, decides that this is your fault, which it is.'],
+    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
   },
 };
 

@@ -53,6 +53,7 @@ export const SECTIONS = {
       { text: 'Pour a ring of glue round the maypole', to: 'glued', if: { item: 'glue' }, show: { notFlag: 'glued' } },
       { text: 'Herd them into the cattle pen', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you’ve herded worse', mods: [{ if: { anyItem: ['rope', 'pole', 'whistle'] }, dd: 4 }] }, pass: 'penned', fail: 'stampede', show: { notFlag: 'penned' } },
       { text: 'Tackle the nearest pair and unlace its boots', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { flag: 'knowsLaces' }, dd: 4 }] }, pass: 'unlaced', fail: 'legs_fight', show: { below: ['tackled', 3] } },
+      { text: 'Cast Trip on the nearest pair, and unlace it while it’s down', cast: 'trip', pass: 'unlaced', fail: 'legs_fight', show: { below: ['tackled', 3] } },
       { text: 'Tickle the nearest pair with your quill', to: 'tickled', if: { item: 'quill' }, show: { flag: 'knowsLaces', notFlag: 'tickled' } },
       { text: 'Go after the legs in the seven-league boots', to: 'chase', show: { notFlag: 'leaderGone' } },
       { text: 'Go to the Hobbling Arms', to: 'pub' },
@@ -91,7 +92,7 @@ export const SECTIONS = {
       : 'You bring a pair of legs down and get the boots off, which takes a lot of pulling. The legs sit down in the grass and stop, as if somebody had cut their strings.'],
     choices: [{ text: 'Back to the fair', to: 'fair' }],
   },
-  legs_fight: {
+  legs_fight: { outdoors: true,
     on: [{ add: ['tackled', 1] }],
     text: ['You grab a pair of legs in hobnail boots. They do not want to be grabbed.'],
     fight: { monsters: [legs], win: 'legs_down', flee: { to: 'fair', label: 'Let go and back off' } },
@@ -113,6 +114,10 @@ export const SECTIONS = {
       { text: 'Dig a hole where they land by the mill', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'leader_tripped', fail: 'chase_miss', if: { anyItem: ['shovel', 'pick'] } },
       { text: 'Ask the fiddler to play a jig: no pair of legs can resist a jig', to: 'jig', show: { notFlag: 'jigTried' } },
       { text: 'Throw yourself at them', test: { stat: 'Dex', dd: 12, skill: ['athletics'] }, pass: 'leader_fight', fail: 'chase_miss' },
+      { text: 'Cast Trip as they land', cast: 'trip', pass: 'leader_tripped', fail: 'chase_miss' },
+      { text: 'Cast Haste on yourself and run them down', cast: 'haste', pass: 'hasted', fail: 'chase_miss' },
+      { text: 'Cast Burden on the boots as they land by the mill', cast: 'burden', pass: 'boots_sink', fail: 'chase_miss', critFail: 'boots_skip' },
+      { text: 'Cast Waterwalk on yourself and cut them off across the millpond', cast: 'waterwalk', pass: 'pond_walk', fail: 'chase_miss', critFail: 'pond_sink' },
       { text: 'Back to the fair', to: 'fair' },
     ],
   },
@@ -150,7 +155,7 @@ export const SECTIONS = {
       { text: 'Get the boots off before they find their feet', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], mods: [{ if: { flag: 'knowsLaces' }, dd: 4 }] }, pass: 'seven_league', fail: 'leader_fight' },
     ],
   },
-  leader_fight: {
+  leader_fight: { outdoors: true,
     text: ['The legs in the seven-league boots turn on you. They don’t run away. They kick, and every kick lands like a falling cart.'],
     fight: {
       monsters: [{ name: 'Legs in seven-league boots', lvl: 2, hp: 12, range: 'engaged', feats: ['relentless'], note: 'Relentless; seven-league boots (kicks hard, 12 HP)' }],
@@ -179,6 +184,28 @@ export const SECTIONS = {
         `You leave Little Hobbling with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
       ];
     },
+  },
+  hasted: {
+    text: ['You set off after the seven-league boots at a speed you have only ever seen in greyhounds. You can’t catch them, quite, but you can be there when they land, and you are, puffing.'],
+    choices: [{ text: 'Grab them mid-hop', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'leader_tripped', fail: 'chase_miss' }],
+  },
+  boots_sink: {
+    text: ['The seven-league boots come down by the mill weighing twice what they did, and go into the soft bank up to the ankles, then the shins, then the knees. The legs flail like a man in a bog.'],
+    choices: [{ text: 'Get the boots off before they find their feet', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'seven_league', fail: 'leader_fight' }],
+  },
+  boots_skip: {
+    on: [{ flag: 'chased' }],
+    text: ['Your god scorns you. Instead of growing heavy, the legs can walk on water. They land on the millpond, skip across it like a stone, and are gone over the far hedge before the ducks have noticed.'],
+    choices: [{ text: 'Try something else', to: 'chase' }],
+  },
+  pond_walk: {
+    text: ['You step out onto the millpond and walk across the top of it, which the legs, coming down on the far bank, were not expecting. You are standing right where they land.'],
+    choices: [{ text: 'Grab them mid-hop', test: { stat: 'Dex', dd: 6, skill: ['athletics'] }, pass: 'leader_tripped', fail: 'chase_miss' }],
+  },
+  pond_sink: {
+    on: [{ flag: 'chased' }],
+    text: ['Your god scorns you. Instead of walking on water, you weigh twice what you did, and the bank of the millpond takes you to the knees. You stand there, stuck, and watch the seven-league boots go by.'],
+    choices: [{ text: 'Pull yourself out and try something else', to: 'chase' }],
   },
 };
 
