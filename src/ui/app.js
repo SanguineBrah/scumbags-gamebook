@@ -161,7 +161,7 @@ function resume(saved) {
 function howToScreen() {
   return h('div', null, h('main', { class: 'page' },
     h('h2', null, 'How to play'),
-    h('p', null, 'You are a scumbag: a contemptible opportunist in search of riches. Read each numbered section and choose what to do. Some choices need an item or a skill; some ask you to test your luck.'),
+    h('p', null, 'You are a scumbag: a contemptible opportunist in search of riches. Read each numbered section and choose what to do. Some choices need an item or a skill; some ask you to test a stat.'),
     h('h3', null, 'Stat tests'),
     h('p', null, 'Roll a d20 skill die plus a difficulty die (DD). You succeed if the total is less than the stat being tested. A 1 on the skill die is always a critical success; a 20 is always a critical failure. If you are skilled, you roll twice and use the better result. Your profession decides your skills, and you are skilled in saving throws for your core and ancillary stats.'),
     h('h3', null, 'Fighting'),

@@ -65,7 +65,7 @@ export const SECTIONS = {
       { text: 'Let Mrs Wimbledon go in first', to: 'mum', show: { flag: 'mumComing' } },
       { text: 'Pay him (20GP)', to: 'inside', if: { gold: 20 }, effects: [{ gold: -20 }, { flag: 'lookoutGone' }], show: { notFlag: 'lookoutGone' } },
       { text: 'Hand him the Headmistress’s detention slip', to: 'slip', if: { item: 'slip' }, show: { notFlag: 'lookoutGone' } },
-      { text: 'Blow your watchman’s whistle like a truant officer', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'whistled' } },
+      { text: 'Blow your watchman’s whistle like a truant officer', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'lookoutGone' } },
       { text: 'Deal with him', to: 'lookout_fight', show: { notFlag: 'lookoutGone' } },
       { text: 'Go in', to: 'inside', show: { flag: 'lookoutGone' } },
     ],
@@ -110,7 +110,7 @@ export const SECTIONS = {
   },
   mum: {
     on: [{ flag: 'mumDone' }],
-    text: ['Mrs Wimbledon walks into the foundry. The sparks stop. Five teenage wizards freeze. Spike drops both wands. “SIMON WIMBLEDON,” says his mother, in a voice that has kneaded ten thousand loaves. “WHAT. IS. THIS.”', 'It is all over in less than a minute. They go quietly, in a line, holding hands, with Mrs Wimbledon at the back with her rolling pin. Spike carries the grimoire himself.'],
+    text: (c) => [`Mrs Wimbledon walks into the foundry. The sparks stop. ${c.flags.gangThinned ? 'Three' : 'Five'} teenage wizards freeze. Spike drops both wands. “SIMON WIMBLEDON,” says his mother, in a voice that has kneaded ten thousand loaves. “WHAT. IS. THIS.”`, 'It is all over in less than a minute. They go quietly, in a line, holding hands, with Mrs Wimbledon at the back with her rolling pin. Spike carries the grimoire himself.'],
     choices: [{ text: 'Follow them to the Collegium', to: 'headmistress' }],
   },
   surrender: {
@@ -147,7 +147,7 @@ export const SECTIONS = {
   sold: {
     on: [{ flag: 'grimoireSold' }],
     text: ['There’s a man in the next town who buys books with chains on them and doesn’t ask why. He pays very well. Spike watches you go, with something like respect.'],
-    choices: [{ text: 'Go back to Muttering', to: 'headmistress' }],
+    choices: [{ text: 'Leave town', to: 'headmistress' }],
   },
   headmistress: {
     end: 'victory',

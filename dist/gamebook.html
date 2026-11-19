@@ -319,7 +319,7 @@ function resume(saved) {
 function howToScreen() {
   return h('div', null, h('main', { class: 'page' },
     h('h2', null, 'How to play'),
-    h('p', null, 'You are a scumbag: a contemptible opportunist in search of riches. Read each numbered section and choose what to do. Some choices need an item or a skill; some ask you to test your luck.'),
+    h('p', null, 'You are a scumbag: a contemptible opportunist in search of riches. Read each numbered section and choose what to do. Some choices need an item or a skill; some ask you to test a stat.'),
     h('h3', null, 'Stat tests'),
     h('p', null, 'Roll a d20 skill die plus a difficulty die (DD). You succeed if the total is less than the stat being tested. A 1 on the skill die is always a critical success; a 20 is always a critical failure. If you are skilled, you roll twice and use the better result. Your profession decides your skills, and you are skilled in saving throws for your core and ancillary stats.'),
     h('h3', null, 'Fighting'),
@@ -688,7 +688,7 @@ return { Rng, rollExpr, dieName };
 };
 __defs["src/adventure/death-and-taxes.js"] = function(){
 // DEATH AND TAXES — a Scumbags! gamebook adventure for one level 1 scumbag.
-// Sections are written against keys; numbering.js shuffles them into numbered paragraphs, in the traditional gamebook way.
+// Sections are written against keys; index.js shuffles them into numbered paragraphs, in the traditional gamebook way.
 //
 // Section fields:
 //   text: string[] (or (c) => string[])     on: effects applied on entry     onceOnly: apply `on` only the first time
@@ -1070,17 +1070,17 @@ const SECTIONS = {
   gallery: {
     text: (c) => c.flags.knightGone
       ? ['The gallery is quiet. The portraits of debtors look down at you, and the empty plinth at the end looks down at nothing.']
-      : c.flags.knightAngry ? ['Sir Reginald Overdraft is back on his plinth, guarding the purse. His visor follows you down the gallery with a long, rusty squeal. “Breach of contract,” he says. “Noted.”']
+      : c.flags.knightAngry ? ['Sir Reginald Overdraft is back on his plinth, guarding the gallery. His visor follows you down the gallery with a long, rusty squeal. “Breach of contract,” he says. “Noted.”']
       : [
-        'Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. A fat purse hangs on the wall behind him.',
+        `Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. ${c.flags.purse ? 'The hook on the wall behind him, where the purse hung, is empty.' : 'A fat purse hangs on the wall behind him.'}`,
         'The visor squeaks open. “Sir Reginald Overdraft,” says a hollow voice. “Pledged against a loan of twenty gold, in the year of the wet harvest. I am to guard this gallery until the debt is paid.” He has been standing there for forty-one years.',
       ],
     choices: [
       { text: 'Pay off his debt', to: 'knight_paid', if: { gold: 20 }, effects: [{ gold: -20 }], show: { notFlag: 'knightGone' } },
       { text: 'Point out that his creditor is dead', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'], profs: ['Cleric', 'Missionary'], why: 'clerics and missionaries are good at telling people they are free' }, pass: 'knight_freed', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
-      { text: 'Creep past him to the purse', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'gallery_purse', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
+      { text: 'Creep past him to the purse', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'gallery_purse', fail: 'knight_fight', show: { notFlag: 'knightGone', none: [{ flag: 'purse' }] } },
       { text: 'Fight him', to: 'knight_fight', show: { notFlag: 'knightGone' } },
-      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'knightGone' } },
+      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'knightGone', notFlag: 'purse' } },
       { text: 'Go back to the great hall', to: 'hall' },
     ],
   },
@@ -1096,7 +1096,7 @@ const SECTIONS = {
   },
   knight_fight: {
     on: [{ flag: 'knightAngry' }],
-    text: ['“Theft from the collateral,” booms Sir Reginald, “is a breach of contract.” He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
+    text: ['“Breach of contract,” booms Sir Reginald. He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
     fight: {
       monsters: [{ name: 'Sir Reginald Overdraft', lvl: 2, hp: 6, range: 'engaged', ap: 6, note: 'Defaulted knight, forty-one years without lunch (6 HP); repossessed plate armour (6 AP)' }],
       win: 'knight_win', flee: { to: 'hall', label: 'Run back to the hall' },
@@ -1108,7 +1108,7 @@ const SECTIONS = {
     choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
   },
   gallery_purse: {
-    on: [{ gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
+    on: [{ flag: 'purse' }, { gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
     text: ['The purse is heavy and the leather is good. You have no idea whose it was, and you plan to keep it that way.'],
     choices: [{ text: 'Go back to the great hall', to: 'hall' }],
   },
@@ -1531,7 +1531,7 @@ const SECTIONS = {
     ],
   },
   sedan: {
-    text: ['Two footmen lift you, chair, stilts and all, and carry you up the Grand Staircase while you wave graciously at the people below. At the top, they set you down and hold out their hands. You shake them both.'],
+    text: (c) => [`Two footmen lift you, chair${c.mundane.some((i) => i.id === 'stilts') ? ', stilts' : ''} and all, and carry you up the Grand Staircase while you wave graciously at the people below. At the top, they set you down and hold out their hands. You shake them both.`],
     choices: [{ text: 'Into the gallery', to: 'gallery' }],
   },
   staircase_quiet: {
@@ -1581,7 +1581,7 @@ const SECTIONS = {
     choices: [{ text: 'Climb down', to: 'gallery' }],
   },
   bedroom: {
-    text: ['The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. Under the pillow is a diary.'],
+    text: (c) => [`The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. ${c.flags.candles ? 'One six-foot silver candlestick stands by the bed, missing its twin.' : 'Two six-foot silver candlesticks stand by the bed.'} ${c.flags.diary ? 'There’s nothing under the pillow now.' : 'Under the pillow is a diary.'}`],
     choices: [
       { text: 'Take the diary', to: 'diary', show: { notFlag: 'diary' } },
       { text: 'Steal one of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
@@ -1656,7 +1656,7 @@ const SECTIONS = {
   },
   stilt_fall: {
     on: [{ damage: 'd4', from: 'The landing' }],
-    text: ['You reach up, wobble, and come down like a felled tree. The hounds watch with interest.'],
+    text: ['You reach up, wobble, and come down like a felled tree. Somewhere below, a guest applauds.'],
     choices: [{ text: 'Try again', to: 'vault_door' }],
   },
   door_fall: {
@@ -1828,11 +1828,12 @@ const SECTIONS = {
       'The gaming floor is a crypt lined with coffins stood on end, each one a booth. Candles drip onto green baize. Pale gamblers lose quietly at the tables. Every so often one of them trips over nothing at all and doesn’t get up for a while.',
       'There is a dice table, a great brass wheel, a card table run by a crab in a bow tie, a bar, and a cashier’s cage. A door marked STAFF ONLY stands in the corner, and a velvet rope guards a stair going down.',
       HOUR(c),
-    ],
+      (c.flags.hour || 0) >= 4 ? 'The croupiers are covering the tables for the day. Nobody is taking any more bets.' : '',
+    ].filter(Boolean),
     choices: [
-      { text: 'Play the Bones (dice)', to: 'bones' },
-      { text: 'Play the Wheel', to: 'wheel' },
-      { text: 'Play Liar’s Dice with the crab', to: 'crab_table' },
+      { text: 'Play the Bones (dice)', to: 'bones', show: { below: ['hour', 4] } },
+      { text: 'Play the Wheel', to: 'wheel', show: { below: ['hour', 4] } },
+      { text: 'Play Liar’s Dice with the crab', to: 'crab_table', show: { below: ['hour', 4] } },
       { text: 'Get a drink at the bar', to: 'bar', show: { notFlag: 'drank' } },
       { text: 'Visit the cashier’s cage', to: 'cage' },
       { text: 'Try the STAFF ONLY door', to: 'office' },
@@ -1970,7 +1971,7 @@ const SECTIONS = {
     ],
   },
   cash_in: {
-    on: [{ sell: { item: 'chips', gold: 100, text: 'The skeleton pays out for a gold chip' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }],
+    on: [{ sell: { item: 'chips', gold: 100, text: 'The skeleton pays out for a gold chip' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }],
     text: ['The skeleton bites each chip, which is a waste of time, as it has no tongue.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
@@ -2022,7 +2023,7 @@ const SECTIONS = {
       { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
-      { text: 'Show him the dawn in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
+      { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
       { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
       { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
@@ -2113,11 +2114,11 @@ const SECTIONS = {
   },
   exit: {
     text: (c) => c.flags.texFree && c.flags.rexDown
-      ? ['Rex is still sitting against the wall by the door, where you left him. Tex sits down beside him, back to back, as is their custom, and gently slaps him awake. “Who—” says Rex. “—hit you? This one,” says Tex. They watch you leave in a silence they finish together.']
+      ? ['Rex is still out cold where you left him. Tex sits down beside him, back to back, as is their custom, and gently slaps him awake. “Who—” says Rex. “—hit you? This one,” says Tex. They watch you leave in a silence they finish together.']
       : c.flags.texFree
       ? ['At the door, Rex turns, sees his brother, and drops the money he was counting. “Tex! I thought—” “—you’d never see me again?” “—exactly!” They hug, back to back, as is their custom. Nobody asks you for anything on the way out.']
       : c.flags.rexDown
-        ? ['You walk back through the gaming floor, clinking. Rex is still asleep against the wall by the door. Nobody stops you.']
+        ? ['You walk back through the gaming floor, clinking. Rex is still out cold where you left him. Nobody stops you.']
         : c.flags.rexFriend
           ? ['At the door, Rex looks at your bulging pockets, then past you, down the steps, hopefully. “Did you—” You shake your head. He sighs, and waves you out without a word, because he can only manage half of one.']
           : ['At the door, Rex looks at your bulging pockets. “Leaving so—” He waits. “Exit fee,” he says miserably.'],
@@ -2249,10 +2250,11 @@ const SECTIONS = {
     choices: [{ text: 'Get up', to: 'kitchen' }],
   },
   table: {
-    text: ['The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. A pair of knitting needles like lances. A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel.'],
+    text: (c) => [`The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. ${c.flags.needle ? 'A knitting needle like a lance, and its twin bridging the gap to the mantelpiece.' : 'A pair of knitting needles like lances.'} A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel${c.flags.coin ? ', a chunk missing from its edge' : ''}.`],
     choices: [
       { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
       { text: 'Drag a knitting needle to the edge of the table', to: 'needle', show: { notFlag: 'needle' } },
+      { text: 'Cross the knitting needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall', show: { flag: 'needle' } },
       { text: 'Climb down', to: 'kitchen' },
     ],
   },
@@ -2263,7 +2265,7 @@ const SECTIONS = {
   },
   coin_noise: {
     on: [NOISE(), { damage: 'd4', from: 'The coin' }],
-    text: ['The coin slips, rolls, and falls off the table onto the stone floor with a sound like a cathedral bell. You’re lucky it didn’t take you with it.'],
+    text: ['The coin slips out of the purse, rolls to the edge of the table and spins there, ringing like a cathedral bell, before it settles. You’re lucky it didn’t take you over the edge with it.'],
     choices: [{ text: 'Climb down before anyone comes', to: 'kitchen' }],
   },
   needle: {
@@ -2475,7 +2477,7 @@ const SECTIONS = {
       { sell: { item: 'thimble', gold: 60, text: 'A fence in the village buys the thimble' } },
     ],
     text: (c) => [
-      c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a shotgun. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
+      c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a pitchfork. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
       `You come down from Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },
@@ -2538,7 +2540,7 @@ const SECTIONS = {
     choices: [
       { text: 'Search Grimsby’s carriage for the deed', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'deed', fail: 'bailiffs', show: { notFlag: 'deed' } },
       { text: 'Visit the town hall', to: 'town_hall', show: { notFlag: 'deed' } },
-      { text: 'Buy a pie from the baker who feeds the kobolds', to: 'baker', show: { notFlag: 'pie' } },
+      { text: 'Buy a pie from the baker who feeds the kobolds (5GP)', to: 'baker', if: { gold: 5 }, show: { notFlag: 'pie' } },
       { text: 'Walk up to the pyramid', to: 'pyramid' },
     ],
   },
@@ -2602,7 +2604,7 @@ const SECTIONS = {
       { text: 'Knock on the door', to: 'door' },
       { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
       { text: 'Set fire to it', to: 'burn', if: { fire: true } },
-      { text: 'Take your bow to the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
+      { text: 'Shoot back at the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
   },
   slingers: {
@@ -3316,7 +3318,7 @@ const SECTIONS = {
     ],
   },
   hauled: {
-    text: ['You get a rope round Thunder and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
+    text: ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
@@ -3496,7 +3498,7 @@ const SECTIONS = {
       c.flags.gloriousDeath || (c.flags.dead && c.flags.propped)
         ? `Sir Bertram Gristle is buried with full honours. The Pension Office pays out, Percival weeps for nearly a minute, and the toads keep on coming.${c.flags.glory ? '' : ' Percival never thanks you. You never asked him to.'}`
         : c.flags.dead
-          ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “showing off” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
+          ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “old age, mostly” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
           : 'Sir Bertram Gristle rides home on Thunder, at the pace of a funeral, and lives another nine years out of spite. Percival’s face is everything he hoped.',
       c.flags.aimed ? 'In Lower Muckle, the exploding toads stop landing in the village pond. Nobody ever finds out why.' : '',
       `You come home with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
@@ -3653,7 +3655,7 @@ const SECTIONS = {
     text: ['A white, dusty, extremely annoyed porcupine appears in the straw, every quill outlined. It is the size of a pig. Now you can see it, you can walk round it. Underneath it, where it was sitting, is a ring of keys.'],
     choices: [
       { text: 'Hook the keys out from under it with your pole', to: 'keys', if: { item: 'pole' } },
-      { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' } },
+      { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Shoo it off the keys', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'keys', fail: 'porcupine_fight' },
       { text: 'Back to the ring', to: 'big_top' },
     ],
@@ -3690,7 +3692,7 @@ const SECTIONS = {
       { text: 'Feel around the platform for the egg', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'], mods: [{ if: { anyItem: ['pocketsand'] }, dd: 8 }, { if: { flag: 'flour' }, dd: 8 }] }, pass: 'egg', fail: 'ostrich_fight' },
       { text: 'Cast Throw voice to call it down, like a lady ostrich', cast: 'voice', pass: 'ostrich_lured', fail: 'ostrich_fight' },
       { text: 'Cast Ward on the platform, so it rings when the ostrich moves', cast: 'ward', pass: 'ostrich_lured', fail: 'ostrich_fight' },
-      { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' } },
+      { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Sweep the platform with your pole until something egg-shaped rolls off into your arms', test: { stat: 'Dex', dd: 6, save: true }, pass: 'egg', fail: 'ostrich_fight', if: { item: 'pole' } },
       { text: 'Climb up and take the egg by force', to: 'ostrich_fight' },
     ],
@@ -3728,7 +3730,7 @@ const SECTIONS = {
   },
   ape_led: {
     on: [{ flag: 'apeSold' }, { gold: 250, msg: 'The Visitor pays in useless yellow metal: 250GP.' }], onceOnly: true,
-    text: ['You walk an invisible ape out of the back of the tent on the end of a rope, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
+    text: ['You walk an invisible ape out of the back of the tent, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   ape_fight: {
@@ -3763,7 +3765,7 @@ const SECTIONS = {
     redirect: [{ if: { flag: 'profDown' }, to: 'safe_jam' }],
     text: ['Professor Peculius catches you in the act. He doesn’t shout. He sweeps back his cape, and his hands start to glow. “My animals,” he says, “are invisible. I am merely very hard to see coming.”'],
     fight: {
-      monsters: [{ name: 'Professor Peculius', lvl: 5, range: 'medium', dmg: '10', note: 'Delinquent wizard; casts arcane bolt (10 damage)' }],
+      monsters: [{ name: 'Professor Peculius', lvl: 5, range: 'medium', dmg: '10', note: 'Showman and wizard; casts arcane bolt (10 damage)' }],
       distance: 1, win: 'professor_down', flee: { to: 'big_top', label: 'Lose yourself in the crowd' },
     },
   },
@@ -3959,7 +3961,7 @@ const SECTIONS = {
     ],
   },
   advance: {
-    on: [{ flag: 'bursar' }, { gold: 100 }],
+    on: [{ flag: 'bursar' }, { flag: 'advance' }, { gold: 100 }],
     text: ['The Bursar counts out a hundred gold with the face of a man pulling his own teeth, and writes it down twice.'],
     choices: [{ text: 'Back to the quad', to: 'quad' }],
   },
@@ -4027,6 +4029,7 @@ const SECTIONS = {
     on: [
       { if: { any: [{ flag: 'solved' }, { flag: 'midTurn' }] }, gold: 500, uncapped: true, msg: 'The Dean pays the full 500GP, weeping with relief.' },
       { if: { flag: 'cubeBroken' }, gold: 300, uncapped: true, msg: 'The Dean pays you 300GP. “For removal,” he says. “Not for solving. The professor of logic would have wanted that distinction made.”' },
+      { if: { flag: 'advance', any: [{ flag: 'solved' }, { flag: 'midTurn' }, { flag: 'cubeBroken' }] }, gold: -100, msg: 'The Bursar deducts his advance. He has written it down twice, so he tries to deduct it twice. You stop him.' },
       { sell: { item: 'tesseract', gold: 200, text: 'The university’s professor of geometry buys the folded tesseract' } },
     ],
     text: (c) => [
@@ -4051,7 +4054,7 @@ __defs["src/adventure/torches-and-pitchforks.js"] = function(){
 // The mob is ghostly: ordinary weapons pass through it. Holy water, magic, a blessed weapon, turning or paperwork all work.
 
 const { pastFlag, didAdventure, lightSource } = __req("src/engine/conditions.js");
-// Every scumbag who gets this far has met Lord Grimsby before, at Middle Whelping (Eviction Notice).
+// A scumbag who played Eviction Notice has met Lord Grimsby before, at Middle Whelping.
 const REUNION = (c) => {
   const p = (f) => pastFlag(c, 'eviction-notice', f);
   if (p('burnt')) return 'He brightens when he sees you. “The one who burnt the kobolds out! Splendid. I asked for you specifically. Nobody else would come.”';
@@ -4304,7 +4307,7 @@ const DEATH_TEXT = [
 return { META, SECTIONS, DEATH_TEXT };
 };
 __defs["src/adventure/standard-dragon.js"] = function(){
-// A PERFECTLY STANDARD DRAGON — the last bad idea. For a level 9–10 scumbag.
+// A PERFECTLY STANDARD DRAGON — deal with a dragon that is following procedure. For a level 9–10 scumbag.
 // The dragon is old, lame and following procedure; the real problem is the slug eating its hoard.
 
 const META = {
@@ -4312,6 +4315,8 @@ const META = {
   blurb: 'A dragon has moved into the mountain above Much Smallness and filed all the right paperwork. It has demanded a maiden, a sheep a week and the usual tribute. The village has offered the standard dragon bounty of one thousand gold. It is the sort of job a scumbag only gets once. It is probably the sort of job a scumbag only gets once.',
 };
 
+const UNITS = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const COUNT = (n) => n < 20 ? UNITS[n] : n < 30 ? `twenty${n > 20 ? `-${UNITS[n - 20]}` : ''}` : String(n);
 const dragon = { name: 'Old Scorchwell', lvl: 9, hp: 34, dmg: '2d6+3', range: 'short', feats: ['breath'], note: 'A perfectly standard dragon, but old (bites for 2d6+3; few teeth left); breathes fire (sometimes, instead of attacking, d12 Dex save or 5d6 fire damage, half on a success); lame, so it can’t fly' };
 const slug = { name: 'Thirty-foot slug', lvl: 8, hp: 44, range: 'engaged', onHit: { stat: 'Dex', dd: 10, label: 'keep your feet', text: 'You slip on the slime.', effect: 'prone' }, note: 'Thirty feet of slug; on hit, d10 Dex save or fall over in its slime; salt is very bad for it' };
 
@@ -4489,7 +4494,7 @@ const SECTIONS = {
       c.flags.retired
         ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
         : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
-      `That’s ${['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][Math.min(10, (c.done || []).length + 1)]} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
+      `That’s ${COUNT((c.done || []).length + 1)} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
     ],
   },
 };
@@ -4726,8 +4731,10 @@ const SECTIONS = {
   },
   hall: {
     text: (c) => [
-      c.flags.footmenGone
+      c.flags.footmenDown
         ? 'The great hall of Mudlark Manor is empty now, apart from the smell, which is never empty.'
+        : c.flags.footmenClean ? 'The footmen hover in the great hall with towels over their arms, waiting their turn for the bath.'
+        : c.flags.footmenGone ? 'The footmen lean on their stain in the great hall, and pay you no attention at all.'
         : 'Two footmen open the front door, one each, and the smell comes out to meet you like a dog. The great hall is hung with tapestries of the Mudlarks through the ages, all of them muddy. The footmen are muddy too. “His Lordship,” says one, “does not receive bathers.”',
       'Stairs lead to the east wing, a door to the cellar, and a corridor to a back door, beyond which you can hear grunting.',
     ],
@@ -4755,7 +4762,7 @@ const SECTIONS = {
     fight: { monsters: [footman], win: 'footmen_down', flee: { to: 'start', label: 'Back out of the front door' } },
   },
   footmen_down: {
-    on: [{ flag: 'footmenGone' }, { gold: 6, msg: 'In the coat pockets: 6GP, very damp.' }], onceOnly: true,
+    on: [{ flag: 'footmenGone' }, { flag: 'footmenDown' }, { gold: 6, msg: 'In the coat pockets: 6GP, very damp.' }], onceOnly: true,
     text: ['The footman lies on the floor, where he fits in with the décor. The other one hands you back his coat, as if you’d won it, and goes off to lie down somewhere.'],
     choices: [{ text: 'Into the hall', to: 'hall' }],
   },
@@ -4801,13 +4808,18 @@ const SECTIONS = {
     text: ['The sponge heaves itself up over the rim of the bath, wet and enormous, and comes at you with a noise like a mop going into a bucket.'],
     fight: {
       monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }],
-      win: 'sponge_out', flee: { to: 'hall', label: 'Run downstairs' },
+      win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' },
       special: [{ label: 'Wring it out', test: { stat: 'Str', dd: 6, skill: 'bruteforce' }, flag: 'wrung', text: 'You get both arms round it and twist. Thirty years of bathwater comes out in a flood, and the sponge goes limp.', failText: 'It’s too wet to get a grip on.', win: true }],
     },
   },
   sponge_burnt: {
     on: [{ flag: 'spongeGone' }, { add: ['ready', 1] }],
     text: ['It takes a while to catch, being a sponge, but when it goes it goes, with a smell that is, remarkably, an improvement on the rest of the house.'],
+    choices: [{ text: 'Back to the bathroom', to: 'bathroom' }],
+  },
+  sponge_beaten: {
+    on: [{ flag: 'spongeGone' }, { add: ['ready', 1] }],
+    text: ['The sponge goes limp at last, and you drag thirty years of it over the rim and out of the window. It lands in the moat with a long, wet sigh.'],
     choices: [{ text: 'Back to the bathroom', to: 'bathroom' }],
   },
   sponge_out: {
@@ -5045,7 +5057,7 @@ const SECTIONS = {
   race_neville: {
     on: [{ flag: 'nevilleWon' }],
     text: (c) => [
-      c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. Neville, in running shoes, doesn’t notice them at all.' : 'The whistle goes. The field thunders off.',
+      c.flags.caltropsStart ? 'The field goes off over your caltrops. The Duchess hears the first one crunch under a hoof behind her, decides it is a flag, and spends the race going sideways. Neville picks his way through them with his knees up, like a man crossing a pebble beach, and then he’s away.' : 'The whistle goes. The field thunders off.',
       c.flags.duchessNobbled ? 'The Duchess has had a very bad afternoon, and runs like it, sideways.' : 'The Duchess goes off in front, as favourites do.',
       'Down the home straight, a strange shape comes through the field: legs pumping, knees high, a horse’s head bobbing on top like a figurehead. Neville wins by four lengths, at twenty to one. There is a terrible silence from the stands, and then, from the bookmakers’ ring, a sound like a man being sick.',
     ],
@@ -5053,7 +5065,7 @@ const SECTIONS = {
   },
   race_duchess: {
     text: (c) => [
-      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : 'The whistle goes. The field thunders off.',
+      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. The Duchess, calm as a cow, doesn’t even look round.' : 'The whistle goes. The field thunders off.',
       c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
       'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
     ],
@@ -5065,7 +5077,7 @@ const SECTIONS = {
       : (c.flags.sidJob ? 'Honest Sid is all smiles behind the grandstand. “Lovely work,” he says, counting out your fee.' : 'Honest Sid is all smiles behind the grandstand, counting his money.')],
     choices: [
       { text: 'Take what’s yours', to: 'payout', show: { notFlag: 'nevilleWon' } },
-      { text: 'Collect your winnings and leave', to: 'payout', show: { flag: 'nevilleWon', notFlag: 'sidJob' } },
+      { text: 'Collect any winnings and leave', to: 'payout', show: { flag: 'nevilleWon', notFlag: 'sidJob' } },
       { text: 'Explain that it wasn’t your fault', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'sid_shrugs', fail: 'heavies', show: { flag: 'nevilleWon', any: [{ flag: 'sidJob' }] } },
       { text: 'Run for it', to: 'heavies', show: { flag: 'nevilleWon', any: [{ flag: 'sidJob' }] } },
     ],
@@ -5093,7 +5105,7 @@ const SECTIONS = {
     text: (c) => [
       c.flags.nevilleWon
         ? 'That evening, Neville is carried round the town on the shoulders of everyone who backed him. He gives a speech from the horse end. Nobody can hear it, but everybody cheers.'
-        : 'That evening, the Duchess is put out to stud, and Honest Sid buys a new suit, even louder than the last one.',
+        : 'That evening, the Duchess is retired to a field full of buttercups, and Honest Sid buys a new suit, even louder than the last one.',
       `You leave Muckmarket with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
   },
@@ -5140,6 +5152,7 @@ const SECTIONS = {
       { text: 'Try the butcher’s', to: 'butcher', effects: [TICK], show: { notFlag: 'butcherDone' } },
       { text: 'Climb the church tower', to: 'tower', effects: [TICK], show: { notFlag: 'towerDone' } },
       { text: 'Pay a visit to Mrs Grudge’s caravan', to: 'grudge', effects: [TICK], show: { notFlag: 'grudgeDone' } },
+      { text: 'Blow Mrs Grudge’s dog whistle', to: 'whistled', show: { flag: 'dogWhistle' } },
       { text: 'Give up and go back to the show', to: 'show' },
     ],
   },
@@ -5211,7 +5224,7 @@ const SECTIONS = {
   whistle: {
     on: [{ flag: 'dogWhistle' }, { flag: 'grudgeDone' }],
     text: ['A small silver whistle, too high to hear. Blink dogs come to it, the way other dogs come to their name.'],
-    choices: [{ text: 'Blow it in the square', to: 'whistled' }],
+    choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
   dogs_fight: {
     text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
@@ -5376,7 +5389,7 @@ const SECTIONS = {
   },
   book_dropped: {
     on: [NOISE(), { flag: 'scriptoriumDone' }],
-    text: ['The green book slips out of your habit and lands on the stone floor with a slap like a gunshot. Twenty quills stop scratching. You leave, walking backwards, smiling.'],
+    text: ['The green book slips out of your habit and lands on the stone floor with a slap like a thunderclap. Twenty quills stop scratching. You leave, walking backwards, smiling.'],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   tower: {
@@ -5427,6 +5440,7 @@ const SECTIONS = {
     choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
   },
   octavius_fight: {
+    on: [{ flag: 'octaviusCame' }],
     text: ['Brother Octavius comes at you without a sound, all eight hands open, and the air fills with slaps.'],
     fight: {
       monsters: [octavius], win: 'octavius_down', flee: { to: 'clatter', label: 'Run for the gate' },
@@ -5434,7 +5448,7 @@ const SECTIONS = {
     },
   },
   octavius_down: {
-    text: ['Brother Octavius sits down on the gravel, all eight arms folded again, and closes his eyes. He has not made a sound, and you realise, with some respect, that he never will.'],
+    text: ['Brother Octavius sits down on the gravel, all eight arms folded again, and closes his eyes. He has not made a sound, and you realise, with some respect, that he never will. Across the cloister, the monk at the cellar door looks at him, then at you, and steps aside.'],
     choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
   },
   cellar: {
@@ -5717,7 +5731,7 @@ const SECTIONS = {
     choices: [
       { text: 'Ask them all a question only the real one could answer', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Envoy'], why: 'you know how to question people' }, pass: 'question', fail: 'chorus', show: { notFlag: 'asked' } },
       { text: 'Look them over with your jeweller’s loupe', to: 'loupe', if: { item: 'loupe' }, show: { notFlag: 'looked' } },
-      { text: 'Search the Professor’s study', to: 'study', show: { notFlag: 'studyDone' } },
+      { text: 'Search the Professor’s study', to: 'study', show: { any: [{ notFlag: 'diary' }, { notFlag: 'strongbox' }] } },
       { text: 'Go down to the laboratory', to: 'lab', show: { notFlag: 'labDone' } },
       { text: 'Herd the Glibbs into the cellar and padlock it', to: 'cellar', if: { item: 'padlock' }, show: { notFlag: 'lidded' } },
       { text: 'Hit one, to see what happens', to: 'split' },
@@ -5743,14 +5757,14 @@ const SECTIONS = {
   study: {
     text: ['The Professor’s study is a mess of papers. On the desk lies his diary, open at the last entry, and a locked strongbox.'],
     choices: [
-      { text: 'Read the diary', to: 'diary' },
+      { text: 'Read the diary', to: 'diary', show: { notFlag: 'diary' } },
       { text: 'Pick the strongbox', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'strongbox', fail: 'strongbox_jam', if: { item: 'tools' }, show: { notFlag: 'strongbox' } },
       { text: 'Lever the strongbox open', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'strongbox', fail: 'strongbox_jam', if: { item: 'prybar' }, show: { notFlag: 'strongbox' } },
       { text: 'Back to the hall', to: 'hall' },
     ],
   },
   diary: {
-    on: [{ flag: 'studyDone' }, CLUE],
+    on: [{ flag: 'diary' }, CLUE],
     text: ['The last entry reads: “Drank it. Feel wonderful. Feel slightly runny. Must remember: if anything goes wrong, I always sit by the fire. Always. I hate the cold. G.” Underneath, in a wobbly hand: “Have gone jelly. Pass the antidote. Formula in lab, half finished.”'],
     choices: [{ text: 'Back to the study', to: 'study' }, { text: 'Back to the hall', to: 'hall' }],
   },
@@ -5825,7 +5839,7 @@ const SECTIONS = {
   },
   all_gone: {
     on: [{ flag: 'noGlibb' }],
-    text: ['When it’s over, there are no Glibbs left in Glibb Hall: only puddles, slowly drying on the carpet, and a single gold tooth.'],
+    text: ['When the real Professor goes, the copies seem to lose interest in holding themselves together. Soon there are no Glibbs left in Glibb Hall: only puddles, slowly drying on the carpet, and a single gold tooth.'],
     choices: [{ text: 'Go to the reading of the will', to: 'reading' }],
   },
   reading: {
@@ -5940,7 +5954,7 @@ const SECTIONS = {
     },
   },
   famine: {
-    on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }],
+    on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }, { flag: 'rotten' }],
     text: ['A wave of brown spreads over the golem, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
     choices: [{ text: 'Back to the golem', to: 'clearing' }],
   },
@@ -5968,10 +5982,13 @@ const SECTIONS = {
   },
   golem_down: {
     on: [{ flag: 'golemDead' }],
-    text: ['The golem goes down in a heap of bunches, and lies still. The villagers come back out of the trees with their spoons, and look at you hopefully.'],
+    text: (c) => [c.flags.rotten
+      ? 'The golem goes down in a brown heap, and lies still. Nobody comes out of the trees to eat it. It smells too much like August.'
+      : 'The golem goes down in a heap of bunches, and lies still. The villagers come back out of the trees with their spoons, and look at you hopefully.'],
     choices: [
-      { text: 'Let them have it', to: 'feast' },
-      { text: 'Fill a sack for the Guild’s custard first', to: 'sacked' },
+      { text: 'Let them have it', to: 'feast', show: { notFlag: 'rotten' } },
+      { text: 'Fill a sack for the Guild’s custard first', to: 'sacked', show: { notFlag: 'rotten' } },
+      { text: 'Go back to the Guild', to: 'festival', show: { flag: 'rotten' } },
     ],
   },
   feast: {
@@ -6099,7 +6116,7 @@ const SECTIONS = {
       { text: 'Let Mrs Wimbledon go in first', to: 'mum', show: { flag: 'mumComing' } },
       { text: 'Pay him (20GP)', to: 'inside', if: { gold: 20 }, effects: [{ gold: -20 }, { flag: 'lookoutGone' }], show: { notFlag: 'lookoutGone' } },
       { text: 'Hand him the Headmistress’s detention slip', to: 'slip', if: { item: 'slip' }, show: { notFlag: 'lookoutGone' } },
-      { text: 'Blow your watchman’s whistle like a truant officer', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'whistled' } },
+      { text: 'Blow your watchman’s whistle like a truant officer', to: 'whistle', if: { item: 'whistle' }, show: { notFlag: 'lookoutGone' } },
       { text: 'Deal with him', to: 'lookout_fight', show: { notFlag: 'lookoutGone' } },
       { text: 'Go in', to: 'inside', show: { flag: 'lookoutGone' } },
     ],
@@ -6144,7 +6161,7 @@ const SECTIONS = {
   },
   mum: {
     on: [{ flag: 'mumDone' }],
-    text: ['Mrs Wimbledon walks into the foundry. The sparks stop. Five teenage wizards freeze. Spike drops both wands. “SIMON WIMBLEDON,” says his mother, in a voice that has kneaded ten thousand loaves. “WHAT. IS. THIS.”', 'It is all over in less than a minute. They go quietly, in a line, holding hands, with Mrs Wimbledon at the back with her rolling pin. Spike carries the grimoire himself.'],
+    text: (c) => [`Mrs Wimbledon walks into the foundry. The sparks stop. ${c.flags.gangThinned ? 'Three' : 'Five'} teenage wizards freeze. Spike drops both wands. “SIMON WIMBLEDON,” says his mother, in a voice that has kneaded ten thousand loaves. “WHAT. IS. THIS.”`, 'It is all over in less than a minute. They go quietly, in a line, holding hands, with Mrs Wimbledon at the back with her rolling pin. Spike carries the grimoire himself.'],
     choices: [{ text: 'Follow them to the Collegium', to: 'headmistress' }],
   },
   surrender: {
@@ -6181,7 +6198,7 @@ const SECTIONS = {
   sold: {
     on: [{ flag: 'grimoireSold' }],
     text: ['There’s a man in the next town who buys books with chains on them and doesn’t ask why. He pays very well. Spike watches you go, with something like respect.'],
-    choices: [{ text: 'Go back to Muttering', to: 'headmistress' }],
+    choices: [{ text: 'Leave town', to: 'headmistress' }],
   },
   headmistress: {
     end: 'victory',
@@ -6230,7 +6247,7 @@ const SECTIONS = {
     text: (c) => [
       'Halfway down Hogback Hill, Mother is sitting in a field with her apron over her face, crying. She is a hill giant, a hundred feet tall, and when she sobs, the hedges shake.',
       MOTHER_KNOWS(c),
-      '“My baby,” she says. “He climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel. Well, most of one. Somebody has taken a chunk out of it.',
+      `“My baby,” she says. “He climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel.${pastFlag(c, 'mothers-kitchen', 'coin') ? ' Well, most of one. Somebody has taken a chunk out of it. You don’t say anything.' : ''}`,
     ].filter(Boolean),
     choices: [{ text: 'Go down into Lower Hogback', to: 'square' }],
   },
@@ -6376,7 +6393,7 @@ const SECTIONS = {
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
   hill_road: {
-    redirect: [{ if: { flag: 'snareDeal' }, to: 'net' }, { if: { notFlag: 'snareFixed' }, to: 'ambush' }],
+    redirect: [{ if: { flag: 'snareDeal', notFlag: 'snareFixed' }, to: 'net' }, { if: { notFlag: 'snareFixed' }, to: 'ambush' }],
     text: ['You lead the baby out of town and up the hill road, slowly, a step at a time. It follows you like an enormous duckling.'],
     choices: [{ text: 'On up the hill', to: 'arrive' }],
   },
@@ -6397,7 +6414,7 @@ const SECTIONS = {
   },
   arrive: {
     on: [{ flag: 'delivered' }],
-    text: ['At the top of the hill road, the baby sees its mother, and lets go of everything it was holding, including the church spire, and crawls into her arms.'],
+    text: ['At the top of the hill road, the baby sees its mother, and lets go of everything it was holding except the church spire, and crawls into her arms.'],
     choices: [{ text: 'Collect your fee', to: 'home' }],
   },
   net: {
@@ -6415,12 +6432,12 @@ const SECTIONS = {
   home: {
     end: 'victory',
     on: [
-      { if: { flag: 'delivered' }, gold: 300, uncapped: true, msg: 'Mother gives you most of a gold coin the size of a cartwheel. A goldsmith in Lower Hogback gives you 300GP for it, and a nervous look.' },
+      { if: { flag: 'delivered' }, gold: 300, uncapped: true, msg: 'Mother gives you her gold coin the size of a cartwheel. A goldsmith in Lower Hogback gives you 300GP for it, and a nervous look.' },
       { if: { flag: 'sold' }, gold: 250, uncapped: true, msg: 'Captain Snare’s cut: 250GP.' },
     ],
     text: (c) => [
       c.flags.sold ? 'The baby is sold to a travelling menagerie that same week. Mother sits on Hogback Hill for a very long time. You avoid the area.'
-        : c.flags.trampled ? 'Mother carries her baby home, still apologising to the town. She pays you anyway. Lower Hogback is rebuilt by Christmas, mostly.'
+        : c.flags.trampled ? 'Mother carries her baby home, still apologising to the town. She pays you anyway. Lower Hogback is rebuilt by midwinter, mostly.'
           : !c.flags.delivered ? 'You leave Lower Hogback with the baby still sitting in the square. By nightfall, Captain Snare has his net round it, and Mother’s crying can be heard three counties away.'
           : 'The baby crawls up the last of the hill into Mother’s arms, and she squashes it to her apron and sobs. Lower Hogback is a bit flatter than it was, but standing. The church never gets its spire back. The baby keeps it.',
       `You leave Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
@@ -6456,15 +6473,16 @@ const SECTIONS = {
   },
   great_bath: {
     text: (c) => [
-      'The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, a tiara and a set of false teeth. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.',
-      c.flags.drained ? 'The bath is drained, and the blob lies at the bottom, a great quivering heap the size of a haycart, shrinking.' : '',
-      c.flags.salted ? 'The water is cloudy with salt, and the blob is in trouble.' : '',
+      c.flags.blobGone ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. The blob has gone down the drain, and it is just a bath again.'
+        : c.flags.drained ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. It is empty of water now, and the blob lies on the tiles at the bottom, a great quivering heap the size of a haycart, shrinking.'
+        : c.flags.salted ? 'The Great Bath is a Roman pool the size of a ballroom, steaming. The water is cloudy with salt, and the blob is in trouble: a milky, shrinking lump at the deep end.'
+        : `The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, ${c.flags.tiaraTaken ? '' : 'a tiara, '}a set of false teeth and a pair of boots. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.`,
     ].filter(Boolean),
     choices: [
       { text: 'Go to the pump room, to see about draining it', to: 'pump_room', show: { notFlag: 'drained' } },
       { text: 'Look in the treatment rooms', to: 'treatments', show: { notFlag: 'saltsFound' } },
       { text: 'Pour the Epsom salts into the bath', to: 'salt_bath', if: { flag: 'saltsFound', flagText: 'the Epsom salts' }, show: { notFlag: 'salted' } },
-      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { notFlag: 'fished' } },
+      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
       { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', show: { none: [{ flag: 'drained' }, { flag: 'salted' }, { flag: 'polluted' }] } },
       { text: 'Wade in and fight it', to: 'blob_fight', show: { notFlag: 'blobGone' } },
       { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'salted' }], notFlag: 'blobGone' } },
@@ -6890,9 +6908,13 @@ const SECTIONS = {
     choices: [{ text: 'Back to the Archive', to: 'archive' }],
   },
   cabinet_fight: {
-    on: [{ flag: 'cabinetDone' }],
     text: ['You open the wrong drawer. It has teeth. So do the other three. The filing cabinet comes at you, drawers snapping.'],
-    fight: { monsters: [cabinet], win: 'your_file', flee: { to: 'forms', label: 'Run for the Hall of Forms' } },
+    fight: { monsters: [cabinet], win: 'cabinet_down', flee: { to: 'forms', label: 'Run for the Hall of Forms' } },
+  },
+  cabinet_down: {
+    on: [{ flag: 'cabinetDone' }],
+    text: ['The filing cabinet topples over with a crash that echoes through the Archive, and its drawers fall open, empty of everything but teeth. Your file was in the one next to it.'],
+    choices: [{ text: 'Read your file', to: 'your_file' }],
   },
   your_file: {
     on: [{ flag: 'fileFound' }],
@@ -6969,7 +6991,7 @@ const SECTIONS = {
   },
   argued: {
     on: [{ flag: 'struckOut' }, { flag: 'settled' }],
-    text: ['You argue for an hour. Income from a vault under a hill is treasure trove. Fees for evicting kobolds are expenses. Squandering is a charitable donation. The Auditor-General listens, writing. At the end, he sighs, takes off his spectacles, and draws a line through your name. “Nobody,” he says, “has ever read the regulations before.”'],
+    text: ['You argue for an hour. Income from a vault under a hill is treasure trove. Fees are expenses. Squandering is a charitable donation. The Auditor-General listens, writing. At the end, he sighs, takes off his spectacles, and draws a line through your name. “Nobody,” he says, “has ever read the regulations before.”'],
     choices: [{ text: 'Leave', to: 'free' }],
   },
   auditor_fight: {
@@ -7174,6 +7196,7 @@ const SECTIONS = {
     },
   },
   bishop_down: {
+    redirect: [{ if: { flag: 'keyFight' }, to: 'wound_down' }],
     on: [{ flag: 'smashed' }],
     text: ['His Mechanical Grace crashes to the floor in a fountain of springs. Its glass eyes look up at you. “FORGIVE THEM,” it says, slowly, winding down, “FOR THEY KNOW NOT…” And stops.'],
     choices: [{ text: 'Go and tell the Dean', to: 'easter' }],
@@ -7586,7 +7609,7 @@ const SECTIONS = {
       { text: 'Visit the rest home', to: 'rest_home', show: { notFlag: 'restDone' } },
       { text: 'Walk out along the pier', to: 'pier' },
       { text: 'Throw your rations to the seagulls to keep them busy', to: 'gulls_fed', if: { item: 'rations' }, show: { notFlag: 'gullsGone' } },
-      { text: 'Go back to Death’s deckchair', to: 'season_ends' },
+      { text: 'Give up, and go back to Death’s deckchair', to: 'season_ends' },
     ],
   },
   gulls_fed: {
@@ -7620,8 +7643,14 @@ const SECTIONS = {
     },
   },
   gulls_down: {
+    redirect: [{ if: { flag: 'gullFood' }, to: 'gulls_away' }],
     on: [{ flag: 'gullsGone' }],
     text: ['The seagulls lie on the pier, battered and burnt and pulped, and do not die, and do not get up either. They glare at you.'],
+    choices: [{ text: 'Go into the ghost train', to: 'ghost_train' }],
+  },
+  gulls_away: {
+    on: [{ flag: 'gullsGone' }, { lose: 'rations' }],
+    text: ['The seagulls go off after your rations in a screaming cloud, out over the sea, fighting over them. None of them can lose, so they’ll be at it for hours.'],
     choices: [{ text: 'Go into the ghost train', to: 'ghost_train' }],
   },
   ghost_train: {
@@ -7718,7 +7747,7 @@ const nimbus = { name: 'Lord Nimbus', lvl: 10, hp: 40, range: 'engaged', dmg: '2
 const REUNION = (c) => {
   const p = (f) => pastFlag(c, 'tall-order', f);
   if (p('sold_hat')) return 'Lord Shortshanks looks at you closely. “You’re the one who stole the Lofty Hat,” he says. “My brother described you very carefully. He has offered a reward for you for years.” He smiles. “I paid half of it. Best money I ever spent.”';
-  if (p('sold_diary')) return '“I bought my brother’s diary, you know,” says Lord Shortshanks. “Five foot two. I had it read out at Christmas.” He sighs. “He’s still my brother.”';
+  if (p('sold_diary')) return '“I bought my brother’s diary, you know,” says Lord Shortshanks. “Five foot two. I had it read out at the midwinter dinner.” He sighs. “He’s still my brother.”';
   if (didAdventure(c, 'tall-order')) return '“You’ve been to the Spire before,” says Lord Shortshanks, looking at you shrewdly. “I can tell. You’ve got the look of somebody who’s been looked down on.”';
   return '';
 };
@@ -7830,7 +7859,10 @@ const SECTIONS = {
     choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   harp_screams: {
-    text: ['The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
+    text: (c) => [c.flags.giantBack
+      ? 'The harp screams: a chord like every church bell in the world dropped down a well. A quarter of a mile away, at the door, Lord Nimbus turns round. He is back at the fireplace in four strides.'
+      : 'The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
+    on: [{ if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
     choices: [{ text: 'Face him', to: 'giant_wakes' }],
   },
   freed: {
@@ -7888,7 +7920,7 @@ const SECTIONS = {
     ],
     text: (c) => [
       c.flags.longshanksFree ? 'Lord Longshanks reaches the ground and kisses it, and then demands that the Spire be pulled down, immediately, all of it. It is. He spends the rest of his days in a bungalow.'
-        : 'Lord Longshanks stays in the clouds, in his birdcage. The giants stop throwing his furniture, because they’ve run out, and start throwing the giants’ own, which is worse.',
+        : 'Lord Longshanks stays in the clouds, in his birdcage. The giants stop throwing his furniture, because they’ve run out, and start throwing their own, which is worse.',
       c.flags.sold_harp ? 'The golden harp sings for the duke every night, and every night it sings about you, and none of it is complimentary.' : '',
       `You come down from the clouds with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),

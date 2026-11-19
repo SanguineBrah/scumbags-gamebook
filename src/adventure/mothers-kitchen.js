@@ -96,10 +96,11 @@ export const SECTIONS = {
     choices: [{ text: 'Get up', to: 'kitchen' }],
   },
   table: {
-    text: ['The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. A pair of knitting needles like lances. A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel.'],
+    text: (c) => [`The tabletop is a plain of scrubbed pine. A loaf the size of a haystack. A teacup you could bathe in. ${c.flags.needle ? 'A knitting needle like a lance, and its twin bridging the gap to the mantelpiece.' : 'A pair of knitting needles like lances.'} A ball of wool. And Mother’s purse, open, with a coin in it the size of a cartwheel${c.flags.coin ? ', a chunk missing from its edge' : ''}.`],
     choices: [
       { text: 'Prise a chunk off the giant coin', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'coin', fail: 'coin_noise', show: { notFlag: 'coin' } },
       { text: 'Drag a knitting needle to the edge of the table', to: 'needle', show: { notFlag: 'needle' } },
+      { text: 'Cross the knitting needle to the mantelpiece', test: { stat: 'Dex', dd: 6, save: true }, pass: 'mantel', fail: 'needle_fall', show: { flag: 'needle' } },
       { text: 'Climb down', to: 'kitchen' },
     ],
   },
@@ -110,7 +111,7 @@ export const SECTIONS = {
   },
   coin_noise: {
     on: [NOISE(), { damage: 'd4', from: 'The coin' }],
-    text: ['The coin slips, rolls, and falls off the table onto the stone floor with a sound like a cathedral bell. You’re lucky it didn’t take you with it.'],
+    text: ['The coin slips out of the purse, rolls to the edge of the table and spins there, ringing like a cathedral bell, before it settles. You’re lucky it didn’t take you over the edge with it.'],
     choices: [{ text: 'Climb down before anyone comes', to: 'kitchen' }],
   },
   needle: {
@@ -322,7 +323,7 @@ export const SECTIONS = {
       { sell: { item: 'thimble', gold: 60, text: 'A fence in the village buys the thimble' } },
     ],
     text: (c) => [
-      c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a shotgun. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
+      c.flags.sold_turnip ? 'Turnbull weeps when he sees it. He hugs the Golden Turnip, then he hugs you, then he locks the turnip in his shed and sits outside it with a pitchfork. You leave him there.' : 'Turnbull looks at your empty hands. “No turnip,” he says. He goes back inside without another word, and you hear him crying.',
       `You come down from Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },

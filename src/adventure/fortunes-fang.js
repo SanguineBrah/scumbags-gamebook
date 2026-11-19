@@ -55,11 +55,12 @@ export const SECTIONS = {
       'The gaming floor is a crypt lined with coffins stood on end, each one a booth. Candles drip onto green baize. Pale gamblers lose quietly at the tables. Every so often one of them trips over nothing at all and doesn’t get up for a while.',
       'There is a dice table, a great brass wheel, a card table run by a crab in a bow tie, a bar, and a cashier’s cage. A door marked STAFF ONLY stands in the corner, and a velvet rope guards a stair going down.',
       HOUR(c),
-    ],
+      (c.flags.hour || 0) >= 4 ? 'The croupiers are covering the tables for the day. Nobody is taking any more bets.' : '',
+    ].filter(Boolean),
     choices: [
-      { text: 'Play the Bones (dice)', to: 'bones' },
-      { text: 'Play the Wheel', to: 'wheel' },
-      { text: 'Play Liar’s Dice with the crab', to: 'crab_table' },
+      { text: 'Play the Bones (dice)', to: 'bones', show: { below: ['hour', 4] } },
+      { text: 'Play the Wheel', to: 'wheel', show: { below: ['hour', 4] } },
+      { text: 'Play Liar’s Dice with the crab', to: 'crab_table', show: { below: ['hour', 4] } },
       { text: 'Get a drink at the bar', to: 'bar', show: { notFlag: 'drank' } },
       { text: 'Visit the cashier’s cage', to: 'cage' },
       { text: 'Try the STAFF ONLY door', to: 'office' },
@@ -197,7 +198,7 @@ export const SECTIONS = {
     ],
   },
   cash_in: {
-    on: [{ sell: { item: 'chips', gold: 100, text: 'The skeleton pays out for a gold chip' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }],
+    on: [{ sell: { item: 'chips', gold: 100, text: 'The skeleton pays out for a gold chip' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }, { sell: { item: 'chips', gold: 100, text: 'And another' } }],
     text: ['The skeleton bites each chip, which is a waste of time, as it has no tongue.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
@@ -249,7 +250,7 @@ export const SECTIONS = {
       { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
-      { text: 'Show him the dawn in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
+      { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
       { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
       { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
@@ -340,11 +341,11 @@ export const SECTIONS = {
   },
   exit: {
     text: (c) => c.flags.texFree && c.flags.rexDown
-      ? ['Rex is still sitting against the wall by the door, where you left him. Tex sits down beside him, back to back, as is their custom, and gently slaps him awake. “Who—” says Rex. “—hit you? This one,” says Tex. They watch you leave in a silence they finish together.']
+      ? ['Rex is still out cold where you left him. Tex sits down beside him, back to back, as is their custom, and gently slaps him awake. “Who—” says Rex. “—hit you? This one,” says Tex. They watch you leave in a silence they finish together.']
       : c.flags.texFree
       ? ['At the door, Rex turns, sees his brother, and drops the money he was counting. “Tex! I thought—” “—you’d never see me again?” “—exactly!” They hug, back to back, as is their custom. Nobody asks you for anything on the way out.']
       : c.flags.rexDown
-        ? ['You walk back through the gaming floor, clinking. Rex is still asleep against the wall by the door. Nobody stops you.']
+        ? ['You walk back through the gaming floor, clinking. Rex is still out cold where you left him. Nobody stops you.']
         : c.flags.rexFriend
           ? ['At the door, Rex looks at your bulging pockets, then past you, down the steps, hopefully. “Did you—” You shake your head. He sighs, and waves you out without a word, because he can only manage half of one.']
           : ['At the door, Rex looks at your bulging pockets. “Leaving so—” He waits. “Exit fee,” he says miserably.'],

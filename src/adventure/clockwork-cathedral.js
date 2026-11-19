@@ -150,6 +150,7 @@ export const SECTIONS = {
     },
   },
   bishop_down: {
+    redirect: [{ if: { flag: 'keyFight' }, to: 'wound_down' }],
     on: [{ flag: 'smashed' }],
     text: ['His Mechanical Grace crashes to the floor in a fountain of springs. Its glass eyes look up at you. “FORGIVE THEM,” it says, slowly, winding down, “FOR THEY KNOW NOT…” And stops.'],
     choices: [{ text: 'Go and tell the Dean', to: 'easter' }],

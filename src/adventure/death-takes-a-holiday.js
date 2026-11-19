@@ -50,7 +50,7 @@ export const SECTIONS = {
       { text: 'Visit the rest home', to: 'rest_home', show: { notFlag: 'restDone' } },
       { text: 'Walk out along the pier', to: 'pier' },
       { text: 'Throw your rations to the seagulls to keep them busy', to: 'gulls_fed', if: { item: 'rations' }, show: { notFlag: 'gullsGone' } },
-      { text: 'Go back to Death’s deckchair', to: 'season_ends' },
+      { text: 'Give up, and go back to Death’s deckchair', to: 'season_ends' },
     ],
   },
   gulls_fed: {
@@ -84,8 +84,14 @@ export const SECTIONS = {
     },
   },
   gulls_down: {
+    redirect: [{ if: { flag: 'gullFood' }, to: 'gulls_away' }],
     on: [{ flag: 'gullsGone' }],
     text: ['The seagulls lie on the pier, battered and burnt and pulped, and do not die, and do not get up either. They glare at you.'],
+    choices: [{ text: 'Go into the ghost train', to: 'ghost_train' }],
+  },
+  gulls_away: {
+    on: [{ flag: 'gullsGone' }, { lose: 'rations' }],
+    text: ['The seagulls go off after your rations in a screaming cloud, out over the sea, fighting over them. None of them can lose, so they’ll be at it for hours.'],
     choices: [{ text: 'Go into the ghost train', to: 'ghost_train' }],
   },
   ghost_train: {

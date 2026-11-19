@@ -85,7 +85,7 @@ export const SECTIONS = {
     },
   },
   famine: {
-    on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }],
+    on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }, { flag: 'rotten' }],
     text: ['A wave of brown spreads over the golem, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
     choices: [{ text: 'Back to the golem', to: 'clearing' }],
   },
@@ -113,10 +113,13 @@ export const SECTIONS = {
   },
   golem_down: {
     on: [{ flag: 'golemDead' }],
-    text: ['The golem goes down in a heap of bunches, and lies still. The villagers come back out of the trees with their spoons, and look at you hopefully.'],
+    text: (c) => [c.flags.rotten
+      ? 'The golem goes down in a brown heap, and lies still. Nobody comes out of the trees to eat it. It smells too much like August.'
+      : 'The golem goes down in a heap of bunches, and lies still. The villagers come back out of the trees with their spoons, and look at you hopefully.'],
     choices: [
-      { text: 'Let them have it', to: 'feast' },
-      { text: 'Fill a sack for the Guild’s custard first', to: 'sacked' },
+      { text: 'Let them have it', to: 'feast', show: { notFlag: 'rotten' } },
+      { text: 'Fill a sack for the Guild’s custard first', to: 'sacked', show: { notFlag: 'rotten' } },
+      { text: 'Go back to the Guild', to: 'festival', show: { flag: 'rotten' } },
     ],
   },
   feast: {

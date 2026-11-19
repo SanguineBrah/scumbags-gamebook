@@ -195,7 +195,7 @@ export const SECTIONS = {
     ],
   },
   sedan: {
-    text: ['Two footmen lift you, chair, stilts and all, and carry you up the Grand Staircase while you wave graciously at the people below. At the top, they set you down and hold out their hands. You shake them both.'],
+    text: (c) => [`Two footmen lift you, chair${c.mundane.some((i) => i.id === 'stilts') ? ', stilts' : ''} and all, and carry you up the Grand Staircase while you wave graciously at the people below. At the top, they set you down and hold out their hands. You shake them both.`],
     choices: [{ text: 'Into the gallery', to: 'gallery' }],
   },
   staircase_quiet: {
@@ -245,7 +245,7 @@ export const SECTIONS = {
     choices: [{ text: 'Climb down', to: 'gallery' }],
   },
   bedroom: {
-    text: ['The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. Under the pillow is a diary.'],
+    text: (c) => [`The Lord’s bed stands on eight-foot legs, with a rope ladder up to the pillows. His wardrobe is full of very long trousers with the bottom four feet sewn shut. ${c.flags.candles ? 'One six-foot silver candlestick stands by the bed, missing its twin.' : 'Two six-foot silver candlesticks stand by the bed.'} ${c.flags.diary ? 'There’s nothing under the pillow now.' : 'Under the pillow is a diary.'}`],
     choices: [
       { text: 'Take the diary', to: 'diary', show: { notFlag: 'diary' } },
       { text: 'Steal one of the Lord’s silver candlesticks', to: 'candles', show: { notFlag: 'candles' } },
@@ -320,7 +320,7 @@ export const SECTIONS = {
   },
   stilt_fall: {
     on: [{ damage: 'd4', from: 'The landing' }],
-    text: ['You reach up, wobble, and come down like a felled tree. The hounds watch with interest.'],
+    text: ['You reach up, wobble, and come down like a felled tree. Somewhere below, a guest applauds.'],
     choices: [{ text: 'Try again', to: 'vault_door' }],
   },
   door_fall: {

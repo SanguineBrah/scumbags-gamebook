@@ -101,7 +101,7 @@ export const SECTIONS = {
     ],
   },
   hauled: {
-    text: ['You get a rope round Thunder and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
+    text: ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
@@ -281,7 +281,7 @@ export const SECTIONS = {
       c.flags.gloriousDeath || (c.flags.dead && c.flags.propped)
         ? `Sir Bertram Gristle is buried with full honours. The Pension Office pays out, Percival weeps for nearly a minute, and the toads keep on coming.${c.flags.glory ? '' : ' Percival never thanks you. You never asked him to.'}`
         : c.flags.dead
-          ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “showing off” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
+          ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “old age, mostly” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
           : 'Sir Bertram Gristle rides home on Thunder, at the pace of a funeral, and lives another nine years out of spite. Percival’s face is everything he hoped.',
       c.flags.aimed ? 'In Lower Muckle, the exploding toads stop landing in the village pond. Nobody ever finds out why.' : '',
       `You come home with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,

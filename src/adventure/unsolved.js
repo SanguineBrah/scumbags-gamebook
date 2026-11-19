@@ -160,7 +160,7 @@ export const SECTIONS = {
     ],
   },
   advance: {
-    on: [{ flag: 'bursar' }, { gold: 100 }],
+    on: [{ flag: 'bursar' }, { flag: 'advance' }, { gold: 100 }],
     text: ['The Bursar counts out a hundred gold with the face of a man pulling his own teeth, and writes it down twice.'],
     choices: [{ text: 'Back to the quad', to: 'quad' }],
   },
@@ -228,6 +228,7 @@ export const SECTIONS = {
     on: [
       { if: { any: [{ flag: 'solved' }, { flag: 'midTurn' }] }, gold: 500, uncapped: true, msg: 'The Dean pays the full 500GP, weeping with relief.' },
       { if: { flag: 'cubeBroken' }, gold: 300, uncapped: true, msg: 'The Dean pays you 300GP. “For removal,” he says. “Not for solving. The professor of logic would have wanted that distinction made.”' },
+      { if: { flag: 'advance', any: [{ flag: 'solved' }, { flag: 'midTurn' }, { flag: 'cubeBroken' }] }, gold: -100, msg: 'The Bursar deducts his advance. He has written it down twice, so he tries to deduct it twice. You stop him.' },
       { sell: { item: 'tesseract', gold: 200, text: 'The university’s professor of geometry buys the folded tesseract' } },
     ],
     text: (c) => [

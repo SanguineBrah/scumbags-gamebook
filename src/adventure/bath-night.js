@@ -30,8 +30,10 @@ export const SECTIONS = {
   },
   hall: {
     text: (c) => [
-      c.flags.footmenGone
+      c.flags.footmenDown
         ? 'The great hall of Mudlark Manor is empty now, apart from the smell, which is never empty.'
+        : c.flags.footmenClean ? 'The footmen hover in the great hall with towels over their arms, waiting their turn for the bath.'
+        : c.flags.footmenGone ? 'The footmen lean on their stain in the great hall, and pay you no attention at all.'
         : 'Two footmen open the front door, one each, and the smell comes out to meet you like a dog. The great hall is hung with tapestries of the Mudlarks through the ages, all of them muddy. The footmen are muddy too. “His Lordship,” says one, “does not receive bathers.”',
       'Stairs lead to the east wing, a door to the cellar, and a corridor to a back door, beyond which you can hear grunting.',
     ],
@@ -59,7 +61,7 @@ export const SECTIONS = {
     fight: { monsters: [footman], win: 'footmen_down', flee: { to: 'start', label: 'Back out of the front door' } },
   },
   footmen_down: {
-    on: [{ flag: 'footmenGone' }, { gold: 6, msg: 'In the coat pockets: 6GP, very damp.' }], onceOnly: true,
+    on: [{ flag: 'footmenGone' }, { flag: 'footmenDown' }, { gold: 6, msg: 'In the coat pockets: 6GP, very damp.' }], onceOnly: true,
     text: ['The footman lies on the floor, where he fits in with the décor. The other one hands you back his coat, as if you’d won it, and goes off to lie down somewhere.'],
     choices: [{ text: 'Into the hall', to: 'hall' }],
   },
@@ -105,13 +107,18 @@ export const SECTIONS = {
     text: ['The sponge heaves itself up over the rim of the bath, wet and enormous, and comes at you with a noise like a mop going into a bucket.'],
     fight: {
       monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }],
-      win: 'sponge_out', flee: { to: 'hall', label: 'Run downstairs' },
+      win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' },
       special: [{ label: 'Wring it out', test: { stat: 'Str', dd: 6, skill: 'bruteforce' }, flag: 'wrung', text: 'You get both arms round it and twist. Thirty years of bathwater comes out in a flood, and the sponge goes limp.', failText: 'It’s too wet to get a grip on.', win: true }],
     },
   },
   sponge_burnt: {
     on: [{ flag: 'spongeGone' }, { add: ['ready', 1] }],
     text: ['It takes a while to catch, being a sponge, but when it goes it goes, with a smell that is, remarkably, an improvement on the rest of the house.'],
+    choices: [{ text: 'Back to the bathroom', to: 'bathroom' }],
+  },
+  sponge_beaten: {
+    on: [{ flag: 'spongeGone' }, { add: ['ready', 1] }],
+    text: ['The sponge goes limp at last, and you drag thirty years of it over the rim and out of the window. It lands in the moat with a long, wet sigh.'],
     choices: [{ text: 'Back to the bathroom', to: 'bathroom' }],
   },
   sponge_out: {

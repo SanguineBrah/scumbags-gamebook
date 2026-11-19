@@ -1,4 +1,4 @@
-// A PERFECTLY STANDARD DRAGON — the last bad idea. For a level 9–10 scumbag.
+// A PERFECTLY STANDARD DRAGON — deal with a dragon that is following procedure. For a level 9–10 scumbag.
 // The dragon is old, lame and following procedure; the real problem is the slug eating its hoard.
 
 export const META = {
@@ -6,6 +6,8 @@ export const META = {
   blurb: 'A dragon has moved into the mountain above Much Smallness and filed all the right paperwork. It has demanded a maiden, a sheep a week and the usual tribute. The village has offered the standard dragon bounty of one thousand gold. It is the sort of job a scumbag only gets once. It is probably the sort of job a scumbag only gets once.',
 };
 
+const UNITS = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const COUNT = (n) => n < 20 ? UNITS[n] : n < 30 ? `twenty${n > 20 ? `-${UNITS[n - 20]}` : ''}` : String(n);
 const dragon = { name: 'Old Scorchwell', lvl: 9, hp: 34, dmg: '2d6+3', range: 'short', feats: ['breath'], note: 'A perfectly standard dragon, but old (bites for 2d6+3; few teeth left); breathes fire (sometimes, instead of attacking, d12 Dex save or 5d6 fire damage, half on a success); lame, so it can’t fly' };
 const slug = { name: 'Thirty-foot slug', lvl: 8, hp: 44, range: 'engaged', onHit: { stat: 'Dex', dd: 10, label: 'keep your feet', text: 'You slip on the slime.', effect: 'prone' }, note: 'Thirty feet of slug; on hit, d10 Dex save or fall over in its slime; salt is very bad for it' };
 
@@ -183,7 +185,7 @@ export const SECTIONS = {
       c.flags.retired
         ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
         : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
-      `That’s ${['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][Math.min(10, (c.done || []).length + 1)]} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
+      `That’s ${COUNT((c.done || []).length + 1)} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
     ],
   },
 };

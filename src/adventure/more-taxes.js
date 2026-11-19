@@ -99,9 +99,13 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the Archive', to: 'archive' }],
   },
   cabinet_fight: {
-    on: [{ flag: 'cabinetDone' }],
     text: ['You open the wrong drawer. It has teeth. So do the other three. The filing cabinet comes at you, drawers snapping.'],
-    fight: { monsters: [cabinet], win: 'your_file', flee: { to: 'forms', label: 'Run for the Hall of Forms' } },
+    fight: { monsters: [cabinet], win: 'cabinet_down', flee: { to: 'forms', label: 'Run for the Hall of Forms' } },
+  },
+  cabinet_down: {
+    on: [{ flag: 'cabinetDone' }],
+    text: ['The filing cabinet topples over with a crash that echoes through the Archive, and its drawers fall open, empty of everything but teeth. Your file was in the one next to it.'],
+    choices: [{ text: 'Read your file', to: 'your_file' }],
   },
   your_file: {
     on: [{ flag: 'fileFound' }],
@@ -178,7 +182,7 @@ export const SECTIONS = {
   },
   argued: {
     on: [{ flag: 'struckOut' }, { flag: 'settled' }],
-    text: ['You argue for an hour. Income from a vault under a hill is treasure trove. Fees for evicting kobolds are expenses. Squandering is a charitable donation. The Auditor-General listens, writing. At the end, he sighs, takes off his spectacles, and draws a line through your name. “Nobody,” he says, “has ever read the regulations before.”'],
+    text: ['You argue for an hour. Income from a vault under a hill is treasure trove. Fees are expenses. Squandering is a charitable donation. The Auditor-General listens, writing. At the end, he sighs, takes off his spectacles, and draws a line through your name. “Nobody,” he says, “has ever read the regulations before.”'],
     choices: [{ text: 'Leave', to: 'free' }],
   },
   auditor_fight: {

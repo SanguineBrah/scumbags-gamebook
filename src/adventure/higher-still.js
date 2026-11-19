@@ -12,7 +12,7 @@ const nimbus = { name: 'Lord Nimbus', lvl: 10, hp: 40, range: 'engaged', dmg: '2
 const REUNION = (c) => {
   const p = (f) => pastFlag(c, 'tall-order', f);
   if (p('sold_hat')) return 'Lord Shortshanks looks at you closely. “You’re the one who stole the Lofty Hat,” he says. “My brother described you very carefully. He has offered a reward for you for years.” He smiles. “I paid half of it. Best money I ever spent.”';
-  if (p('sold_diary')) return '“I bought my brother’s diary, you know,” says Lord Shortshanks. “Five foot two. I had it read out at Christmas.” He sighs. “He’s still my brother.”';
+  if (p('sold_diary')) return '“I bought my brother’s diary, you know,” says Lord Shortshanks. “Five foot two. I had it read out at the midwinter dinner.” He sighs. “He’s still my brother.”';
   if (didAdventure(c, 'tall-order')) return '“You’ve been to the Spire before,” says Lord Shortshanks, looking at you shrewdly. “I can tell. You’ve got the look of somebody who’s been looked down on.”';
   return '';
 };
@@ -124,7 +124,10 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   harp_screams: {
-    text: ['The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
+    text: (c) => [c.flags.giantBack
+      ? 'The harp screams: a chord like every church bell in the world dropped down a well. A quarter of a mile away, at the door, Lord Nimbus turns round. He is back at the fireplace in four strides.'
+      : 'The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
+    on: [{ if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
     choices: [{ text: 'Face him', to: 'giant_wakes' }],
   },
   freed: {
@@ -182,7 +185,7 @@ export const SECTIONS = {
     ],
     text: (c) => [
       c.flags.longshanksFree ? 'Lord Longshanks reaches the ground and kisses it, and then demands that the Spire be pulled down, immediately, all of it. It is. He spends the rest of his days in a bungalow.'
-        : 'Lord Longshanks stays in the clouds, in his birdcage. The giants stop throwing his furniture, because they’ve run out, and start throwing the giants’ own, which is worse.',
+        : 'Lord Longshanks stays in the clouds, in his birdcage. The giants stop throwing his furniture, because they’ve run out, and start throwing their own, which is worse.',
       c.flags.sold_harp ? 'The golden harp sings for the duke every night, and every night it sings about you, and none of it is complimentary.' : '',
       `You come down from the clouds with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ].filter(Boolean),

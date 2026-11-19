@@ -31,6 +31,7 @@ export const SECTIONS = {
       { text: 'Try the butcher’s', to: 'butcher', effects: [TICK], show: { notFlag: 'butcherDone' } },
       { text: 'Climb the church tower', to: 'tower', effects: [TICK], show: { notFlag: 'towerDone' } },
       { text: 'Pay a visit to Mrs Grudge’s caravan', to: 'grudge', effects: [TICK], show: { notFlag: 'grudgeDone' } },
+      { text: 'Blow Mrs Grudge’s dog whistle', to: 'whistled', show: { flag: 'dogWhistle' } },
       { text: 'Give up and go back to the show', to: 'show' },
     ],
   },
@@ -102,7 +103,7 @@ export const SECTIONS = {
   whistle: {
     on: [{ flag: 'dogWhistle' }, { flag: 'grudgeDone' }],
     text: ['A small silver whistle, too high to hear. Blink dogs come to it, the way other dogs come to their name.'],
-    choices: [{ text: 'Blow it in the square', to: 'whistled' }],
+    choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
   dogs_fight: {
     text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],

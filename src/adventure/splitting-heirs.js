@@ -40,7 +40,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Ask them all a question only the real one could answer', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Envoy'], why: 'you know how to question people' }, pass: 'question', fail: 'chorus', show: { notFlag: 'asked' } },
       { text: 'Look them over with your jeweller’s loupe', to: 'loupe', if: { item: 'loupe' }, show: { notFlag: 'looked' } },
-      { text: 'Search the Professor’s study', to: 'study', show: { notFlag: 'studyDone' } },
+      { text: 'Search the Professor’s study', to: 'study', show: { any: [{ notFlag: 'diary' }, { notFlag: 'strongbox' }] } },
       { text: 'Go down to the laboratory', to: 'lab', show: { notFlag: 'labDone' } },
       { text: 'Herd the Glibbs into the cellar and padlock it', to: 'cellar', if: { item: 'padlock' }, show: { notFlag: 'lidded' } },
       { text: 'Hit one, to see what happens', to: 'split' },
@@ -66,14 +66,14 @@ export const SECTIONS = {
   study: {
     text: ['The Professor’s study is a mess of papers. On the desk lies his diary, open at the last entry, and a locked strongbox.'],
     choices: [
-      { text: 'Read the diary', to: 'diary' },
+      { text: 'Read the diary', to: 'diary', show: { notFlag: 'diary' } },
       { text: 'Pick the strongbox', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'strongbox', fail: 'strongbox_jam', if: { item: 'tools' }, show: { notFlag: 'strongbox' } },
       { text: 'Lever the strongbox open', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'strongbox', fail: 'strongbox_jam', if: { item: 'prybar' }, show: { notFlag: 'strongbox' } },
       { text: 'Back to the hall', to: 'hall' },
     ],
   },
   diary: {
-    on: [{ flag: 'studyDone' }, CLUE],
+    on: [{ flag: 'diary' }, CLUE],
     text: ['The last entry reads: “Drank it. Feel wonderful. Feel slightly runny. Must remember: if anything goes wrong, I always sit by the fire. Always. I hate the cold. G.” Underneath, in a wobbly hand: “Have gone jelly. Pass the antidote. Formula in lab, half finished.”'],
     choices: [{ text: 'Back to the study', to: 'study' }, { text: 'Back to the hall', to: 'hall' }],
   },
@@ -148,7 +148,7 @@ export const SECTIONS = {
   },
   all_gone: {
     on: [{ flag: 'noGlibb' }],
-    text: ['When it’s over, there are no Glibbs left in Glibb Hall: only puddles, slowly drying on the carpet, and a single gold tooth.'],
+    text: ['When the real Professor goes, the copies seem to lose interest in holding themselves together. Soon there are no Glibbs left in Glibb Hall: only puddles, slowly drying on the carpet, and a single gold tooth.'],
     choices: [{ text: 'Go to the reading of the will', to: 'reading' }],
   },
   reading: {

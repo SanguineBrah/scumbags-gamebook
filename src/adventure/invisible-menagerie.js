@@ -139,7 +139,7 @@ export const SECTIONS = {
     text: ['A white, dusty, extremely annoyed porcupine appears in the straw, every quill outlined. It is the size of a pig. Now you can see it, you can walk round it. Underneath it, where it was sitting, is a ring of keys.'],
     choices: [
       { text: 'Hook the keys out from under it with your pole', to: 'keys', if: { item: 'pole' } },
-      { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' } },
+      { text: 'Lure it off the keys with your rations', to: 'keys', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Shoo it off the keys', test: { stat: 'Wis', dd: 8, skill: ['survival'], profs: ['Hunter', 'Woodcutter'], why: 'you know animals' }, pass: 'keys', fail: 'porcupine_fight' },
       { text: 'Back to the ring', to: 'big_top' },
     ],
@@ -176,7 +176,7 @@ export const SECTIONS = {
       { text: 'Feel around the platform for the egg', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'], mods: [{ if: { anyItem: ['pocketsand'] }, dd: 8 }, { if: { flag: 'flour' }, dd: 8 }] }, pass: 'egg', fail: 'ostrich_fight' },
       { text: 'Cast Throw voice to call it down, like a lady ostrich', cast: 'voice', pass: 'ostrich_lured', fail: 'ostrich_fight' },
       { text: 'Cast Ward on the platform, so it rings when the ostrich moves', cast: 'ward', pass: 'ostrich_lured', fail: 'ostrich_fight' },
-      { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' } },
+      { text: 'Tempt it down with your rations', to: 'ostrich_lured', if: { item: 'rations' }, effects: [{ lose: 'rations' }] },
       { text: 'Sweep the platform with your pole until something egg-shaped rolls off into your arms', test: { stat: 'Dex', dd: 6, save: true }, pass: 'egg', fail: 'ostrich_fight', if: { item: 'pole' } },
       { text: 'Climb up and take the egg by force', to: 'ostrich_fight' },
     ],
@@ -214,7 +214,7 @@ export const SECTIONS = {
   },
   ape_led: {
     on: [{ flag: 'apeSold' }, { gold: 250, msg: 'The Visitor pays in useless yellow metal: 250GP.' }], onceOnly: true,
-    text: ['You walk an invisible ape out of the back of the tent on the end of a rope, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
+    text: ['You walk an invisible ape out of the back of the tent, holding an invisible banana in front of it, which is harder than it sounds. The Visitor greets it with a squeal of joy, and the craft takes off with the ape inside, both of them waving.'],
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   ape_fight: {
@@ -249,7 +249,7 @@ export const SECTIONS = {
     redirect: [{ if: { flag: 'profDown' }, to: 'safe_jam' }],
     text: ['Professor Peculius catches you in the act. He doesn’t shout. He sweeps back his cape, and his hands start to glow. “My animals,” he says, “are invisible. I am merely very hard to see coming.”'],
     fight: {
-      monsters: [{ name: 'Professor Peculius', lvl: 5, range: 'medium', dmg: '10', note: 'Delinquent wizard; casts arcane bolt (10 damage)' }],
+      monsters: [{ name: 'Professor Peculius', lvl: 5, range: 'medium', dmg: '10', note: 'Showman and wizard; casts arcane bolt (10 damage)' }],
       distance: 1, win: 'professor_down', flee: { to: 'big_top', label: 'Lose yourself in the crowd' },
     },
   },

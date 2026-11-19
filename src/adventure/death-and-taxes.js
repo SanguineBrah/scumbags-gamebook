@@ -1,5 +1,5 @@
 // DEATH AND TAXES — a Scumbags! gamebook adventure for one level 1 scumbag.
-// Sections are written against keys; numbering.js shuffles them into numbered paragraphs, in the traditional gamebook way.
+// Sections are written against keys; index.js shuffles them into numbered paragraphs, in the traditional gamebook way.
 //
 // Section fields:
 //   text: string[] (or (c) => string[])     on: effects applied on entry     onceOnly: apply `on` only the first time
@@ -381,17 +381,17 @@ export const SECTIONS = {
   gallery: {
     text: (c) => c.flags.knightGone
       ? ['The gallery is quiet. The portraits of debtors look down at you, and the empty plinth at the end looks down at nothing.']
-      : c.flags.knightAngry ? ['Sir Reginald Overdraft is back on his plinth, guarding the purse. His visor follows you down the gallery with a long, rusty squeal. “Breach of contract,” he says. “Noted.”']
+      : c.flags.knightAngry ? ['Sir Reginald Overdraft is back on his plinth, guarding the gallery. His visor follows you down the gallery with a long, rusty squeal. “Breach of contract,” he says. “Noted.”']
       : [
-        'Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. A fat purse hangs on the wall behind him.',
+        `Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. ${c.flags.purse ? 'The hook on the wall behind him, where the purse hung, is empty.' : 'A fat purse hangs on the wall behind him.'}`,
         'The visor squeaks open. “Sir Reginald Overdraft,” says a hollow voice. “Pledged against a loan of twenty gold, in the year of the wet harvest. I am to guard this gallery until the debt is paid.” He has been standing there for forty-one years.',
       ],
     choices: [
       { text: 'Pay off his debt', to: 'knight_paid', if: { gold: 20 }, effects: [{ gold: -20 }], show: { notFlag: 'knightGone' } },
       { text: 'Point out that his creditor is dead', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages'], profs: ['Cleric', 'Missionary'], why: 'clerics and missionaries are good at telling people they are free' }, pass: 'knight_freed', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
-      { text: 'Creep past him to the purse', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'gallery_purse', fail: 'knight_fight', show: { notFlag: 'knightGone' } },
+      { text: 'Creep past him to the purse', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'gallery_purse', fail: 'knight_fight', show: { notFlag: 'knightGone', none: [{ flag: 'purse' }] } },
       { text: 'Fight him', to: 'knight_fight', show: { notFlag: 'knightGone' } },
-      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'knightGone' } },
+      { text: 'Take the purse', to: 'gallery_purse', show: { flag: 'knightGone', notFlag: 'purse' } },
       { text: 'Go back to the great hall', to: 'hall' },
     ],
   },
@@ -407,7 +407,7 @@ export const SECTIONS = {
   },
   knight_fight: {
     on: [{ flag: 'knightAngry' }],
-    text: ['“Theft from the collateral,” booms Sir Reginald, “is a breach of contract.” He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
+    text: ['“Breach of contract,” booms Sir Reginald. He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
     fight: {
       monsters: [{ name: 'Sir Reginald Overdraft', lvl: 2, hp: 6, range: 'engaged', ap: 6, note: 'Defaulted knight, forty-one years without lunch (6 HP); repossessed plate armour (6 AP)' }],
       win: 'knight_win', flee: { to: 'hall', label: 'Run back to the hall' },
@@ -419,7 +419,7 @@ export const SECTIONS = {
     choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
   },
   gallery_purse: {
-    on: [{ gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
+    on: [{ flag: 'purse' }, { gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
     text: ['The purse is heavy and the leather is good. You have no idea whose it was, and you plan to keep it that way.'],
     choices: [{ text: 'Go back to the great hall', to: 'hall' }],
   },

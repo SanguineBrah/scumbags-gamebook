@@ -105,7 +105,7 @@ export const SECTIONS = {
   },
   book_dropped: {
     on: [NOISE(), { flag: 'scriptoriumDone' }],
-    text: ['The green book slips out of your habit and lands on the stone floor with a slap like a gunshot. Twenty quills stop scratching. You leave, walking backwards, smiling.'],
+    text: ['The green book slips out of your habit and lands on the stone floor with a slap like a thunderclap. Twenty quills stop scratching. You leave, walking backwards, smiling.'],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   tower: {
@@ -156,6 +156,7 @@ export const SECTIONS = {
     choices: [{ text: 'Carry on, quietly', to: 'cloister' }],
   },
   octavius_fight: {
+    on: [{ flag: 'octaviusCame' }],
     text: ['Brother Octavius comes at you without a sound, all eight hands open, and the air fills with slaps.'],
     fight: {
       monsters: [octavius], win: 'octavius_down', flee: { to: 'clatter', label: 'Run for the gate' },
@@ -163,7 +164,7 @@ export const SECTIONS = {
     },
   },
   octavius_down: {
-    text: ['Brother Octavius sits down on the gravel, all eight arms folded again, and closes his eyes. He has not made a sound, and you realise, with some respect, that he never will.'],
+    text: ['Brother Octavius sits down on the gravel, all eight arms folded again, and closes his eyes. He has not made a sound, and you realise, with some respect, that he never will. Across the cloister, the monk at the cellar door looks at him, then at you, and steps aside.'],
     choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
   },
   cellar: {

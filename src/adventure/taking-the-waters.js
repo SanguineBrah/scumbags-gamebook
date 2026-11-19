@@ -18,15 +18,16 @@ export const SECTIONS = {
   },
   great_bath: {
     text: (c) => [
-      'The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, a tiara and a set of false teeth. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.',
-      c.flags.drained ? 'The bath is drained, and the blob lies at the bottom, a great quivering heap the size of a haycart, shrinking.' : '',
-      c.flags.salted ? 'The water is cloudy with salt, and the blob is in trouble.' : '',
+      c.flags.blobGone ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. The blob has gone down the drain, and it is just a bath again.'
+        : c.flags.drained ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. It is empty of water now, and the blob lies on the tiles at the bottom, a great quivering heap the size of a haycart, shrinking.'
+        : c.flags.salted ? 'The Great Bath is a Roman pool the size of a ballroom, steaming. The water is cloudy with salt, and the blob is in trouble: a milky, shrinking lump at the deep end.'
+        : `The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, ${c.flags.tiaraTaken ? '' : 'a tiara, '}a set of false teeth and a pair of boots. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.`,
     ].filter(Boolean),
     choices: [
       { text: 'Go to the pump room, to see about draining it', to: 'pump_room', show: { notFlag: 'drained' } },
       { text: 'Look in the treatment rooms', to: 'treatments', show: { notFlag: 'saltsFound' } },
       { text: 'Pour the Epsom salts into the bath', to: 'salt_bath', if: { flag: 'saltsFound', flagText: 'the Epsom salts' }, show: { notFlag: 'salted' } },
-      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { notFlag: 'fished' } },
+      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
       { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', show: { none: [{ flag: 'drained' }, { flag: 'salted' }, { flag: 'polluted' }] } },
       { text: 'Wade in and fight it', to: 'blob_fight', show: { notFlag: 'blobGone' } },
       { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'salted' }], notFlag: 'blobGone' } },

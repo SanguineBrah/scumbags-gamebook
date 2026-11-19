@@ -130,7 +130,7 @@ export const SECTIONS = {
   race_neville: {
     on: [{ flag: 'nevilleWon' }],
     text: (c) => [
-      c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. Neville, in running shoes, doesn’t notice them at all.' : 'The whistle goes. The field thunders off.',
+      c.flags.caltropsStart ? 'The field goes off over your caltrops. The Duchess hears the first one crunch under a hoof behind her, decides it is a flag, and spends the race going sideways. Neville picks his way through them with his knees up, like a man crossing a pebble beach, and then he’s away.' : 'The whistle goes. The field thunders off.',
       c.flags.duchessNobbled ? 'The Duchess has had a very bad afternoon, and runs like it, sideways.' : 'The Duchess goes off in front, as favourites do.',
       'Down the home straight, a strange shape comes through the field: legs pumping, knees high, a horse’s head bobbing on top like a figurehead. Neville wins by four lengths, at twenty to one. There is a terrible silence from the stands, and then, from the bookmakers’ ring, a sound like a man being sick.',
     ],
@@ -138,7 +138,7 @@ export const SECTIONS = {
   },
   race_duchess: {
     text: (c) => [
-      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : 'The whistle goes. The field thunders off.',
+      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. The Duchess, calm as a cow, doesn’t even look round.' : 'The whistle goes. The field thunders off.',
       c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
       'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
     ],
@@ -150,7 +150,7 @@ export const SECTIONS = {
       : (c.flags.sidJob ? 'Honest Sid is all smiles behind the grandstand. “Lovely work,” he says, counting out your fee.' : 'Honest Sid is all smiles behind the grandstand, counting his money.')],
     choices: [
       { text: 'Take what’s yours', to: 'payout', show: { notFlag: 'nevilleWon' } },
-      { text: 'Collect your winnings and leave', to: 'payout', show: { flag: 'nevilleWon', notFlag: 'sidJob' } },
+      { text: 'Collect any winnings and leave', to: 'payout', show: { flag: 'nevilleWon', notFlag: 'sidJob' } },
       { text: 'Explain that it wasn’t your fault', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'sid_shrugs', fail: 'heavies', show: { flag: 'nevilleWon', any: [{ flag: 'sidJob' }] } },
       { text: 'Run for it', to: 'heavies', show: { flag: 'nevilleWon', any: [{ flag: 'sidJob' }] } },
     ],
@@ -178,7 +178,7 @@ export const SECTIONS = {
     text: (c) => [
       c.flags.nevilleWon
         ? 'That evening, Neville is carried round the town on the shoulders of everyone who backed him. He gives a speech from the horse end. Nobody can hear it, but everybody cheers.'
-        : 'That evening, the Duchess is put out to stud, and Honest Sid buys a new suit, even louder than the last one.',
+        : 'That evening, the Duchess is retired to a field full of buttercups, and Honest Sid buys a new suit, even louder than the last one.',
       `You leave Muckmarket with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
   },

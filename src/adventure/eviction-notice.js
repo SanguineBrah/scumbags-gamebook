@@ -48,7 +48,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Search Grimsby’s carriage for the deed', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'deed', fail: 'bailiffs', show: { notFlag: 'deed' } },
       { text: 'Visit the town hall', to: 'town_hall', show: { notFlag: 'deed' } },
-      { text: 'Buy a pie from the baker who feeds the kobolds', to: 'baker', show: { notFlag: 'pie' } },
+      { text: 'Buy a pie from the baker who feeds the kobolds (5GP)', to: 'baker', if: { gold: 5 }, show: { notFlag: 'pie' } },
       { text: 'Walk up to the pyramid', to: 'pyramid' },
     ],
   },
@@ -112,7 +112,7 @@ export const SECTIONS = {
       { text: 'Knock on the door', to: 'door' },
       { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
       { text: 'Set fire to it', to: 'burn', if: { fire: true } },
-      { text: 'Take your bow to the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
+      { text: 'Shoot back at the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
   },
   slingers: {

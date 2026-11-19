@@ -3,7 +3,7 @@
 
 import { pastFlag, didAdventure, lightSource } from '../engine/conditions.js';
 
-// Every scumbag who gets this far has met Lord Grimsby before, at Middle Whelping (Eviction Notice).
+// A scumbag who played Eviction Notice has met Lord Grimsby before, at Middle Whelping.
 const REUNION = (c) => {
   const p = (f) => pastFlag(c, 'eviction-notice', f);
   if (p('burnt')) return 'He brightens when he sees you. “The one who burnt the kobolds out! Splendid. I asked for you specifically. Nobody else would come.”';

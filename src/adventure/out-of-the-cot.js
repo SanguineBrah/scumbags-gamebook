@@ -22,7 +22,7 @@ export const SECTIONS = {
     text: (c) => [
       'Halfway down Hogback Hill, Mother is sitting in a field with her apron over her face, crying. She is a hill giant, a hundred feet tall, and when she sobs, the hedges shake.',
       MOTHER_KNOWS(c),
-      '“My baby,” she says. “He climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel. Well, most of one. Somebody has taken a chunk out of it.',
+      `“My baby,” she says. “He climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel.${pastFlag(c, 'mothers-kitchen', 'coin') ? ' Well, most of one. Somebody has taken a chunk out of it. You don’t say anything.' : ''}`,
     ].filter(Boolean),
     choices: [{ text: 'Go down into Lower Hogback', to: 'square' }],
   },
@@ -168,7 +168,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
   hill_road: {
-    redirect: [{ if: { flag: 'snareDeal' }, to: 'net' }, { if: { notFlag: 'snareFixed' }, to: 'ambush' }],
+    redirect: [{ if: { flag: 'snareDeal', notFlag: 'snareFixed' }, to: 'net' }, { if: { notFlag: 'snareFixed' }, to: 'ambush' }],
     text: ['You lead the baby out of town and up the hill road, slowly, a step at a time. It follows you like an enormous duckling.'],
     choices: [{ text: 'On up the hill', to: 'arrive' }],
   },
@@ -189,7 +189,7 @@ export const SECTIONS = {
   },
   arrive: {
     on: [{ flag: 'delivered' }],
-    text: ['At the top of the hill road, the baby sees its mother, and lets go of everything it was holding, including the church spire, and crawls into her arms.'],
+    text: ['At the top of the hill road, the baby sees its mother, and lets go of everything it was holding except the church spire, and crawls into her arms.'],
     choices: [{ text: 'Collect your fee', to: 'home' }],
   },
   net: {
@@ -207,12 +207,12 @@ export const SECTIONS = {
   home: {
     end: 'victory',
     on: [
-      { if: { flag: 'delivered' }, gold: 300, uncapped: true, msg: 'Mother gives you most of a gold coin the size of a cartwheel. A goldsmith in Lower Hogback gives you 300GP for it, and a nervous look.' },
+      { if: { flag: 'delivered' }, gold: 300, uncapped: true, msg: 'Mother gives you her gold coin the size of a cartwheel. A goldsmith in Lower Hogback gives you 300GP for it, and a nervous look.' },
       { if: { flag: 'sold' }, gold: 250, uncapped: true, msg: 'Captain Snare’s cut: 250GP.' },
     ],
     text: (c) => [
       c.flags.sold ? 'The baby is sold to a travelling menagerie that same week. Mother sits on Hogback Hill for a very long time. You avoid the area.'
-        : c.flags.trampled ? 'Mother carries her baby home, still apologising to the town. She pays you anyway. Lower Hogback is rebuilt by Christmas, mostly.'
+        : c.flags.trampled ? 'Mother carries her baby home, still apologising to the town. She pays you anyway. Lower Hogback is rebuilt by midwinter, mostly.'
           : !c.flags.delivered ? 'You leave Lower Hogback with the baby still sitting in the square. By nightfall, Captain Snare has his net round it, and Mother’s crying can be heard three counties away.'
           : 'The baby crawls up the last of the hill into Mother’s arms, and she squashes it to her apron and sobs. Lower Hogback is a bit flatter than it was, but standing. The church never gets its spire back. The baby keeps it.',
       `You leave Hogback Hill with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
