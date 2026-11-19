@@ -318,6 +318,7 @@ function castInFight(g, f, id, m) {
   const t = test(g, f, { stat, dd: sp.dd, skill: `cast:${sp.list}`, label: `Cast ${sp.name} (${stat})` });
   if (t.success) {
     if (t.ddRoll >= 4) { c.slots[sp.lvl] = false; note(f, `You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
+    else note(f, `You rolled under 4 on the difficulty die: you keep your level ${sp.lvl} spell slot.`);
     spellEffect(g, f, id, m);
   } else if (t.critFail && sp.list === 'divine') {
     note(f, `Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`, 'bad');

@@ -38,6 +38,7 @@
     font-size: .9rem; min-height: calc(48px + env(safe-area-inset-top));
   }
   .topbar[hidden] { display: none; }
+  .update-banner { margin: .6rem auto 0; max-width: 46rem; padding: .5rem .8rem; border: 1px solid var(--ink); border-radius: 10px; background: var(--paper-2); display: flex; gap: .6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
   .topbar .brand { font-family: var(--display); font-size: 1.15rem; letter-spacing: .02em; margin-right: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chip { display: inline-flex; align-items: baseline; gap: .25rem; padding: .1rem .5rem; border: 1px solid #ffffff33; border-radius: 99px; white-space: nowrap; }
   .chip b { font-variant-numeric: tabular-nums; }
@@ -148,6 +149,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
+<meta name="build" content="323990ca8259">
 </head>
 <body>
 <div id="app"></div>
@@ -224,6 +226,24 @@ document.body.insertBefore(bar, root); document.body.insertBefore(barSpace, root
 const fitBar = () => { barSpace.style.height = bar.hidden ? '0' : `${bar.offsetHeight}px`; };
 if (window.ResizeObserver) new ResizeObserver(fitBar).observe(bar);
 
+/** A page left open for hours keeps running the old game. Check for a newer build when the tab comes back. */
+const BUILD = document.querySelector('meta[name="build"]')?.content;
+let updateReady = false, lastCheck = 0;
+async function checkForUpdate() {
+  if (!BUILD || updateReady || !location.protocol.startsWith('http') || Date.now() - lastCheck < 60000) return;
+  lastCheck = Date.now();
+  try {
+    const text = await (await fetch(location.href.split('#')[0], { cache: 'no-store' })).text();
+    const latest = (text.match(/<meta name="build" content="([0-9a-f]+)">/) || [])[1];
+    if (latest && latest !== BUILD) { updateReady = true; render(); }
+  } catch { /* offline: try again later */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+setInterval(checkForUpdate, 30 * 60000);
+setTimeout(checkForUpdate, 5000);
+const updateBanner = () => updateReady && h('div', { class: 'update-banner' }, 'A new version of the gamebook is out. Your progress is saved. ',
+  h('button', { class: 'btn', onclick: () => { save(); location.reload(); } }, 'Reload'));
+
 function render() {
   const view = ui.screen === 'title' ? titleScreen()
     : ui.screen === 'howto' ? howToScreen()
@@ -232,7 +252,7 @@ function render() {
           : playScreen();
   const head = view.querySelector('header.topbar');
   if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
-  root.replaceChildren(view);
+  root.replaceChildren(...[updateBanner(), view].filter(Boolean));
   fitBar();
   save();
 }
@@ -346,7 +366,7 @@ function howToScreen() {
     h('h3', null, 'Fighting'),
     h('p', null, 'Melee attacks test Str with a d8; ranged attacks test Dex with a die for the distance (d4 at short range, d8 at medium, d12 at long, d20 if you shoot while engaged — which also gives everyone in reach a free attack). You deal your weapon’s damage plus your level. When a monster attacks, you test your Str or Dex, whichever is higher, using the monster’s difficulty die; if you fail, it hits you. Damage comes off your AP (armour) first, then your HP. AP comes back after a short rest. At 0 HP you bleed out, and your adventure ends.'),
     h('h3', null, 'Magic'),
-    h('p', null, 'Magicians have one spell slot at each level up to their own, and know every spell of those levels on their list (for divine magicians, their side’s). A spell can be cast while the slot at its level is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
+    h('p', null, 'Magicians have one spell slot at each level up to their own, and know every spell of those levels on their list (for divine magicians, their side’s). A spell can be cast while the slot at its level is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent; roll under 4 and you keep it, as the rulebook says. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
     h('h3', null, 'Light'),
     h('p', null, 'Dark places use up a torch, a flask of oil for a lantern, or some other light. Without one, every test uses at least a d12.'),
     h('h3', null, 'Treasure'),
@@ -9439,6 +9459,7 @@ class Game {
     if (ch.cast) {
       const sp = SPELLS[ch.cast];
       if (r.success && r.ddRoll >= 4) { c.slots[sp.lvl] = false; lines.push(`You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
+      else if (r.success) lines.push(`You rolled under 4 on the difficulty die: you keep your level ${sp.lvl} spell slot.`);
       if (r.critFail) {
         if (sp.list === 'divine') lines.push(`Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`);
         else { const d = rng.roll(sp.lvl, 4); lines.push(`Overwhelmed by ætheric currents, you take ${sp.lvl}d4 damage.`); this.damage(d, 'The backlash'); }
@@ -9477,7 +9498,7 @@ class Game {
     const r = statTest(this.rng, { stat: c.stats[stat], dd: this.dark ? Math.max(sp.dd, DARK_DIE) : sp.dd, skilled: isSkilled(c, `cast:${sp.list}`), forceRoll: true });
     let out = `Cast ${sp.name} (${stat} ${c.stats[stat]} vs d20+d${sp.dd}): ${r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ')} — `;
     if (r.success) {
-      if (r.ddRoll >= 4) { c.slots[sp.lvl] = false; out += `your level ${sp.lvl} slot is spent. `; }
+      if (r.ddRoll >= 4) { c.slots[sp.lvl] = false; out += `your level ${sp.lvl} slot is spent. `; } else out += `you rolled under 4 on the difficulty die, so you keep your level ${sp.lvl} slot. `;
       return out + this.sheetEffect(id, extra);
     }
     if (r.critFail && sp.list === 'divine') return `${out}critical failure. Your god scorns you, and casts ${SPELLS[sp.opp].name} instead. ${this.sheetEffect(sp.opp, extra)}`;
@@ -9929,6 +9950,7 @@ function castInFight(g, f, id, m) {
   const t = test(g, f, { stat, dd: sp.dd, skill: `cast:${sp.list}`, label: `Cast ${sp.name} (${stat})` });
   if (t.success) {
     if (t.ddRoll >= 4) { c.slots[sp.lvl] = false; note(f, `You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
+    else note(f, `You rolled under 4 on the difficulty die: you keep your level ${sp.lvl} spell slot.`);
     spellEffect(g, f, id, m);
   } else if (t.critFail && sp.list === 'divine') {
     note(f, `Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`, 'bad');

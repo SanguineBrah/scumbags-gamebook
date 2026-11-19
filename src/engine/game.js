@@ -260,6 +260,7 @@ export class Game {
     if (ch.cast) {
       const sp = SPELLS[ch.cast];
       if (r.success && r.ddRoll >= 4) { c.slots[sp.lvl] = false; lines.push(`You rolled 4 or more on the difficulty die: your level ${sp.lvl} spell slot is spent.`); }
+      else if (r.success) lines.push(`You rolled under 4 on the difficulty die: you keep your level ${sp.lvl} spell slot.`);
       if (r.critFail) {
         if (sp.list === 'divine') lines.push(`Your god scorns you, and casts ${SPELLS[sp.opp].name} instead.`);
         else { const d = rng.roll(sp.lvl, 4); lines.push(`Overwhelmed by ætheric currents, you take ${sp.lvl}d4 damage.`); this.damage(d, 'The backlash'); }
@@ -298,7 +299,7 @@ export class Game {
     const r = statTest(this.rng, { stat: c.stats[stat], dd: this.dark ? Math.max(sp.dd, DARK_DIE) : sp.dd, skilled: isSkilled(c, `cast:${sp.list}`), forceRoll: true });
     let out = `Cast ${sp.name} (${stat} ${c.stats[stat]} vs d20+d${sp.dd}): ${r.rolls.map((x) => `${x.skill}+${x.ddRoll}=${x.total}`).join(' / ')} — `;
     if (r.success) {
-      if (r.ddRoll >= 4) { c.slots[sp.lvl] = false; out += `your level ${sp.lvl} slot is spent. `; }
+      if (r.ddRoll >= 4) { c.slots[sp.lvl] = false; out += `your level ${sp.lvl} slot is spent. `; } else out += `you rolled under 4 on the difficulty die, so you keep your level ${sp.lvl} slot. `;
       return out + this.sheetEffect(id, extra);
     }
     if (r.critFail && sp.list === 'divine') return `${out}critical failure. Your god scorns you, and casts ${SPELLS[sp.opp].name} instead. ${this.sheetEffect(sp.opp, extra)}`;

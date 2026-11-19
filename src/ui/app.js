@@ -59,6 +59,24 @@ document.body.insertBefore(bar, root); document.body.insertBefore(barSpace, root
 const fitBar = () => { barSpace.style.height = bar.hidden ? '0' : `${bar.offsetHeight}px`; };
 if (window.ResizeObserver) new ResizeObserver(fitBar).observe(bar);
 
+/** A page left open for hours keeps running the old game. Check for a newer build when the tab comes back. */
+const BUILD = document.querySelector('meta[name="build"]')?.content;
+let updateReady = false, lastCheck = 0;
+async function checkForUpdate() {
+  if (!BUILD || updateReady || !location.protocol.startsWith('http') || Date.now() - lastCheck < 60000) return;
+  lastCheck = Date.now();
+  try {
+    const text = await (await fetch(location.href.split('#')[0], { cache: 'no-store' })).text();
+    const latest = (text.match(/<meta name="build" content="([0-9a-f]+)">/) || [])[1];
+    if (latest && latest !== BUILD) { updateReady = true; render(); }
+  } catch { /* offline: try again later */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+setInterval(checkForUpdate, 30 * 60000);
+setTimeout(checkForUpdate, 5000);
+const updateBanner = () => updateReady && h('div', { class: 'update-banner' }, 'A new version of the gamebook is out. Your progress is saved. ',
+  h('button', { class: 'btn', onclick: () => { save(); location.reload(); } }, 'Reload'));
+
 function render() {
   const view = ui.screen === 'title' ? titleScreen()
     : ui.screen === 'howto' ? howToScreen()
@@ -67,7 +85,7 @@ function render() {
           : playScreen();
   const head = view.querySelector('header.topbar');
   if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
-  root.replaceChildren(view);
+  root.replaceChildren(...[updateBanner(), view].filter(Boolean));
   fitBar();
   save();
 }
@@ -181,7 +199,7 @@ function howToScreen() {
     h('h3', null, 'Fighting'),
     h('p', null, 'Melee attacks test Str with a d8; ranged attacks test Dex with a die for the distance (d4 at short range, d8 at medium, d12 at long, d20 if you shoot while engaged — which also gives everyone in reach a free attack). You deal your weapon’s damage plus your level. When a monster attacks, you test your Str or Dex, whichever is higher, using the monster’s difficulty die; if you fail, it hits you. Damage comes off your AP (armour) first, then your HP. AP comes back after a short rest. At 0 HP you bleed out, and your adventure ends.'),
     h('h3', null, 'Magic'),
-    h('p', null, 'Magicians have one spell slot at each level up to their own, and know every spell of those levels on their list (for divine magicians, their side’s). A spell can be cast while the slot at its level is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
+    h('p', null, 'Magicians have one spell slot at each level up to their own, and know every spell of those levels on their list (for divine magicians, their side’s). A spell can be cast while the slot at its level is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent; roll under 4 and you keep it, as the rulebook says. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
     h('h3', null, 'Light'),
     h('p', null, 'Dark places use up a torch, a flask of oil for a lantern, or some other light. Without one, every test uses at least a d12.'),
     h('h3', null, 'Treasure'),

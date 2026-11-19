@@ -1,6 +1,7 @@
 // Bundle src/ into a single self-contained dist/gamebook.html (no dependencies, works from file://).
 // Supports the module style used in this repo: single-line named imports, and
 // `export function|class|const|let` declarations or `export { a, b };` lists.
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +43,9 @@ let html = readFileSync(resolve(root, 'index.html'), 'utf8')
 if (!html.includes('__req(')) throw new Error('index.html script tag not found');
 // Inline local font files so the single HTML file works anywhere.
 html = html.replace(/url\('(assets\/[^']+\.ttf)'\)/g, (_, f) => `url('data:font/ttf;base64,${readFileSync(resolve(root, f)).toString('base64')}')`);
+// Stamp the build, so a page left open in a tab can tell when a newer one has been published.
+const stamp = createHash('sha1').update(html).digest('hex').slice(0, 12);
+html = html.replace('</head>', () => `<meta name="build" content="${stamp}">\n</head>`);
 mkdirSync(resolve(root, 'dist'), { recursive: true });
 writeFileSync(resolve(root, 'dist/gamebook.html'), html);
 console.log(`dist/gamebook.html written: ${mods.size} modules, ${(html.length / 1024).toFixed(1)} KB`);
