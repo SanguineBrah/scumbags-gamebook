@@ -14,7 +14,7 @@ const COUNTING_HOUSE = (c) => {
 };
 
 export const META = {
-  after: ['mothers-kitchen'], id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
+  tier: 5, id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
   blurb: 'A kobold siege-pyramid has parked itself in the square at Middle Whelping and refuses to move. Lord Grimsby, who owns the square, owns the town and has never once bathed, will pay 300 gold to have it evicted. Nobody has asked the kobolds why they’re there.',
 };
 
@@ -23,7 +23,7 @@ const sapper = { name: 'Kobold sapper', lvl: 2, range: 'engaged', feats: ['burst
 
 export const SECTIONS = {
   start: {
-    text: [
+    text: (c, visits) => visits > 1 ? ['You fall back across the square to where Lord Grimsby is standing, at a safe distance, with his handkerchief. “Well?” he says. “They’re still there. I can see them. I can smell them, which is saying something.”'] : [
       'Lord Grimsby receives you in the town square of Middle Whelping, holding a scented handkerchief to his nose, which does nothing for anyone else’s. Behind him squats a wooden pyramid thirty feet high, bristling with arrow slits and painted with slogans: WE SHALL NOT BE MOVED. FAIR RENTS NOW. GRIMSBY IS A SMELL.',
       '“Kobolds,” says Lord Grimsby. “Arrived on Tuesday. Squatting on my square. Three hundred gold to get them out, I don’t care how.” He hands you a formal eviction notice. It is spelled wrong.',
     ],

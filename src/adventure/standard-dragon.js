@@ -2,7 +2,7 @@
 // The dragon is old, lame and following procedure; the real problem is the slug eating its hoard.
 
 export const META = {
-  after: ['torches-and-pitchforks'], id: 'standard-dragon', title: 'A Perfectly Standard Dragon', levels: '9–10', final: 'epilogue',
+  tier: 10, id: 'standard-dragon', title: 'A Perfectly Standard Dragon', levels: '9–10', final: 'epilogue',
   blurb: 'A dragon has moved into the mountain above Much Smallness and filed all the right paperwork. It has demanded a maiden, a sheep a week and the usual tribute. The village has offered the standard dragon bounty of one thousand gold. It is the sort of job a scumbag only gets once. It is probably the sort of job a scumbag only gets once.',
 };
 
@@ -11,7 +11,7 @@ const slug = { name: 'Thirty-foot slug', lvl: 8, hp: 44, range: 'engaged', onHit
 
 export const SECTIONS = {
   start: {
-    text: [
+    text: (c, visits) => visits > 1 ? ['Back in Much Smallness, the mayor is filling in a form, and Agnes is still on her bench with her packed lunch. Above the village, smoke curls out of the cave in a very standard way.'] : [
       'The mayor of Much Smallness reads you the form. “A dragon,” he says, “has been sighted. It has demanded, tick one, a maiden. Reward, one thousand gold, payable on proof of removal. Proof of removal,” he adds, “is usually the head.”',
       'Outside the town hall, the village’s maiden waits on a bench with a packed lunch. Her name is Agnes, she is seventy-four, and she volunteered. Above the village, smoke curls out of a cave near the top of the mountain, in a very standard way.',
     ],

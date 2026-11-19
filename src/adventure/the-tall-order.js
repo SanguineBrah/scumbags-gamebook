@@ -2,7 +2,7 @@
 // Section format: see docs/WRITING.md.
 
 export const META = {
-  after: ['death-and-taxes'], id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
+  tier: 2, id: 'tall-order', title: 'The Tall Order', levels: '1–2', final: 'grubb',
   blurb: 'Lord Altimus Longshanks believes greatness is measured vertically. Tonight, at the top of the tallest house in the county, he unveils the Lofty Hat: nine feet of velvet and rubies. Mother Grubb will pay 400 gold for it, if you can get it home.',
 };
 

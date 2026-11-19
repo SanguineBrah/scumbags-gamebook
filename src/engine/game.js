@@ -87,6 +87,11 @@ export class Game {
         continue;
       }
       if (e.add) { const [k, n] = e.add; c.flags[k] = (c.flags[k] || 0) + n; }
+      if (e.goldPer) {   // { goldPer: ['counter', GP each], uncapped, text }: pay for every one of something
+        const [k, each] = e.goldPer; const n = c.flags[k] || 0;
+        if (n > 0) { const g = n * each; c.gold += g; this.say(`${e.text ? `${e.text}: ` : ''}+${g}GP.`, 'good'); }
+        continue;
+      }
       if (e.gold > 0 && e.uncapped) { c.gold += e.gold; this.say(`+${e.gold}GP.`, 'good'); }
       else if (e.gold > 0) {
         const room = goldRoom(c); const got = Math.min(room, e.gold);

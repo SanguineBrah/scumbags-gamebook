@@ -2,7 +2,7 @@
 // The `hour` counter moves on with every game you play; at 4, dawn sends the Count to his coffin.
 
 export const META = {
-  after: ['death-and-taxes'], id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
+  tier: 3, id: 'fortunes-fang', title: 'Fortune’s Fang', levels: '2–3', final: 'dawn_out',
   blurb: 'Under the town of Lesser Wager, in a crypt full of candles and card tables, Count Fortunato runs the only casino where the house always wins. He is a luck vampire: he feeds on yours. Tonight, you’re going to take his bank.',
 };
 
@@ -15,7 +15,7 @@ const GAME = { add: ['hour', 1] };
 export const SECTIONS = {
   start: {
     on: [{ gold: 40, msg: 'You won 40GP in a raffle you didn’t enter. You keep it anyway.' }], onceOnly: true,
-    text: [
+    text: (c, visits) => visits > 1 ? ['You climb back up into the churchyard of Lesser Wager to catch your breath. Down the steps, the crypt door waits, with its painted sign: WHERE LUCK GOES TO DIE.'] : [
       'A painted sign above a crypt door in the churchyard of Lesser Wager reads FORTUNE’S FANG: WHERE LUCK GOES TO DIE. Below it, smaller: NO PAUPERS. NO GARLIC. NO REFUNDS.',
       'Everyone in Lesser Wager owes the Count money. Everyone in Lesser Wager is pale and tired and keeps tripping over things. Somewhere below your feet is the bank: every coin the town has lost in thirty years.',
     ],

@@ -95,7 +95,7 @@ test('a big item makes room by leaving coins behind', () => {
 
 test('every adventure is complete and its final section is a victory', async () => {
   const { ADVENTURES, buildAdventure } = await import('../src/adventure/index.js');
-  assert.equal(ADVENTURES.length, 10);
+  assert.equal(ADVENTURES.length, 28);
   for (const a of ADVENTURES) {
     const b = buildAdventure(a.id);
     assert.equal(b.numbers.start, 1);
@@ -104,20 +104,22 @@ test('every adventure is complete and its final section is a victory', async () 
   }
 });
 
-test('adventures are revealed one by one, and none can be repeated', async () => {
+test('adventures are revealed a level band at a time, and none can be repeated', async () => {
   const { ADVENTURES, availableFor, revealedFor } = await import('../src/adventure/index.js');
   const c = make(21);
-  assert.deepEqual(availableFor(c).map((a) => a.id), ['death-and-taxes']);
-  c.done.push('death-and-taxes');
-  const next = availableFor(c).map((a) => a.id);
-  assert.ok(!next.includes('death-and-taxes'));
-  assert.deepEqual(next.sort(), ['fortunes-fang', 'tall-order']);
-  // every adventure is reachable by doing them in order, and the last leaves nothing to do
+  assert.deepEqual(availableFor(c).map((a) => a.tier), ADVENTURES.filter((a) => a.tier === 1).map(() => 1));
+  const first = availableFor(c)[0]; c.done.push(first.id);
+  const next = availableFor(c);
+  assert.ok(!next.some((a) => a.id === first.id));
+  assert.ok(next.some((a) => a.tier === 2) && !next.some((a) => a.tier > 2));
+  // finishing the highest band available each time reaches every band, and doing everything leaves nothing
   const d = make(22);
-  for (let i = 0; i < ADVENTURES.length; i++) {
-    const a = availableFor(d); assert.ok(a.length, `nothing available after ${d.done.length}`);
+  for (let band = 1; band <= 10; band++) {
+    const a = availableFor(d).filter((x) => x.tier === band);
+    assert.ok(a.length, `nothing in band ${band}`);
     d.done.push(a[0].id);
   }
+  for (const a of ADVENTURES) if (!d.done.includes(a.id)) d.done.push(a.id);
   assert.equal(availableFor(d).length, 0);
   assert.equal(revealedFor(d).length, ADVENTURES.length);
 });

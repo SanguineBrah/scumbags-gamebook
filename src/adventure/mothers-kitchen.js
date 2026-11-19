@@ -2,7 +2,7 @@
 // The `noise` counter rises with every clumsy act; at 3, Mother comes back (see `redirect` on the kitchen).
 
 export const META = {
-  after: ['tall-order', 'fortunes-fang'], id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
+  tier: 4, id: 'mothers-kitchen', title: 'Mother’s Kitchen', levels: '3–4', final: 'turnbull',
   blurb: 'Farmer Turnbull lost the last oversized turnip at market to a stranger. Then a hill giant grew a bigger one, had it gilded, and won every prize in the county. Turnbull will pay 300 gold to see it gone. It sits on her mantelpiece, forty feet up.',
 };
 
@@ -287,6 +287,7 @@ export const SECTIONS = {
     choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },
   mother_finds: {
+    on: [{ flag: 'jarred' }],
     text: ['A hand the size of a cart closes round you. Mother holds you up to her face. Her eyes are kind and enormous. “What’s this, then?” she says. She doesn’t squash you. She does something worse: she pops you in an empty jam jar, screws the lid on, and puts you on the windowsill to show the vicar.'],
     choices: [
       { text: 'Unscrew the lid from the inside', test: { stat: 'Str', dd: 12, skill: ['bruteforce'] }, pass: 'jar_out', fail: 'jar_stuck' },

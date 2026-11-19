@@ -198,7 +198,7 @@ function monstersTurn(g, f) {
     }
     if (!alive(m)) continue;
     if (m.unaware) continue;
-    if (m.stunned > 0) { m.stunned--; note(f, `The ${m.name} is still rubbing sand out of its eyes.`); continue; }
+    if (m.stunned > 0) { m.stunned--; note(f, `The ${m.name} loses its turn.`); continue; }
     if (m.prone) { m.prone = false; }
     if (has(m, 'approval')) { m.tick ^= 1; if (m.tick) { note(f, `The ${m.name} waits for the action to be approved.`); continue; } }
     if (m.range === 'engaged' && f.distance > 0) {

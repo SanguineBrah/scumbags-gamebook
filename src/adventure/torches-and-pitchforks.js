@@ -14,7 +14,7 @@ const REUNION = (c) => {
 };
 
 export const META = {
-  after: ['unsolved'], id: 'torches-and-pitchforks', title: 'Torches and Pitchforks', levels: '8–9', final: 'grimsby_hall',
+  tier: 9, id: 'torches-and-pitchforks', title: 'Torches and Pitchforks', levels: '8–9', final: 'grimsby_hall',
   blurb: 'Lord Grimsby has inherited Grimsby Hall, on the far side of Blackmire Moor. So have three hundred years of Grimsbys’ evicted tenants, who rise every night with torches and pitchforks and are, technically, still owed their deposits. He’ll pay 400 gold for an escort. He has asked everyone else.',
 };
 
@@ -24,7 +24,7 @@ const blob = { name: 'Bog blob', lvl: 6, hp: 36, range: 'engaged', onHit: { stat
 
 export const SECTIONS = {
   start: {
-    text: (c) => [
+    text: (c, visits) => visits > 1 ? ['Back in the bar of the Tumbledown Inn, Lord Grimsby is watching the clock, and the innkeeper is polishing the same glass. Outside, it is getting dark.'] : [
       'The Tumbledown Inn is the last building before Blackmire Moor, and Lord Grimsby is its only guest. He’s wrapped in three coats and a scarf with his family crest on it, and he still hasn’t bathed.',
       REUNION(c),
       '“Four hundred gold,” he says, “to see me to Grimsby Hall by midnight. Once I’m over the threshold, the hall is legally mine, and the tenants can’t touch me. If I’m not there by midnight, it’s theirs, and so am I.”',

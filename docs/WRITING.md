@@ -16,7 +16,8 @@ library: {
 },
 ```
 
-- **Effects:** `gold` (add `uncapped: true` for payment at the end, which ignores slots), `item`,
+- **Effects:** `gold` (add `uncapped: true` for payment at the end, which ignores slots),
+  `goldPer: ['counter', GP]` (pay for every one of something, with an optional `text`), `item`,
   `lose`, `sell: { item, gold, text }` (removes the item, pays out and sets the flag `sold_<item>`),
   `add: ['counter', n]`, `damage` (dice), `heal` (dice), `flag`, `unflag`, `msg`, `lightCharges`.
   Each can have its own `if`.
@@ -65,8 +66,10 @@ ran away from should remember you; something you took shouldn't still be on the 
 What happened in earlier adventures is kept too: when a scumbag finishes an adventure, its flags
 are saved in `c.past[adventureId]`. Use `pastFlag(c, id, flag)` in text, or the `past` and
 `notPast` conditions, when a character or place comes back (Lord Grimsby, the counting house).
-Adventures unlock in chains, so check `after` to see which earlier ones a player must have done,
-and which they might have skipped.
+Adventures unlock a level band at a time, so only Death and Taxes (band 1) is certain to have been
+played before any other; anything else might have been skipped. Use `didAdventure(c, id)` to tell
+the difference between "skipped it" and "played it before memory was recorded", and always write
+a version of the text for a scumbag who's never been there.
 
 `node tools/states.mjs <id>` plays an adventure many times and lists, for every section, the
 flags that are always or only sometimes set on arrival: read each section against the
@@ -88,7 +91,8 @@ Prefer features that change how you play the fight, or offer a way round it, ove
 ## Adventures
 
 Each adventure is a module in `src/adventure/` exporting `META` (`id`, `title`, `levels`, `blurb`,
-`final`: the key of the main victory section, which gets the last number; `after`: the adventures,
-any one of which reveals this one), `SECTIONS` and `DEATH_TEXT`. Register it in
-`src/adventure/index.js`. A scumbag can't repeat an adventure they've finished. Significant loot that is sold at the end can
+`final`: the key of the main victory section, which gets the last number; `tier`: its level band,
+1 to 10), `SECTIONS` and `DEATH_TEXT`. Register it in `src/adventure/index.js`. Band 1 is always
+open; finishing any adventure in a band reveals every adventure in the next. A scumbag can't
+repeat an adventure they've finished. Every adventure needs a way to give up and go home. Significant loot that is sold at the end can
 take several slots (`slots` in `SIGNIFICANT`), which makes carrying it a decision.

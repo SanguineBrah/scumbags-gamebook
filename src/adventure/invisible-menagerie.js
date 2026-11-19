@@ -2,7 +2,7 @@
 // Invisible monsters are hard to hit (d20) until something shows their outline: sand, flour, water, a ward, a sharp nose.
 
 export const META = {
-  after: ['last-ride'], id: 'invisible-menagerie', title: 'The Invisible Menagerie', levels: '6–7', final: 'collector',
+  tier: 7, id: 'invisible-menagerie', title: 'The Invisible Menagerie', levels: '6–7', final: 'collector',
   blurb: 'Professor Peculius’s Invisible Menagerie charges five gold to look at empty cages. Everyone assumes it’s a swindle. Lady Vellum, a collector of rare and impossible things, knows better, and will pay 400 gold for the egg of the invisible ostrich. Someone else is after the animals too. Someone from a very long way away.',
 };
 

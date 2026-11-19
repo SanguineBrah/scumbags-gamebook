@@ -2,7 +2,7 @@
 // Every time Sir Gristle exerts himself there is a 1 in 10 chance his heart gives out (the rulebook's aged hero).
 
 export const META = {
-  after: ['eviction-notice'], id: 'last-ride', title: 'The Last Ride of Sir Gristle', levels: '5–6', final: 'pension_office',
+  tier: 6, id: 'last-ride', title: 'The Last Ride of Sir Gristle', levels: '5–6', final: 'pension_office',
   blurb: 'Sir Bertram Gristle is ninety-one and wants one last quest: to slay Old Croaker, the toad farmer of Muckle Fen. His nephew will pay you to make sure he dies gloriously. Sir Gristle will pay you to make sure he doesn’t. You could, in theory, take both jobs.',
 };
 

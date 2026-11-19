@@ -30,22 +30,40 @@ get you past things a sword won't.
 ## Adventures
 
 Each adventure is a short, self-contained job. Survivors return to Scumbag Town, where they can
-heal, restock, buy and sell, and squander their takings. Finishing one job reveals new ones on
-the notice board. Nobody gets to do the same job twice, and later adventures remember what you
+heal, restock, buy and sell, and squander their takings. Finishing any job in a level band reveals
+every job in the next band on the notice board, so there's always a choice. Nobody gets to do the same job twice, and later adventures remember what you
 did in earlier ones.
 
-| Adventure | Level | The job |
-|---|---|---|
-| Death and Taxes | 1 | Rob a dead moneylender's vault under Gallows Hill |
-| The Tall Order | 1–2 | Steal the Lofty Hat from Lord Longshanks' birthday party |
-| Fortune's Fang | 2–3 | Break the bank at a casino run by a luck vampire |
-| Mother's Kitchen | 3–4 | Steal a hill giant's prize Golden Turnip from her mantelpiece |
-| Eviction Notice | 4–5 | Evict a kobold siege-pyramid from a town square, or don't |
-| The Last Ride of Sir Gristle | 5–6 | Get a dying old knight to his glorious last battle, or keep him alive |
-| The Invisible Menagerie | 6–7 | Steal an invisible ostrich egg from a travelling show |
-| Unsolved | 7–8 | Solve the transdimensional murdercube haunting a university |
-| Torches and Pitchforks | 8–9 | Escort Lord Grimsby across a moor through a mob of ghostly tenants |
-| A Perfectly Standard Dragon | 9–10 | Deal with a dragon that is following procedure |
+| Band | Adventure | Level | The job |
+|---|---|---|---|
+| 1 | Death and Taxes | 1 | Rob a dead moneylender's vault under Gallows Hill |
+| 2 | The Tall Order | 1–2 | Steal the Lofty Hat from Lord Longshanks' birthday party |
+| 2 | Legging It | 1–2 | Round up forty pairs of animated legs at a village fair |
+| 2 | Bath Night | 1–2 | Get a filthy lord into a bath before his wedding |
+| 3 | Fortune's Fang | 2–3 | Break the bank at a casino run by a luck vampire |
+| 3 | The Wrong Way Round | 2–3 | Fix a horse race with a reverse centaur in it |
+| 3 | Now You See Him | 2–3 | Catch a champion blink dog before the judging |
+| 4 | Mother's Kitchen | 3–4 | Steal a hill giant's prize Golden Turnip from her mantelpiece |
+| 4 | Vow of Silence | 3–4 | Steal a liqueur recipe from an abbey where nobody may make a sound |
+| 4 | Knightmare | 3–4 | Get a riderless warhorse out of the tournament it keeps winning |
+| 5 | Eviction Notice | 4–5 | Evict a kobold siege-pyramid from a town square, or don't |
+| 5 | Splitting Heirs | 4–5 | Find the real alchemist among thirty copies of him |
+| 5 | Going Bananas | 4–5 | Deal with a runaway golem made of bananas |
+| 6 | The Last Ride of Sir Gristle | 5–6 | Get a dying old knight to his glorious last battle, or keep him alive |
+| 6 | Detention | 5–6 | Get a stolen grimoire back from a gang of delinquent wizards |
+| 6 | Out of the Cot | 5–6 | Get a hill giant's baby home before the giant-catcher gets it |
+| 7 | The Invisible Menagerie | 6–7 | Steal an invisible ostrich egg from a travelling show |
+| 7 | Taking the Waters | 6–7 | Get a giant blob out of a fashionable spa |
+| 7 | Trial by Ducking | 6–7 | Save an old herbalist from a witchfinder before dawn |
+| 8 | Unsolved | 7–8 | Solve the transdimensional murdercube haunting a university |
+| 8 | Death and More Taxes | 7–8 | Break into the Royal Exchequer to get your name out of the Great Ledger |
+| 8 | The Clockwork Cathedral | 7–8 | Stop a mechanical bishop before the Archbishop arrives |
+| 9 | Torches and Pitchforks | 8–9 | Escort Lord Grimsby across a moor through a mob of ghostly tenants |
+| 9 | The Lich's Leaving Do | 8–9 | Steal an archlich's soul at his retirement party |
+| 9 | Heads You Lose | 8–9 | Get a hydra out of a town's reservoir without making it bigger |
+| 10 | A Perfectly Standard Dragon | 9–10 | Deal with a dragon that is following procedure |
+| 10 | Death Takes a Holiday | 9–10 | Find Death's stolen scythe at the seaside |
+| 10 | Higher Still | 9–10 | Rescue Lord Longshanks from the cloud giants above his spire |
 
 Sections are shuffled the traditional way: the start is 1 and the way home is last. Progress
 and surviving scumbags are saved in your browser.

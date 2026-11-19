@@ -104,7 +104,7 @@ function townScreen() {
   const c = ui.char;
   const act = (msg) => { if (msg) { ui.townMsg = msg; keepScumbag(c); } render(); };
   const left = MUNDANE_LIMIT - c.mundane.length;
-  const avail = availableFor(c);
+  const avail = availableFor(c).slice().sort((a, b) => b.tier - a.tier);   // newest band first
   return h('div', null, charBar(c), h('main', { class: 'page' },
     h('h2', null, `${c.name} in Scumbag Town`),
     h('p', { class: 'muted' }, `Level ${c.level} ${c.profession.toLowerCase()}. ${c.hp}/${c.maxHp} HP, ${c.gold}GP, ${(c.done || []).length} adventure${(c.done || []).length === 1 ? '' : 's'} behind you.`),
@@ -171,7 +171,7 @@ function howToScreen() {
     h('h3', null, 'Treasure'),
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level.'),
     h('h3', null, 'Between adventures'),
-    h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Each job you finish reveals new ones, and you can’t do the same job twice. Live long enough, and you might get through all of them.'),
+    h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
     h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
     h('button', { class: 'btn', onclick: () => go('title') }, 'Back'),

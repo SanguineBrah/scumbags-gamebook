@@ -2,7 +2,7 @@
 // Each clue you gather (the `clues` counter) makes the final puzzle easier: d20, d12, d8, then d4.
 
 export const META = {
-  after: ['invisible-menagerie'], id: 'unsolved', title: 'Unsolved', levels: '7–8', final: 'dean',
+  tier: 8, id: 'unsolved', title: 'Unsolved', levels: '7–8', final: 'dean',
   blurb: 'Six weeks ago, a professor at the University of Lesser Wisdom summoned something from the fourth dimension to settle an argument. It is a cube. It hovers. It asks a question, and it murders anyone who gets it wrong. The Dean will pay 500 gold to whoever solves it, and nobody has been to a lecture since.',
 };
 
