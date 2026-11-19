@@ -10,5 +10,5 @@
   the section format. Sections are keyed by name; numbers are assigned by `index.js`, so never
   write a section number into the text.
 - After changing content or balance, run `npm run simulate` and `node tools/duels.mjs` and look
-  at the fight death rates.
+  at the fight death rates. After changing rewards or levelling, run `node tools/campaign.mjs` too.
 - House style: British spelling, second person, short sentences, the rulebook's deadpan tone.

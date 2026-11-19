@@ -218,3 +218,19 @@ test('higher-level spells turn up in fights, and divine backfires hit the caster
   h.fightAct(heal);
   assert.ok(h.c.hp < before, 'Afflict hurts the caster');
 });
+
+test('over-qualified scumbags keep half their profit for each level above the band, and loot fetches less', async () => {
+  const town = await import('../src/engine/town.js');
+  const adv = buildAdventure('death-and-taxes');   // band 1
+  const win = Object.keys(adv.sections).find((k) => adv.sections[k].end === 'victory' && !adv.sections[k].on);
+  for (const [level, expect] of [[1, 150], [2, 100], [3, 75]]) {
+    const g = new Game(adv, 1); const c = botCharacter(new Rng(5), level);
+    c.gold = 50; c.significant = []; c.flags = {};
+    g.begin(c); c.gold = 50; c.flags.startGold = 50;   // whatever the opening section paid
+    g.apply([{ gold: 100, uncapped: true }]);
+    g.give('abacus');
+    assert.equal(town.sellPrice(c.significant.at(-1)), 100 / 2 ** (level - 1));
+    g.goto(win);
+    assert.equal(c.gold, expect);
+  }
+});

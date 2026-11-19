@@ -130,19 +130,22 @@ function townScreen() {
         town.weaponsFor(c).filter((w) => w.id !== c.weapon.id).map((w) => h('button', { class: 'opt', disabled: c.gold < town.weaponPrice(w), onclick: () => act(town.buyWeapon(c, w.id)) }, h('span', null, `${w.name} — ${town.weaponPrice(w)}GP`, h('span', { class: 'note' }, `d${WEAPON_DIE[w.weight]}${w.ranged ? ', ranged' : ''}`)))),
         ARMOURS.filter((a) => a.weight <= profOf(c).prof && (!c.armour || a.id !== c.armour.id)).map((a) => h('button', { class: 'opt', disabled: c.gold < town.armourPrice(a), onclick: () => act(town.buyArmour(c, a.id)) }, h('span', null, `${a.name} — ${town.armourPrice(a)}GP`, h('span', { class: 'note' }, `${a.ap} AP; replaces a shield`)))),
         SHIELDS.filter((x) => x.weight <= profOf(c).prof && (!c.shield || x.id !== c.shield.id)).map((x) => h('button', { class: 'opt', disabled: c.gold < town.shieldPrice(x), onclick: () => act(town.buyShield(c, x.id)) }, h('span', null, `${x.name} — ${town.shieldPrice(x)}GP`, h('span', { class: 'note' }, `blocks ${x.block.join('d')}; replaces armour`)))))),
-    c.significant.some((i) => town.sellPrice(i.id)) && h('div', { class: 'card' }, h('h3', null, 'The fence'),
-      h('div', { class: 'opts' }, c.significant.map((i, n) => town.sellPrice(i.id) ? h('button', { class: 'opt', onclick: () => act(town.sell(c, n)) }, h('span', null, `Sell ${i.name.toLowerCase()} — ${town.sellPrice(i.id)}GP`)) : null))),
+    c.significant.some((i) => town.sellPrice(i)) && h('div', { class: 'card' }, h('h3', null, 'The fence'),
+      h('div', { class: 'opts' }, c.significant.map((i, n) => town.sellPrice(i) ? h('button', { class: 'opt', onclick: () => act(town.sell(c, n)) }, h('span', null, `Sell ${i.name.toLowerCase()} — ${town.sellPrice(i)}GP`)) : null))),
     c.gold >= LEVEL_COST && h('div', { class: 'card' }, h('h3', null, 'Squander your gold'),
       h('p', { class: 'small' }, `Every ${LEVEL_COST}GP you waste on a pointless endeavour gains you a level.`),
       h('button', { class: 'btn', onclick: () => { const roll = rng.die(20); const r = wasteForLevel(rng, c); const up = Object.entries(r.statRolls).filter(([, x]) => x.up).map(([k]) => k); act(`${ENDEAVOURS[roll - 1]} Level ${r.level}! +${r.hpRoll} max HP${up.length ? `, +1 ${up.join(', ')}` : ''}.`); } }, `Waste ${LEVEL_COST}GP`)),
     h('div', { class: 'card' }, h('h3', null, 'The notice board'),
       avail.length ? h('p', { class: 'small' }, 'Jobs for people with no scruples:') : h('p', { class: 'small' }, 'There’s nothing on the board for you. You’ve done it all. Retire, or find something worse to do.'),
-      avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag`), h('p', null, a.blurb),
+      avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag${overBy(c, a) ? `. You’re over-qualified: you’ll keep ${overBy(c, a) === 1 ? 'half' : `1/${2 ** overBy(c, a)}`} of the profit` : ''}`), h('p', null, a.blurb),
         h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
       h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
     h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title screen')),
   ));
 }
+
+/** (gamebook) Levels above an adventure's band: each one halves the profit you keep. */
+const overBy = (c, a) => Math.max(0, c.level - parseInt(String(a.levels).split('–').at(-1), 10));
 
 function startAdventure(id) {
   adv = buildAdventure(id);
@@ -167,11 +170,11 @@ function howToScreen() {
     h('h3', null, 'Fighting'),
     h('p', null, 'Melee attacks test Str with a d8; ranged attacks test Dex with a die for the distance (d4 at short range, d8 at medium, d12 at long, d20 if you shoot while engaged — which also gives everyone in reach a free attack). You deal your weapon’s damage plus your level. When a monster attacks, you test your Str or Dex, whichever is higher, using the monster’s difficulty die; if you fail, it hits you. Damage comes off your AP (armour) first, then your HP. AP comes back after a short rest. At 0 HP you bleed out, and your adventure ends.'),
     h('h3', null, 'Magic'),
-    h('p', null, 'Magicians have one spell slot at each of their levels, and can cast any spell they know of that level or below while its slot is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
+    h('p', null, 'Magicians have one spell slot at each level up to their own, and know every spell of those levels on their list (for divine magicians, their side’s). A spell can be cast while the slot at its level is unspent. A night’s rest renews them. If you succeed and roll 4 or more on the difficulty die, the slot is spent. Divine magicians test Wis, need a holy symbol, and cast the spells of law or chaos; on a critical failure their god scorns them and casts the opposite spell instead. Arcane magicians test Int; on a critical failure the backlash deals a d4 per level of the spell. Some spells can be cast from your adventure sheet, some in a fight, and the rest where the story gives them a use.'),
     h('h3', null, 'Light'),
     h('p', null, 'Dark places use up a torch, a flask of oil for a lantern, or some other light. Without one, every test uses at least a d12.'),
     h('h3', null, 'Treasure'),
-    h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level.'),
+    h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level. An over-qualified scumbag loses half their profit from an adventure for each level they are above its band, and its loot fetches half at the fence.'),
     h('h3', null, 'Between adventures'),
     h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
     h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
@@ -378,7 +381,7 @@ function finishAdventure(c) {
 // ---------- adventure sheet
 function sheetView() {
   const g = ui.game; const c = g.c; const q = qualityOf(c); const p = profOf(c);
-  const item = (i, def) => h('li', null, i.name, i.tokens !== undefined ? ` (${i.tokens} left)` : '', def && def.note && h('span', { class: 'muted small' }, ` — ${def.note}`));
+  const item = (i, def) => h('li', null, i.name, i.tokens !== undefined ? ` (${i.tokens} left)` : '', def && def.note && h('span', { class: 'muted small' }, ` — ${def.note}${i.cut ? `. The fence knows you were over-qualified when you got it: ${town.sellPrice(i)}GP` : ''}`));
   const spells = knownSpells(c);
   const skills = [...p.skills.map((s) => SKILL_NAMES[s]), ...(hasFeature(c, 'liar') ? ['Lying'] : [])];
   const saves = STATS.filter((s) => isSkilled(c, `save:${s}`));

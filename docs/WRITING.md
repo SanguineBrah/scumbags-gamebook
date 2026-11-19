@@ -21,6 +21,10 @@ library: {
   `lose`, `sell: { item, gold, text }` (removes the item, pays out and sets the flag `sold_<item>`),
   `add: ['counter', n]`, `damage` (dice), `heal` (dice), `flag`, `unflag`, `msg`, `lightCharges`.
   Each can have its own `if`.
+- **Pay is written at full rates.** An over-qualified scumbag loses part of their profit when they
+  reach a `victory` ending (see ADAPTATION.md), after the ending's `on` effects and before its
+  text, so `c.flags.homeGold` in ending text is already the reduced figure. Don't promise a total
+  anywhere else.
 - **Interruptions:** `redirect: [{ if, to }]` on a section sends the player somewhere else on entry,
   for events like a giant coming home when the `noise` counter reaches 3.
 - **Conditions** (`if`, `show`): `item`, `anyItem`, `notItem`, `flag`, `notFlag`, `gold`, `atLeast: ['counter', n]`,

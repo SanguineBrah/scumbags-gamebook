@@ -41,7 +41,8 @@ Each adventure is a short, self-contained job. Survivors return to Scumbag Town,
 heal, restock, buy and sell, and squander their takings. Finishing any job in a level band
 reveals every job in the next band on the notice board, so after the first job there's always a
 choice. Nobody gets to do the same job twice, and later adventures remember what you did in
-earlier ones.
+earlier ones. Scumbags who are over-qualified for a job get paid less for it, so going back for
+the easy ones won't make you rich.
 
 | Band | Adventure | Level | The job |
 |---|---|---|---|

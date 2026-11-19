@@ -43,11 +43,15 @@ export function buy(c, id) {
   c.significant.push(makeItem(id));
   return `You buy ${def.name.toLowerCase()} for ${def.cost}GP.`;
 }
-/** The fence pays the item's value; things you could buy are taken back at half price. */
-export function sellPrice(id) { const d = SIGNIFICANT[id]; return d.value || (d.cost ? Math.floor(d.cost / 2) : 0); }
+/** The fence pays the item's value; things you could buy are taken back at half price.
+ *  (gamebook) Loot an over-qualified scumbag picked up is worth half for each level over (`cut`). */
+export function sellPrice(item) {
+  const it = typeof item === 'string' ? { id: item } : item; const d = SIGNIFICANT[it.id];
+  return d.value ? Math.floor(d.value / 2 ** (it.cut || 0)) : d.cost ? Math.floor(d.cost / 2) : 0;
+}
 export function sell(c, idx) {
   const it = c.significant[idx]; if (!it) return null;
-  const p = sellPrice(it.id); if (!p) return null;
+  const p = sellPrice(it); if (!p) return null;
   c.significant.splice(idx, 1); c.gold += p;
   return `The fence gives you ${p}GP for the ${it.name.toLowerCase()}.`;
 }

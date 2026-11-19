@@ -1,8 +1,8 @@
 // Whole careers: one bot scumbag plays adventure after adventure until it dies or runs out.
 // Compares a "rusher", who always takes the newest band on offer, with a "farmer", who
 // clears every lower adventure first. Shows level on arrival and death rate in each band.
-// Usage: node tools/campaign.mjs [careers=400] [seed=1] [rule=none|taper|cost|cap|close]
-//   taper: an adventure pays half for each level you are above its band
+// Usage: node tools/campaign.mjs [careers=400] [seed=1] [rule=none|cost|cap|close]
+//   (the game itself halves an adventure's profit for each level you are above its band)
 //   cost:  each level costs 100GP times your current level
 //   cap:   you can't level past the top of the band after the highest one you've finished
 //   close: adventures whose band tops out more than a level below yours aren't offered
@@ -58,8 +58,6 @@ function career(strategy, rng) {
     const end = play(c, built[meta.id], rng);
     log.push({ tier, lvl, over: lvl - topOf(meta), end, back, gold: c.gold - gold });
     if (end !== 'victory') return { log, alive: false, c };
-    const over = lvl - topOf(meta);
-    if (RULE === 'taper' && over > 0 && c.gold > gold) c.gold = gold + Math.floor((c.gold - gold) / 2 ** over);
     recordAdventure(c, meta.id);
     inTown(c, rng);
   }

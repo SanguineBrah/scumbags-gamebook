@@ -29,7 +29,7 @@ export class Game {
   text(key = this.at) { const t = this.section(key).text || []; return typeof t === 'function' ? t(this.c, this.visits[key] || 1) : t; }
   number(key = this.at) { return this.adv.numbers[key]; }
 
-  begin(character) { this.c = character; this.goto(this.adv.start); }
+  begin(character) { this.c = character; character.flags.startGold = character.gold; this.goto(this.adv.start); }
 
   goto(key) {
     const s = this.adv.sections[key];
@@ -47,7 +47,7 @@ export class Game {
     }
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
-    if (s.end === 'victory') c.flags.homeGold = c.gold;
+    if (s.end === 'victory') { this.overcharge(); c.flags.homeGold = c.gold; }
     if (s.fight && !(s.fight.unless && check(c, s.fight.unless).ok)) {
       this.fight = startFight(this, s.fight);
       if (this.fight.lost) this.dead = true;   // killed before you could act
@@ -84,8 +84,9 @@ export class Game {
       if (e.msg) this.say(e.msg, e.kind || 'info');
       if (e.sell) {
         if (!hasItem(c, e.sell.item)) continue;
-        this.take(e.sell.item); c.gold += e.sell.gold; c.flags[`sold_${e.sell.item}`] = true;
-        this.say(`${e.sell.text || `You sell the ${itemName(e.sell.item).toLowerCase()}`}: +${e.sell.gold}GP.`, 'good');
+        const g = e.sell.gold;
+        this.take(e.sell.item); c.gold += g; c.flags[`sold_${e.sell.item}`] = true;
+        this.say(`${e.sell.text || `You sell the ${itemName(e.sell.item).toLowerCase()}`}: +${g}GP.`, 'good');
         continue;
       }
       if (e.add) { const [k, n] = e.add; c.flags[k] = (c.flags[k] || 0) + n; }
@@ -127,8 +128,19 @@ export class Game {
       used = itemSlots(c) + Math.ceil(c.gold / 50);
     }
     if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
-    list.push(makeItem(id)); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
+    const it = makeItem(id);
+    if (!mundane && SIGNIFICANT[id].value && this.overLevel()) it.cut = this.overLevel();   // the fence pays less for it too
+    list.push(it); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
     return true;
+  }
+  /** (gamebook) How many levels this scumbag is above the adventure's band. */
+  overLevel() { return Math.max(0, this.c.level - parseInt(String(this.adv.levels).split('–').at(-1), 10)); }
+  /** (gamebook) Over-qualified scumbags keep half their profit for each level above the band. */
+  overcharge() {
+    const c = this.c; const n = this.overLevel(); const profit = c.gold - (c.flags.startGold ?? c.gold);
+    if (!n || profit <= 0) return;
+    const lost = profit - Math.floor(profit / 2 ** n); c.gold -= lost;
+    this.say(`Word gets round that a level ${c.level} scumbag took a job for a level ${this.adv.levels} scumbag. Nobody in Scumbag Town will take you seriously until you’ve bought them all a drink: −${lost}GP. (${n === 1 ? 'Half' : n === 2 ? 'Three quarters' : 'Nearly all'} of your profit.)`, 'bad');
   }
   take(id) {
     const c = this.c;
