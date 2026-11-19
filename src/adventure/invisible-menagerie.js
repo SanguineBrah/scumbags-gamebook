@@ -51,7 +51,7 @@ export const SECTIONS = {
   bruno_fight: { outdoors: true,
     on: [{ flag: 'brunoAngry' }],
     text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
-    fight: { monsters: [{ name: 'Bruno', lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
+    fight: { monsters: [{ name: 'Bruno', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
   },
   bruno_down: {
     text: ['Bruno sits down in the sawdust and decides you can go in for free.'],

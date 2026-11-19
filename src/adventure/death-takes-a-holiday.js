@@ -6,7 +6,7 @@ export const META = {
   blurb: 'Death is on holiday at Brinemouth-on-Sea, and somebody has stolen his scythe from his beach hut. Nobody in Brinemouth has died for a week. The hospital is full, the undertakers are bankrupt, and the seagulls have become a problem. Death would like his scythe back before his fortnight is up. He has been saving for a long time, and he is prepared to be generous.',
 };
 
-const gull = { name: 'Undying seagulls', lvl: 6, hp: 14, range: 'engaged', feats: ['relentless', 'flies'], note: 'A flock that will not die while the scythe is missing; relentless (must be burned or pulped); flies; wants your chips' };
+const gull = { name: 'Undying seagulls', plural: true, lvl: 6, hp: 14, range: 'engaged', feats: ['relentless', 'flies'], note: 'A flock that will not die while the scythe is missing; relentless (must be burned or pulped); flies; wants your chips' };
 const mortimer = { name: 'Old Mortimer, with a scythe', lvl: 9, hp: 30, range: 'engaged', dmg: '3d6', feats: ['relentless'], note: 'A hundred and four; Death’s scythe (3d6); can’t die while he holds it (relentless)' };
 
 export const SECTIONS = {

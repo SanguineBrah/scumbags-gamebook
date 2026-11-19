@@ -6,7 +6,8 @@ import { Game } from '../engine/game.js';
 import { Rng } from '../rules/dice.js';
 import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SPELLS, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } from '../rules/data.js';
 import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS, recordAdventure } from '../rules/character.js';
-import { alive } from '../engine/combat.js';
+import { alive, the } from '../engine/combat.js';
+import { itemRef } from '../engine/conditions.js';
 
 const SAVE_KEY = 'scumbags-gamebook-v2';
 const ROSTER_KEY = 'scumbags-gamebook-roster';
@@ -50,14 +51,24 @@ function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); window.scrollTo(0, 0); }
 
 // ---------- screens
+// The top bar is one fixed element that lives outside the app and only has its contents swapped.
+// Rebuilding a sticky bar on every render left a blank strip at the top in some mobile browsers.
+const bar = document.createElement('header'); bar.className = 'topbar'; bar.hidden = true;
+const barSpace = document.createElement('div'); barSpace.className = 'topbar-space';
+document.body.insertBefore(bar, root); document.body.insertBefore(barSpace, root);
+const fitBar = () => { barSpace.style.height = bar.hidden ? '0' : `${bar.offsetHeight}px`; };
+if (window.ResizeObserver) new ResizeObserver(fitBar).observe(bar);
+
 function render() {
-  root.replaceChildren(
-    ui.screen === 'title' ? titleScreen()
-      : ui.screen === 'howto' ? howToScreen()
-        : ui.screen === 'create' ? createScreen()
-          : ui.screen === 'town' ? townScreen()
-          : playScreen(),
-  );
+  const view = ui.screen === 'title' ? titleScreen()
+    : ui.screen === 'howto' ? howToScreen()
+      : ui.screen === 'create' ? createScreen()
+        : ui.screen === 'town' ? townScreen()
+          : playScreen();
+  const head = view.querySelector('header.topbar');
+  if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
+  root.replaceChildren(view);
+  fitBar();
   save();
 }
 
@@ -118,10 +129,10 @@ function townScreen() {
       h('p', { class: 'small' }, 'Mundane items cost next to nothing in town. Restock, or swap what you carry.'),
       h('button', { class: 'btn ghost', onclick: () => { town.restock(c); act('You top up your torches, oil, ammunition and everything else that runs out.'); } }, 'Restock everything'),
       h('h3', null, `Your mundane items (${c.mundane.length}/${MUNDANE_LIMIT})`),
-      h('div', { class: 'opts' }, c.mundane.map((i) => h('button', { class: 'opt', onclick: () => { town.dropMundane(c, i.id); act(`You leave the ${i.name.toLowerCase()} at home.`); } },
+      h('div', { class: 'opts' }, c.mundane.map((i) => h('button', { class: 'opt', onclick: () => { town.dropMundane(c, i.id); act(`You leave ${itemRef(i.id)} at home.`); } },
         h('span', null, i.name, i.tokens !== undefined ? ` (${i.tokens})` : '', h('span', { class: 'note' }, 'Tap to leave it at home'))))),
       left > 0 && [h('h3', null, `Pick up (${left} free)`), h('div', { class: 'opts' }, Object.entries(MUNDANE).filter(([id, m]) => !m.hidden && !c.mundane.some((i) => i.id === id)).map(([id, m]) =>
-        h('button', { class: 'opt', onclick: () => { town.addMundane(c, id); act(`You pick up ${m.name.toLowerCase()}.`); } }, h('span', null, m.name, m.note && h('span', { class: 'note' }, m.note)))))]),
+        h('button', { class: 'opt', onclick: () => { town.addMundane(c, id); act(`You pick up ${itemRef(id)}.`); } }, h('span', null, m.name, m.note && h('span', { class: 'note' }, m.note)))))]),
     h('div', { class: 'card' }, h('h3', null, 'The apothecary'),
       h('div', { class: 'opts' }, town.SHOP.map((id) => { const d = SIGNIFICANT[id]; return h('button', { class: 'opt', disabled: c.gold < d.cost, onclick: () => act(town.buy(c, id)) }, h('span', null, `${d.name} — ${d.cost}GP`, h('span', { class: 'note' }, d.note))); }))),
     h('div', { class: 'card' }, h('h3', null, 'The armourer'),
@@ -311,7 +322,12 @@ function fightView() {
   const g = ui.game; const f = g.fight; const c = g.c;
   const foes = f.monsters.map((m) => {
     const dead = !alive(m) && !m.dormant;
-    const status = [m.fled && 'fled', m.obeys && 'obeys you', m.dormant && 'twitching on the floor', m.prone && !m.dormant && 'prone', m.stunned && 'blinded by sand', m.unaware && 'unaware'].filter(Boolean).join(', ');
+    const rounds = (n) => `${n} round${n === 1 ? '' : 's'}`;
+    const status = [m.fled && 'fled', m.obeys && 'obeys you', m.dormant && 'twitching on the floor', m.prone && !m.dormant && 'prone',
+      m.stunned && alive(m) && `${m.stunWhy || 'stunned'} (${rounds(m.stunned)})`, m.unaware && 'unaware',
+      m.galv > 0 && `galvanised (${rounds(m.galv)})`, m.greased > 0 && 'on a greased floor', m.enfeebled && 'enfeebled',
+      m.misted && 'insubstantial', m.floating && 'floating', alive(m) && f.sanctMon > 0 && `behind shining walls (${rounds(f.sanctMon)})`,
+      alive(m) && f.fireMon > 0 && `in hellfire (${rounds(f.fireMon)})`].filter(Boolean).join(', ');
     return h('div', { class: `foe${dead ? ' dead' : ''}` },
       h('div', { class: 'name' }, m.name),
       h('div', { class: 'stats' }, `Level ${m.lvl} · DD d${m.dd} · ${m.range}${m.ap ? ` · ${m.ap} AP` : ''}${status ? ` · ${status}` : ''}`),
@@ -323,7 +339,10 @@ function fightView() {
     h('h3', null, h('span', null, f.over ? (f.won ? 'Victory' : f.fled ? 'You got away' : 'Defeat') : `Round ${f.round}`),
       h('span', { class: 'small muted' }, `Range: ${BANDS[f.distance].toLowerCase()}${f.dark ? ' · in the dark (d12)' : ''}`)),
     h('div', { class: 'foes' }, foes),
-    h('div', { class: 'small' }, `You: ${Math.max(0, c.hp)}/${c.maxHp} HP${c.armour ? `, ${c.ap} AP` : ''}${c.blocking ? ', blocking' : ''}${c.prone ? ', prone' : ''}`),
+    h('div', { class: 'small' }, `You: ${[`${Math.max(0, c.hp)}/${c.maxHp} HP`, c.armour && `${c.ap} AP`, c.blocking && 'blocking', c.prone && 'prone',
+      f.pacified > 0 && `pacified (${f.pacified} round${f.pacified === 1 ? '' : 's'})`, f.galv > 0 && `galvanised (${f.galv} round${f.galv === 1 ? '' : 's'})`,
+      f.sanctSelf > 0 && `in your sanctuary (${f.sanctSelf} round${f.sanctSelf === 1 ? '' : 's'})`, f.chosen > 0 && `Chosen (${f.chosen} round${f.chosen === 1 ? '' : 's'})`,
+      f.fireSelf > 0 && `standing in hellfire (${f.fireSelf} round${f.fireSelf === 1 ? '' : 's'})`].filter(Boolean).join(', ')}`),
     h('div', { class: 'bar you' }, h('i', { style: `width:${Math.max(0, 100 * c.hp / c.maxHp)}%` })),
     h('div', { class: 'log' }, f.log.map((l) => h('div', { class: l.kind === 'roll' ? 'roll-l' : l.kind }, l.text))),
     !f.over && fightButtons(g, acts),
@@ -350,7 +369,7 @@ function spellbook(casts, spells, doIt) {
     const sp = SPELLS[ui.castSpell];
     return h('div', { class: 'spellbook' },
       h('div', { class: 'small' }, h('b', null, sp.name), ` (level ${sp.lvl}): ${sp.text}`),
-      h('div', { class: 'actions' }, pick.map((a) => h('button', { class: 'btn ghost', onclick: () => doIt(a) }, `At the ${targetName(a)}`)),
+      h('div', { class: 'actions' }, pick.map((a) => h('button', { class: 'btn ghost', onclick: () => doIt(a) }, `At ${targetName(a)}`)),
         h('button', { class: 'btn ghost', onclick: () => { ui.castSpell = null; render(); } }, 'Back to the spellbook')));
   }
   const byLevel = spells.slice().sort((x, y) => SPELLS[x].lvl - SPELLS[y].lvl);
@@ -359,11 +378,11 @@ function spellbook(casts, spells, doIt) {
     const warn = mine[0].label.includes(' — ') ? mine[0].label.split(' — ').at(-1) : '';
     return h('button', { class: 'opt', onclick: () => { if (mine.length === 1) doIt(mine[0]); else { ui.castSpell = id; render(); } } },
       h('span', null, h('b', null, sp.name), h('span', { class: 'lvl' }, ` level ${sp.lvl}`),
-        mine[0].target && h('span', { class: 'note' }, mine.length === 1 ? `At the ${targetName(mine[0])}` : 'Choose a target'),
+        mine[0].target && h('span', { class: 'note' }, mine.length === 1 ? `At ${targetName(mine[0])}` : 'Choose a target'),
         h('span', { class: 'note' }, sp.text), warn && h('span', { class: 'note warn' }, warn)));
   })));
 }
-const targetName = (a) => ui.game.fight.monsters.find((m) => m.uid === a.target).name;
+const targetName = (a) => the(ui.game.fight.monsters.find((m) => m.uid === a.target));
 
 function endingView() {
   const g = ui.game; const c = g.c; const end = g.ending();

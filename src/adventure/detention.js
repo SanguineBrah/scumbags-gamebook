@@ -6,7 +6,7 @@ export const META = {
 };
 
 const delinquent = { name: 'Delinquent wizard', lvl: 3, hp: 10, range: 'medium', dmg: '6', onHit: { stat: 'Dex', dd: 6, label: 'keep your footing', text: 'A gob of Grease lands at your feet.', effect: 'prone' }, note: 'Casts Arcane bolt (6 damage) and Grease (on hit, d6 Dex save or fall over); no melee; bad attitude' };
-const spike = { name: 'Spike', lvl: 5, hp: 18, range: 'medium', dmg: '8', onHit: { stat: 'Dex', dd: 8, label: 'keep your footing', text: 'He greases the floor under you.', effect: 'prone' }, note: 'Gang leader; Arcane bolt (8 damage) and Grease (d8 Dex save or fall over); stolen grimoire; no melee' };
+const spike = { name: 'Spike', proper: true, lvl: 5, hp: 18, range: 'medium', dmg: '8', onHit: { stat: 'Dex', dd: 8, label: 'keep your footing', text: 'He greases the floor under you.', effect: 'prone' }, note: 'Gang leader; Arcane bolt (8 damage) and Grease (d8 Dex save or fall over); stolen grimoire; no melee' };
 
 export const SECTIONS = {
   start: {

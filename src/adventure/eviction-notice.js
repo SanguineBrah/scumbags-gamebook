@@ -209,7 +209,7 @@ export const SECTIONS = {
   troll_fight: {
     text: ['“No visitors in the engine room,” says Gnasher, climbing out of his wheel. He is twelve feet tall, mostly knuckles.'],
     fight: {
-      monsters: [{ name: 'Gnasher', lvl: 5, hp: 20, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay standing', text: 'He knocks you flat.', effect: 'prone' }, note: 'Treadmill troll (20 HP); on hit, d6 Str save or be knocked prone' }],
+      monsters: [{ name: 'Gnasher', proper: true, lvl: 5, hp: 20, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay standing', text: 'He knocks you flat.', effect: 'prone' }, note: 'Treadmill troll (20 HP); on hit, d6 Str save or be knocked prone' }],
       win: 'troll_win', flee: { to: 'pyramid', label: 'Dive out of the door' },
     },
   },

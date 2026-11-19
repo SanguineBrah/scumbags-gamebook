@@ -7,8 +7,8 @@ export const META = {
 };
 
 const CLUE = { add: ['clues', 1] };
-const glibb = { name: 'A Glibb', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Con', dd: 4, label: 'keep it off your skin', text: 'It gets on you. It is cold, and it moves.', effect: 'damage', amount: 'd4' }, note: 'Manmoeba: a man-shaped blob; splits in two when struck; gross' };
-const half = { name: 'Half a Glibb', lvl: 1, hp: 3, range: 'engaged', note: 'What’s left of a Glibb after it split; still cross' };
+const glibb = { name: 'Glibb', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Con', dd: 4, label: 'keep it off your skin', text: 'It gets on you. It is cold, and it moves.', effect: 'damage', amount: 'd4' }, note: 'Manmoeba: a man-shaped blob; splits in two when struck; gross' };
+const half = { name: 'Half-Glibb', lvl: 1, hp: 3, range: 'engaged', note: 'What’s left of a Glibb after it split; still cross' };
 
 export const SECTIONS = {
   start: {

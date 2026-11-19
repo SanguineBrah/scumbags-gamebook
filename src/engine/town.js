@@ -1,4 +1,5 @@
 // Scumbag Town, between adventures: the inn, the market and the fence (rulebook prices).
+import { itemRef } from './conditions.js';
 import { MUNDANE, SIGNIFICANT, WEAPONS, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, WEAPON_DIE } from '../rules/data.js';
 import { makeItem, maxAp, resetDay, prof, itemSlots, hasFeature } from '../rules/character.js';
 
@@ -41,7 +42,7 @@ export function buy(c, id) {
   c.gold -= def.cost;
   if (itemSlots(c) + (def.slots || 1) > SIGNIFICANT_LIMIT) { c.gold += def.cost; return null; }
   c.significant.push(makeItem(id));
-  return `You buy ${def.name.toLowerCase()} for ${def.cost}GP.`;
+  return `You buy ${itemRef(id)} for ${def.cost}GP.`;
 }
 /** The fence pays the item's value; things you could buy are taken back at half price.
  *  (gamebook) Loot an over-qualified scumbag picked up is worth half for each level over (`cut`). */
@@ -53,7 +54,7 @@ export function sell(c, idx) {
   const it = c.significant[idx]; if (!it) return null;
   const p = sellPrice(it); if (!p) return null;
   c.significant.splice(idx, 1); c.gold += p;
-  return `The fence gives you ${p}GP for the ${it.name.toLowerCase()}.`;
+  return `The fence gives you ${p}GP for ${itemRef(it.id)}.`;
 }
 
 export function weaponsFor(c) { return WEAPONS.filter((w) => w.weight <= prof(c)); }

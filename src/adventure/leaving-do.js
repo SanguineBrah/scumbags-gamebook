@@ -6,7 +6,7 @@ export const META = {
 };
 
 const skeleton = { name: 'Skeleton waiter', lvl: 4, hp: 12, range: 'engaged', feats: ['undead'], note: 'Undead; silver tray; terrible service' };
-const vexilla = { name: 'Vexilla', lvl: 8, hp: 26, range: 'medium', dmg: '2d6', note: 'The apprentice; Arcane bolt (2d6); ambitious' };
+const vexilla = { name: 'Vexilla', proper: true, lvl: 8, hp: 26, range: 'medium', dmg: '2d6', note: 'The apprentice; Arcane bolt (2d6); ambitious' };
 
 export const SECTIONS = {
   start: {

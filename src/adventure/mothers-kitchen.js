@@ -62,7 +62,7 @@ export const SECTIONS = {
     on: [{ flag: 'tiddlesAngry' }],
     text: ['Tiddles stretches, which takes a while, and then pounces, which doesn’t.'],
     fight: {
-      monsters: [{ name: 'Tiddles', lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
+      monsters: [{ name: 'Tiddles', proper: true, lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
       win: 'tiddles_win', flee: { to: 'cottage', label: 'Dive back out through the flap' },
     },
   },

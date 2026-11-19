@@ -5,6 +5,12 @@ import { MUNDANE, SIGNIFICANT, SPELLS } from '../rules/data.js';
 export const hasItem = (c, id) => c.mundane.some((i) => i.id === id && (i.tokens === undefined || i.tokens > 0) && (i.uses === undefined || i.uses > 0))
   || c.significant.some((i) => i.id === id && (i.tokens === undefined || i.tokens > 0) && (i.uses === undefined || i.uses > 0));
 export const itemName = (id) => (MUNDANE[id] || SIGNIFICANT[id] || { name: id }).name;
+/** An item mid-sentence: "the old map", "the healer’s kit", "Ezra Tock’s winding key" (items can set `ref`). */
+export function itemRef(id) {
+  const d = MUNDANE[id] || SIGNIFICANT[id]; const n = d ? d.name : id;
+  if (d && d.ref) return d.ref;
+  return /^The /.test(n) ? `the ${n.slice(4)}` : `the ${n[0].toLowerCase()}${n.slice(1)}`;
+}
 
 /** Something that gives light right now (without spending it). */
 export function lightSource(c) {

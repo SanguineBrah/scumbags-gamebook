@@ -6,7 +6,7 @@ export const META = {
 };
 
 const blob = { name: 'The blob', lvl: 7, hp: 22, range: 'engaged', onHit: { stat: 'Str', dd: 8, label: 'pull yourself free', text: 'It closes over you, and starts to digest.', effect: 'damage', amount: '2d4' }, note: 'A giant blob, warm and clear as soup (22 HP); on hit, d8 Str save or take 2d4 more' };
-const leeches = { name: 'Therapeutic leeches', lvl: 4, hp: 12, range: 'engaged', feats: ['tiny'], note: 'A tank of medical leeches, very keen (+2 to tests when being attacked)' };
+const leeches = { name: 'Therapeutic leeches', plural: true, lvl: 4, hp: 12, range: 'engaged', feats: ['tiny'], note: 'A tank of medical leeches, very keen (+2 to tests when being attacked)' };
 
 export const SECTIONS = {
   start: {

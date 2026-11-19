@@ -7,7 +7,7 @@ export const META = {
 };
 
 // Rex is half of a fighting duo. His brother Tex, who used to guard his back and finish his sentences, is missing.
-const rex = { name: 'Rex', lvl: 2, hp: 10, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' };
+const rex = { name: 'Rex', proper: true, lvl: 2, hp: 10, range: 'engaged', feats: ['exposed'], note: 'Half of a fighting duo; back always exposed (critical hits while engaged); unfinished sentences' };
 const count = { name: 'Count Fortunato', lvl: 7, range: 'engaged', feats: ['undead', 'unluckyAura', 'critWide'], note: 'Luck vampire; each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' };
 const HOUR = (c) => `The candles say it is ${['eleven o’clock', 'midnight', 'one in the morning', 'two in the morning. Not long till dawn', 'nearly dawn'][Math.min(4, c.flags.hour || 0)]}.`;
 const GAME = { add: ['hour', 1] };

@@ -6,7 +6,7 @@ export const META = {
   blurb: 'Mr Welt the cobbler hired a hedge-wizard to animate a pair of legs, to break in new boots. The hedge-wizard was generous. Forty pairs of legs walked out of the shop this morning, wearing the whole season’s stock, and one of them is wearing the mayor’s seven-league boots. Welt will pay for every pair you bring back.',
 };
 
-const legs = { name: 'Animated legs', lvl: 1, hp: 4, range: 'engaged', feats: ['relentless'], note: 'Relentless (get back up unless burned or pulped); kick like a mule; ticklish' };
+const legs = { name: 'Animated legs', plural: true, lvl: 1, hp: 4, range: 'engaged', feats: ['relentless'], note: 'Relentless (get back up unless burned or pulped); kick like a mule; ticklish' };
 const BOOTS = (n = 1) => ({ add: ['boots', n] });
 
 export const SECTIONS = {
@@ -158,7 +158,7 @@ export const SECTIONS = {
   leader_fight: { outdoors: true,
     text: ['The legs in the seven-league boots turn on you. They don’t run away. They kick, and every kick lands like a falling cart.'],
     fight: {
-      monsters: [{ name: 'Legs in seven-league boots', lvl: 2, hp: 12, range: 'engaged', feats: ['relentless'], note: 'Relentless; seven-league boots (kicks hard, 12 HP)' }],
+      monsters: [{ name: 'Legs in seven-league boots', plural: true, lvl: 2, hp: 12, range: 'engaged', feats: ['relentless'], note: 'Relentless; seven-league boots (kicks hard, 12 HP)' }],
       win: 'seven_league', flee: { to: 'fair', label: 'Run back to the fair' },
       special: [{ label: 'Tickle them with your quill', if: { item: 'quill' }, flag: 'leaderTickled', text: 'They collapse, kicking with laughter. You get both boots off.', win: true }],
     },

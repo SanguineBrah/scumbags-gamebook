@@ -7,7 +7,7 @@ export const META = {
 };
 
 const heavy = { name: 'Sid’s heavy', lvl: 2, hp: 6, range: 'engaged', note: 'Never bathes; knuckles like walnuts' };
-const neville = { name: 'Neville', lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more (cursed)' };
+const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more (cursed)' };
 
 export const SECTIONS = {
   start: {

@@ -4,7 +4,7 @@ import { Rng, rollExpr } from '../rules/dice.js';
 import { statTest, successChance } from '../rules/tests.js';
 import { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } from '../rules/data.js';
 import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots, knownSpells } from '../rules/character.js';
-import { check, hasItem, lightSource, itemName, canCast } from './conditions.js';
+import { check, hasItem, lightSource, itemName, itemRef, canCast } from './conditions.js';
 import { startFight, act, actions } from './combat.js';
 
 
@@ -64,7 +64,7 @@ export class Game {
     const it = c[list].find((i) => i.id === id);
     it.tokens -= 1;
     this.say(`You light the way with your ${src}. (${itemName(id)}: ${it.tokens} left.)`);
-    if (it.tokens <= 0) { c[list] = c[list].filter((x) => x !== it); this.say(`That was the last of your ${itemName(id).toLowerCase()}.`, 'bad'); }
+    if (it.tokens <= 0) { c[list] = c[list].filter((x) => x !== it); this.say(`That was the last of your ${itemRef(id).replace(/^the /, '')}.`, 'bad'); }
   }
 
   rest() {
@@ -86,7 +86,7 @@ export class Game {
         if (!hasItem(c, e.sell.item)) continue;
         const g = e.sell.gold;
         this.take(e.sell.item); c.gold += g; c.flags[`sold_${e.sell.item}`] = true;
-        this.say(`${e.sell.text || `You sell the ${itemName(e.sell.item).toLowerCase()}`}: +${g}GP.`, 'good');
+        this.say(`${e.sell.text || `You sell ${itemRef(e.sell.item)}`}: +${g}GP.`, 'good');
         continue;
       }
       if (e.add) { const [k, n] = e.add; c.flags[k] = (c.flags[k] || 0) + n; }
@@ -127,10 +127,10 @@ export class Game {
       this.say(`To make room, you leave ${dropped}GP behind.`, 'bad');
       used = itemSlots(c) + Math.ceil(c.gold / 50);
     }
-    if (used + size > limit) { this.say(`No room for the ${itemName(id).toLowerCase()}: you’re carrying all you can.`, 'bad'); return false; }
+    if (used + size > limit) { this.say(`No room for ${itemRef(id)}: you’re carrying all you can.`, 'bad'); return false; }
     const it = makeItem(id);
     if (!mundane && SIGNIFICANT[id].value && this.overLevel()) it.cut = this.overLevel();   // the fence pays less for it too
-    list.push(it); this.say(`You take the ${itemName(id).toLowerCase()}.`, 'good');
+    list.push(it); this.say(`You take ${itemRef(id)}.`, 'good');
     return true;
   }
   /** (gamebook) How many levels this scumbag is above the adventure's band. */
@@ -158,7 +158,7 @@ export class Game {
   damage(n, from) {
     const c = this.c;
     c.hp -= n;
-    this.say(`${from} costs you ${n} HP (${Math.max(0, c.hp)}/${c.maxHp}).`, 'bad');
+    this.say(`${from} ${/^The \S+[^s]s$/.test(from) ? 'cost' : 'costs'} you ${n} HP (${Math.max(0, c.hp)}/${c.maxHp}).`, 'bad');
     if (c.hp <= 0) {
       const salve = c.significant.find((i) => i.id === 'salve');
       if (salve) { this.take('salve'); c.hp = 1; this.say('Bleeding out, you slap on your clotting salve. Back up on 1 HP.', 'good'); }

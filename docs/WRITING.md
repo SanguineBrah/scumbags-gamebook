@@ -41,7 +41,10 @@ library: {
   never rely on a cast as its only way out. Offer spells up to the top level of the adventure's band.
 - **Fights:** `fight: { monsters: [{ name, lvl, range, feats, hp, dmg, note }], win, flee: { to, label },
   surprise, distance, cornered, unless, unlucky, outdoors (Lightning storm works), special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
-  'prone' | 'gold' | 'damage', amount }`. Monster features: `brute`, `contract`, `exposed` (crits when
+  'prone' | 'gold' | 'damage', amount }`. Names: the fight text calls a monster "the Filthy footman", or "the baby" for a name
+  starting "The". Names with a second capitalised word or a possessive ("Lord Mudlark", "Sid’s heavy")
+  get no article; set `proper: true` for one-word names ("Rex") and `plural: true` for plurals
+  ("Animated legs"). Items can set `ref` the same way ("Ezra Tock’s winding key"). Monster features: `brute`, `contract`, `exposed` (crits when
   engaged), `noEngaged` (pikes), `burst` (explodes when slain), `topple`, `coward`, `unluckyAura`,
   `critWide`,
   `tiny`, `handgun`, `dealD6`, `takeD6`, `approval`, `relentless`, `magicImmune`, `undead`,
