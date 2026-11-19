@@ -1,5 +1,6 @@
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
 import { buildAdventure, ADVENTURES, availableFor, revealedFor } from '../adventure/index.js';
+import { careerWriteUp } from '../adventure/career.js';
 import { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield } from '../engine/town.js';
 const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
 import { Game } from '../engine/game.js';
@@ -15,7 +16,7 @@ let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { castOpen: false, castSpell: null, screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
+const ui = { castOpen: false, castSpell: null, retireAsk: false, writeup: null, screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -47,6 +48,17 @@ function roster() { try { return JSON.parse(localStorage.getItem(ROSTER_KEY) || 
 function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify(list.slice(0, 12))); } catch { /* ignore */ } }
 function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
 function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
+// Retired scumbags: kept as their write-ups, newest first.
+const RETIRED_KEY = 'scumbags-gamebook-retired';
+function retired() { try { return JSON.parse(localStorage.getItem(RETIRED_KEY) || '[]'); } catch { return []; } }
+/** End a career: write it up, take the scumbag off the roster, and show the write-up. */
+function retire(c, how) {
+  const w = careerWriteUp(c, how);
+  try { localStorage.setItem(RETIRED_KEY, JSON.stringify([w, ...retired()].slice(0, 24))); } catch { /* ignore */ }
+  dropScumbag(c); clearSave();
+  ui.writeup = w; ui.retireAsk = false;
+  go('writeup');
+}
 
 /** Back to the top of the page (the game scrolls inside #app, not the window). */
 function toTop() { root.scrollTop = 0; }
@@ -80,6 +92,7 @@ function render() {
     : ui.screen === 'howto' ? howToScreen()
       : ui.screen === 'create' ? createScreen()
         : ui.screen === 'town' ? townScreen()
+          : ui.screen === 'writeup' ? writeupScreen()
           : playScreen();
   const head = view.querySelector('header.topbar');
   if (head) { head.remove(); bar.replaceChildren(...head.childNodes); bar.hidden = false; } else bar.hidden = true;
@@ -114,6 +127,9 @@ function titleScreen() {
         h('button', { class: saved ? 'btn ghost' : 'btn', onclick: newScumbag }, 'New scumbag'),
         h('button', { class: 'btn ghost', onclick: () => go('howto') }, 'How to play')),
     ),
+    retired().length > 0 && h('main', { class: 'page' }, h('h2', null, 'Finished careers'),
+      h('div', { class: 'opts' }, retired().map((w) => h('button', { class: 'opt', onclick: () => { ui.writeup = w; go('writeup'); } },
+        h('span', null, h('b', null, w.name), h('span', { class: 'note' }, `${w.title}. ${w.ending}`)))))),
     list.length > 0 && h('main', { class: 'page' }, h('h2', null, 'Survivors'),
       h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => { ui.char = c; ui.townMsg = ''; go('town'); } },
         h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${ADVENTURES.length} adventures done`)))))));
@@ -166,12 +182,32 @@ function townScreen() {
       avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag${overBy(c, a) ? `. You’re over-qualified: you’ll keep ${overBy(c, a) === 1 ? 'half' : `1/${2 ** overBy(c, a)}`} of the profit` : ''}`), h('p', null, a.blurb),
         h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
       h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
+    h('div', { class: 'card' }, h('h3', null, 'Retire'),
+      ui.retireAsk
+        ? [h('p', { class: 'small' }, `This ends ${c.name}’s career for good. You’ll get a write-up of everything they did, and they won’t be coming back.`),
+          h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => retire(c, 'town') }, 'Retire for good'), h('button', { class: 'btn ghost', onclick: () => { ui.retireAsk = false; render(); } }, 'Not yet'))]
+        : [h('p', { class: 'small' }, 'Every career ends somehow. You can hang up your boots now, or wait for the last job on the board, which ends it for you.'),
+          h('button', { class: 'btn ghost', onclick: () => { ui.retireAsk = true; render(); } }, 'Retire')]),
     h('p', null, h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title screen')),
   ));
 }
 
+/** A finished career, written up. */
+function writeupScreen() {
+  const w = ui.writeup;
+  return h('div', null, h('main', { class: 'page writeup' },
+    h('div', { class: 'strap' }, w.died ? 'DECEASED' : 'RETIRED'),
+    h('h1', null, w.name),
+    h('p', { class: 'muted' }, `${w.title}. ${w.date}.`),
+    h('p', { class: 'ending' }, w.ending),
+    h('h3', null, 'Career'),
+    h('ol', { class: 'career' }, w.lines.map((l) => h('li', null, l))),
+    h('p', { class: 'small muted' }, w.tally),
+    h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))));
+}
+
 /** (gamebook) Levels above an adventure's band: each one halves the profit you keep. */
-const overBy = (c, a) => Math.max(0, c.level - parseInt(String(a.levels).split('–').at(-1), 10));
+const overBy = (c, a) => (a.finale ? 0 : Math.max(0, c.level - parseInt(String(a.levels).split('–').at(-1), 10)));
 
 function startAdventure(id) {
   adv = buildAdventure(id);
@@ -203,6 +239,7 @@ function howToScreen() {
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level. An over-qualified scumbag loses half their profit from an adventure for each level they are above its band, and its loot fetches half at the fence.'),
     h('h3', null, 'Between adventures'),
     h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
+    h('p', null, 'Every career ends. Finish any job at the highest level and one last job turns up, which ends it for you, one way or another. Or retire from town whenever you like. Either way, you get a write-up of everything you did, kept on the title screen.'),
     h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
     h('button', { class: 'btn', onclick: () => go('title') }, 'Back'),
@@ -406,15 +443,22 @@ function endingView() {
     return [h('div', { class: 'num' }, g.number()),
       h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))), messages(g),
       g.fight && fightView(),
-      h('div', { class: 'banner dead' }, 'Your adventure ends here'),
+      h('div', { class: 'banner dead' }, adv.finale ? 'Your career ends here' : 'Your adventure ends here'),
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+      adv.finale
+        ? h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => retire(c, 'died') }, 'Read your write-up'))
+        : h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
     clearSaveSoon();
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))),
       h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
+  }
+  // the last job: the career ends here, with a write-up instead of squandering
+  if (adv.finale) {
+    return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))), messages(g),
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => { recordAdventure(c, adv.id); retire(c, 'finale'); } }, 'Read your write-up'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });

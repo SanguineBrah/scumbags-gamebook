@@ -42,7 +42,9 @@ heal, restock, buy and sell, and squander their takings. Finishing any job in a 
 reveals every job in the next band on the notice board, so after the first job there's always a
 choice. Nobody gets to do the same job twice, and later adventures remember what you did in
 earlier ones. Scumbags who are over-qualified for a job get paid less for it, so going back for
-the easy ones won't make you rich.
+the easy ones won't make you rich. Finish a job at the top level and one last job turns up, where
+the career ends; retire in town before then if you'd rather. Retired scumbags get a write-up of
+everything they did.
 
 | Band | Adventure | Level | The job |
 |---|---|---|---|

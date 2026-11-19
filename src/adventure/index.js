@@ -29,8 +29,9 @@ import { META as M25, SECTIONS as S25, DEATH_TEXT as D25 } from './leaving-do.js
 import { META as M26, SECTIONS as S26, DEATH_TEXT as D26 } from './heads-you-lose.js';
 import { META as M27, SECTIONS as S27, DEATH_TEXT as D27 } from './death-takes-a-holiday.js';
 import { META as M28, SECTIONS as S28, DEATH_TEXT as D28 } from './higher-still.js';
+import { META as M29, SECTIONS as S29, DEATH_TEXT as D29 } from './final-demand.js';
 
-const SOURCES = [[M1, S1, D1], [M2, S2, D2], [M3, S3, D3], [M4, S4, D4], [M5, S5, D5], [M6, S6, D6], [M7, S7, D7], [M8, S8, D8], [M9, S9, D9], [M10, S10, D10], [M11, S11, D11], [M12, S12, D12], [M13, S13, D13], [M14, S14, D14], [M15, S15, D15], [M16, S16, D16], [M17, S17, D17], [M18, S18, D18], [M19, S19, D19], [M20, S20, D20], [M21, S21, D21], [M22, S22, D22], [M23, S23, D23], [M24, S24, D24], [M25, S25, D25], [M26, S26, D26], [M27, S27, D27], [M28, S28, D28]];
+const SOURCES = [[M1, S1, D1], [M2, S2, D2], [M3, S3, D3], [M4, S4, D4], [M5, S5, D5], [M6, S6, D6], [M7, S7, D7], [M8, S8, D8], [M9, S9, D9], [M10, S10, D10], [M11, S11, D11], [M12, S12, D12], [M13, S13, D13], [M14, S14, D14], [M15, S15, D15], [M16, S16, D16], [M17, S17, D17], [M18, S18, D18], [M19, S19, D19], [M20, S20, D20], [M21, S21, D21], [M22, S22, D22], [M23, S23, D23], [M24, S24, D24], [M25, S25, D25], [M26, S26, D26], [M27, S27, D27], [M28, S28, D28], [M29, S29, D29]];
 export const ADVENTURES = SOURCES.map(([m]) => m);
 
 /** The highest level band a scumbag has opened: band 1 always, and each band finished opens the next. */

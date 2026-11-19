@@ -59,6 +59,7 @@ function career(strategy, rng) {
     log.push({ tier, lvl, over: lvl - topOf(meta), end, back, gold: c.gold - gold });
     if (end !== 'victory') return { log, alive: false, c };
     recordAdventure(c, meta.id);
+    if (meta.finale) return { log, alive: true, c };   // the last job ends the career
     inTown(c, rng);
   }
 }

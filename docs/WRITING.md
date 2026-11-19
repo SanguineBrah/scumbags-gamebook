@@ -110,3 +110,6 @@ Each adventure is a module in `src/adventure/` exporting `META` (`id`, `title`, 
 open; finishing any adventure in a band reveals every adventure in the next. A scumbag can't
 repeat an adventure they've finished. Every adventure needs a way to give up and go home. Significant loot that is sold at the end can
 take several slots (`slots` in `SIGNIFICANT`), which makes carrying it a decision.
+
+When you add an adventure, add a line for it to `LINES` in `src/adventure/career.js`: what the
+scumbag did there, from the flags it ended with. It goes in their write-up when they retire.

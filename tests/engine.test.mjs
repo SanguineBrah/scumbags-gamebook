@@ -114,7 +114,7 @@ test('a big item makes room by leaving coins behind', () => {
 
 test('every adventure is complete and its final section is a victory', async () => {
   const { ADVENTURES, buildAdventure } = await import('../src/adventure/index.js');
-  assert.equal(ADVENTURES.length, 28);
+  assert.equal(ADVENTURES.length, 29);
   for (const a of ADVENTURES) {
     const b = buildAdventure(a.id);
     assert.equal(b.numbers.start, 1);
@@ -252,4 +252,15 @@ test('over-qualified scumbags keep half their profit for each level above the ba
     g.goto(win);
     assert.equal(c.gold, expect);
   }
+});
+
+test('every adventure has a line in the career write-up, and the finale ends it', async () => {
+  const { ADVENTURES } = await import('../src/adventure/index.js');
+  const { careerWriteUp } = await import('../src/adventure/career.js');
+  const c = make(1);
+  c.done = ADVENTURES.map((a) => a.id); c.past = { 'final-demand': { deferred: true } };
+  const w = careerWriteUp(c, 'finale');
+  assert.equal(w.lines.length, ADVENTURES.filter((a) => !a.finale).length);
+  assert.match(w.ending, /more time/);
+  assert.ok(w.lines.every((l) => typeof l === 'string' && l.endsWith('.')));
 });

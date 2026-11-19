@@ -152,7 +152,7 @@ export class Game {
   /** (gamebook) Over-qualified scumbags keep half their profit for each level above the band. */
   overcharge() {
     const c = this.c; const n = this.overLevel(); const profit = c.gold - (c.flags.startGold ?? c.gold);
-    if (!n || profit <= 0) return;
+    if (!n || profit <= 0 || this.adv.finale) return;
     const lost = profit - Math.floor(profit / 2 ** n); c.gold -= lost;
     this.say(`Word gets round that a level ${c.level} scumbag took a job for a level ${this.adv.levels} scumbag. Nobody in Scumbag Town will take you seriously until you’ve bought them all a drink: −${lost}GP. (${n === 1 ? 'Half' : n === 2 ? 'Three quarters' : 'Nearly all'} of your profit.)`, 'bad');
   }
