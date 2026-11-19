@@ -39,9 +39,10 @@ library: {
   at the same target, and the section should say what that does. The check rejects divine casts
   without one. Cast choices are hidden from scumbags who don't know the spell, so a section must
   never rely on a cast as its only way out. Offer spells up to the top level of the adventure's band.
-- **Fights:** `fight: { monsters: [{ name, lvl, range, feats, hp, dmg, note }], win, flee: { to, label },
+- **Fights:** `fight: { monsters: [{ name, lvl, range, feats, hp, dmg, note }], win, key, flee: { to, label },
   surprise, distance, cornered, unless, unlucky, outdoors (Lightning storm works), special: [{ label, text, if, flag | repeat, test, dmg, win }] }`. Monsters can have `ap` (armour points, soaked before HP) and `onHit: { stat, dd, label, text, effect:
-  'prone' | 'gold' | 'damage', amount }`. Names: the fight text calls a monster "the Filthy footman", or "the baby" for a name
+  'prone' | 'gold' | 'damage', amount }`. Wounds from a fight you ran from are kept per section, or per `key` if two
+  sections fight the same monster (a later fight's lower `hp` still caps it). Names: the fight text calls a monster "the Filthy footman", or "the baby" for a name
   starting "The". Names with a second capitalised word or a possessive ("Lord Mudlark", "Sid’s heavy")
   get no article; set `proper: true` for one-word names ("Rex") and `plural: true` for plurals
   ("Animated legs"). Items can set `ref` the same way ("Ezra Tock’s winding key"). Monster features: `brute`, `contract`, `exposed` (crits when

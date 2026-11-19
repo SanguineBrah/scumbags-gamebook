@@ -33,15 +33,23 @@ const attacksOf = (m) => (has(m, 'brute') ? Math.min(3, Math.ceil(m.lvl / 2)) : 
 export function startFight(g, def) {
   const { rng, c } = g;
   const f = {
-    def, round: 1, monsters: def.monsters.map((m) => makeMonster(rng, m)), distance: def.distance || 0,
+    def, round: 1, monsters: def.monsters.map((m, i) => ({ ...makeMonster(rng, m), slot: i })), distance: def.distance || 0,
     log: [], over: false, won: false, lost: false, fired: false, dark: g.dark && !def.lit,
   };
   // Number lookalikes, so you can tell which goblin you're hitting.
   const count = {}, seen = {};
   for (const m of f.monsters) count[m.name] = (count[m.name] || 0) + 1;
   for (const m of f.monsters) if (count[m.name] > 1) m.name = `${m.name} ${seen[m.name] = (seen[m.name] || 0) + 1}`;
+  // Wounds stick: if you ran from this fight before, the monsters are as you left them.
+  f.key = def.key || g.at;
+  const wounds = (c.flags.wounds || {})[f.key];
+  if (wounds) {
+    f.monsters = f.monsters.filter((m, i) => !wounds[i] || wounds[i].hp > 0);
+    f.monsters.forEach((m) => { const w = wounds[m.slot]; if (w && w.hp < m.hp) { m.hp = w.hp; m.ap = Math.min(m.ap, w.ap); } });
+  }
   if (def.surprise) for (const m of f.monsters) m.unaware = true;
   note(f, def.intro || 'Fight!');
+  if (wounds && f.monsters.some((m) => m.hp < m.maxHp)) note(f, 'Nothing has healed since you ran.');
   if (def.surprise) note(f, 'They haven’t noticed you. Every success on your first attack is a critical success.');
   else {
     // Initiative: a d4 Dex saving throw
@@ -486,7 +494,11 @@ function finish(g, f) {
   c.blocking = false; c.prone = false;
   if (f.fired) { const ammo = c.mundane.find((i) => i.id === 'ammo'); if (ammo) { ammo.tokens -= 1; note(f, `Ammunition: ${ammo.tokens} left.`); if (ammo.tokens <= 0) c.mundane = c.mundane.filter((i) => i !== ammo); } }
   if (f.won) { note(f, 'Victory. Ten minutes’ rest restores your AP.', 'good'); c.ap = maxAp(c); }
-  if (f.fled) { c.ap = maxAp(c); }
+  if (f.fled) {
+    c.ap = maxAp(c);
+    const w = (c.flags.wounds ||= {})[f.key] = [];
+    for (const m of f.monsters) if (m.slot !== undefined) w[m.slot] = { hp: alive(m) ? m.hp : 0, ap: m.ap };
+  }
 }
 
 export { alive, active };

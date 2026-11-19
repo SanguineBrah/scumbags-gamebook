@@ -20,21 +20,22 @@ export const SECTIONS = {
     text: (c) => [
       c.flags.blobGone ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. The blob has gone down the drain, and it is just a bath again.'
         : c.flags.dropped ? 'The Great Bath is a Roman pool the size of a ballroom, steaming, with a hole in the glass roof above it. The blob lies on the tiles beside it where it fell, a great quivering heap, shrinking.'
+        : c.flags.polluted ? 'The Great Bath is a Roman pool the size of a ballroom, full to the brim with black oil. The blob lies on the tiles beside it, coughing, a great quivering heap the size of a haycart.'
         : c.flags.drained ? 'The Great Bath is a Roman pool the size of a ballroom, with stone steps and pillars. It is empty of water now, and the blob lies on the tiles at the bottom, a great quivering heap the size of a haycart, shrinking.'
         : c.flags.salted ? 'The Great Bath is a Roman pool the size of a ballroom, steaming. The water is cloudy with salt, and the blob is in trouble: a milky, shrinking lump at the deep end.'
-        : `The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, ${c.flags.tiaraTaken ? '' : 'a tiara, '}a set of false teeth and a pair of boots. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.`,
+        : `The Great Bath is a Roman pool the size of a ballroom, steaming, with stone steps and pillars. The water is perfectly clear, and perfectly still. At the bottom, among the tiles, lie three wedding rings, ${c.flags.tiaraTaken ? '' : 'a tiara, '}${c.flags.whitlow ? 'and a set of false teeth' : 'a set of false teeth and a pair of boots'}. They are not at the bottom. They are floating, very slowly, three feet up, inside something you can’t see.`,
     ].filter(Boolean),
     choices: [
-      { text: 'Go to the pump room, to see about draining it', to: 'pump_room', show: { notFlag: 'drained' } },
+      { text: 'Go to the pump room, to see about draining it', to: 'pump_room', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
       { text: 'Look in the treatment rooms', to: 'treatments', show: { notFlag: 'saltsFound' } },
-      { text: 'Pour the Epsom salts into the bath', to: 'salt_bath', if: { flag: 'saltsFound', flagText: 'the Epsom salts' }, show: { notFlag: 'salted' } },
-      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
-      { text: 'Cast Telekinesis, and lift the tiara out of the blob from the side of the bath', cast: 'telekinesis', pass: 'fished_tk', fail: 'blob_fight', show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
-      { text: 'Cast Aqualung on yourself, and swim into the blob after Lord Whitlow', cast: 'aqualung', pass: 'blob_swim', fail: 'blob_fight', show: { none: [{ flag: 'whitlow' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
-      { text: 'Cast Descend on the blob', cast: 'descend', pass: 'blob_dropped', fail: 'blob_fight', critFail: 'blob_ascends', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'blobGone' }] } },
-      { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', critFail: 'blob_blessed', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }] } },
-      { text: 'Wade in and fight it', to: 'blob_fight', show: { notFlag: 'blobGone' } },
-      { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }], notFlag: 'blobGone' } },
+      { text: 'Pour the Epsom salts into the bath', to: 'salt_bath', if: { flag: 'saltsFound', flagText: 'the Epsom salts' }, show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Fish for the jewels with your pole', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'fished', fail: 'blob_fight', if: { item: 'pole' }, show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Telekinesis, and lift the tiara out of the blob from the side of the bath', cast: 'telekinesis', pass: 'fished_tk', fail: 'blob_fight', show: { none: [{ flag: 'fished' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Aqualung on yourself, and swim into the blob after Lord Whitlow', cast: 'aqualung', pass: 'blob_swim', fail: 'blob_fight', show: { none: [{ flag: 'whitlow' }, { flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Descend on the blob', cast: 'descend', pass: 'blob_dropped', fail: 'blob_fight', critFail: 'blob_ascends', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Cast Pollute on the Great Bath', cast: 'pollute', pass: 'polluted', fail: 'blob_fight', critFail: 'blob_blessed', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Wade in and fight it', to: 'blob_fight', show: { none: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }, { flag: 'blobGone' }] } },
+      { text: 'Finish it off', to: 'blob_weak', show: { any: [{ flag: 'drained' }, { flag: 'dropped' }, { flag: 'salted' }, { flag: 'polluted' }], notFlag: 'blobGone' } },
       { text: 'Report to Mr Bubbleby', to: 'season' },
     ],
   },
@@ -65,7 +66,7 @@ export const SECTIONS = {
   },
   drain: {
     on: [{ flag: 'drained' }],
-    text: ['The valve groans open. Somewhere under your feet, two thousand years of bathwater roars away down a Roman drain. Back in the Great Bath, the water level drops, and drops, and there it is: a great clear lump of jelly, the size of a haycart, quivering on the tiles, with a tiara in the middle of it, and Lord Whitlow’s teeth, and a pair of boots that might be Lord Whitlow.'],
+    text: (c) => [`The valve groans open. Somewhere under your feet, two thousand years of bathwater roars away down a Roman drain. Back in the Great Bath, the water level drops, and drops, and there it is: a great clear lump of jelly, the size of a haycart, quivering on the tiles, with ${c.flags.tiaraTaken ? '' : 'a tiara in the middle of it, and '}Lord Whitlow’s teeth${c.flags.whitlow ? '' : ', and a pair of boots that might be Lord Whitlow'}.`],
     choices: [{ text: 'Back to the Great Bath', to: 'great_bath' }],
   },
   treatments: {
@@ -97,9 +98,12 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the treatment rooms', to: 'treatments' }],
   },
   salt_bath: {
-    on: [{ flag: 'salted' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'You fish the tiara out of the salty water: 120GP of diamonds.' }, { flag: 'tiaraTaken' }],
-    text: ['You slit the sacks and pour the salt into the Great Bath. For a moment, nothing. Then the water starts to heave. The blob writhes, shrinks and turns milky. It spits out a wedding ring. Then another. Then a tiara. Then, with a noise like a drain clearing, Lord Whitlow, who is alive, furious and very clean.'],
-    choices: [{ text: 'Help Lord Whitlow out of the bath', to: 'whitlow' }],
+    on: [{ flag: 'salted' }, { if: { notFlag: 'tiaraTaken' }, flag: 'saltTiara' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'You fish the tiara out of the salty water: 120GP of diamonds.' }, { flag: 'tiaraTaken' }],
+    text: (c) => [`You slit the sacks and pour the salt into the Great Bath. For a moment, nothing. Then the water starts to heave. The blob writhes, shrinks and turns milky. It spits out a wedding ring. Then another.${c.flags.saltTiara ? ' Then a tiara.' : ''}${c.flags.whitlow ? ' Then a set of false teeth, with feeling.' : ' Then, with a noise like a drain clearing, Lord Whitlow, who is alive, furious and very clean.'}`],
+    choices: [
+      { text: 'Help Lord Whitlow out of the bath', to: 'whitlow', show: { notFlag: 'whitlow' } },
+      { text: 'Back to the Great Bath', to: 'great_bath', show: { flag: 'whitlow' } },
+    ],
   },
   whitlow: {
     on: [{ flag: 'whitlow' }],
@@ -107,8 +111,8 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the Great Bath', to: 'great_bath' }],
   },
   polluted: {
-    on: [{ flag: 'polluted' }, { flag: 'drained' }],
-    text: ['The Great Bath turns thick and black and smells of lamps. The blob, which lives on warm clean water, does not like oil at all. It heaves itself out of the bath onto the tiles in a hurry, coughing up jewellery, and lies there, quivering, a great clear lump the size of a haycart.'],
+    on: [{ flag: 'polluted' }],
+    text: ['The Great Bath turns thick and black and smells of lamps. The blob, which lives on warm clean water, does not like oil at all. It heaves itself out of the bath onto the tiles in a hurry, coughing, and lies there, quivering, a great clear lump the size of a haycart.'],
     choices: [{ text: 'Back to the Great Bath', to: 'great_bath' }],
   },
   fished: {
@@ -119,7 +123,7 @@ export const SECTIONS = {
   blob_fight: {
     text: ['The water stands up. The blob rises out of the Great Bath like a wave that has decided not to come down, and comes for you.'],
     fight: {
-      monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
+      key: 'blob', monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
       special: [
         { label: 'Throw salt from your rations into it', if: { item: 'rations' }, flag: 'blobSalt', text: 'The blob flinches from the salt and shrinks back.', dmg: '2d6' },
         { label: 'Throw burning oil on it', if: { fire: true }, flag: 'blobFire', text: 'It boils, hissing, where the fire hits.', dmg: '3d6' },
@@ -128,7 +132,7 @@ export const SECTIONS = {
   },
   blob_weak: {
     text: ['What’s left of the blob heaves itself up off the tiles at you, sluggish and shrinking.'],
-    fight: { monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
+    fight: { key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
   },
   blob_dead: {
     on: [{ flag: 'blobGone' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'In what’s left of the blob: a tiara worth 120GP.' }, { gold: 60, msg: 'And three wedding rings: 60GP.' }],
@@ -147,6 +151,7 @@ export const SECTIONS = {
     ],
     text: (c) => [
       c.flags.blobGone ? 'The season opens on Saturday. The Duchess of Fenwick takes the waters, and comes out with everything she went in with. The Royal Spa has its best year ever. Lord Whitlow takes a bath there every day, and stays in it for hours, looking wistful.'
+        : (c.flags.drained || c.flags.dropped || c.flags.salted || c.flags.polluted) ? 'The season opens on Saturday. What’s left of the blob has crept back into the Great Bath, about the size of a dog now, and very sulky. The Duchess of Fenwick sits on it by mistake, and it takes her diamond earrings. Mr Bubbleby doesn’t pay you.'
         : 'The season opens on Saturday with the blob still in the bath. The Duchess of Fenwick goes in, and does not come out for six months. When she does, she says it was the best rest she’s ever had, and the Royal Spa becomes the most fashionable place in the land.',
       `You leave Sludgeby with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
