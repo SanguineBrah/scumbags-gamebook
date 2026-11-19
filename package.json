@@ -1,7 +1,7 @@
 {
   "name": "scumbags-gamebook",
   "version": "0.1.0",
-  "description": "Death and Taxes: a classic gamebook for the Scumbags! RPG",
+  "description": "Scumbags! A Book of Bad Ideas: classic gamebook adventures for the Scumbags! tabletop RPG, playable in a browser",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,7 +9,13 @@
     "build": "node tools/build.mjs",
     "check": "node tools/check.mjs",
     "simulate": "node tools/simulate.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "duels": "node tools/duels.mjs"
   },
-  "license": "UNLICENSED"
+  "license": "CC-BY-NC-4.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SanguineBrah/scumbags-gamebook.git"
+  },
+  "homepage": "https://sanguinebrah.github.io/scumbags-gamebook/"
 }

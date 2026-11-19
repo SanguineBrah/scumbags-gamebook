@@ -23,6 +23,10 @@ Fights with no way round them were tuned with `tools/duels.mjs` so a fresh level
 wins roughly 9 in 10. The boss and the vault guards are harder, and each has peaceful
 alternatives.
 - **Survivors carry on.** A scumbag who gets home keeps their level, stats, items and leftover gold
-  for the next adventure, starting it rested with full HP and fresh spell slots.
+  for the next adventure, with fresh spell slots and full AP. HP carries over: they heal in town,
+  at the inn or in a ditch.
+- **Mundane items are cheap in town.** Between adventures, mundane items can be swapped and
+  restocked for nothing, as the rulebook says they're trivial to acquire. Significant items cost
+  gold, and loot sells to the fence.
 - **Levels are recommendations.** Adventures are tuned with bots at the lowest recommended level;
   a scumbag carried over from earlier adventures will usually be a level or two ahead.
