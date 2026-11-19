@@ -9,6 +9,12 @@ on a desktop or a phone.
 
 ![The title page](docs/title.png)
 
+## The rulebook
+
+The full Scumbags! tabletop rulebook, version 2.0, is in
+[`rulebook/Scumbags-rulebook-v2.0.pdf`](rulebook/Scumbags-rulebook-v2.0.pdf): a 20-page A5
+booklet with everything you need to run the game with a host and a group of players.
+
 ## The game
 
 You are a scumbag: a contemptible opportunist in search of riches. Roll up a character from
