@@ -55,7 +55,7 @@ export const SECTIONS = {
     choices: [{ text: 'Climb the tower stair', to: 'stair' }],
   },
   crypt: {
-    dark: true,
+    dark: 'crypt',
     text: (c) => [
       'The crypt is quiet, the bells muffled to a hum. Among the bishops’ tombs is a plain one with a clock carved on the lid instead of a face: EZRA TOCK, CLOCKMAKER. HE KEPT GOOD TIME.',
       c.flags.tombOpen ? 'The lid stands open.' : 'The lid has a keyhole in it, shaped like a winding key.',
@@ -69,21 +69,25 @@ export const SECTIONS = {
     ],
   },
   worn: {
+    dark: 'crypt',
     on: [{ flag: 'triedTomb' }],
     text: ['The inscription round the tomb is tiny and worn, and in a clockmaker’s shorthand. You make out WHEEL, and SUNDAY, and nothing else.'],
     choices: [{ text: 'Back to the tomb', to: 'crypt' }],
   },
   inscription: {
+    dark: 'crypt',
     on: [{ flag: 'readTomb' }],
     text: ['Round the base of the tomb, in tiny letters: MY GRACE RUNS TRUE WHILE HIS FOURTH WHEEL TURNS. IF HE STRAYS, LOOK TO THE FOURTH WHEEL. AND OIL HIM ON A SUNDAY. Somebody, you suspect, has not been oiling him on Sundays.'],
     choices: [{ text: 'Back to the tomb', to: 'crypt' }],
   },
   tomb_trap: {
+    dark: 'crypt',
     on: [{ damage: '2d6', from: 'A clockwork trap' }],
     text: ['Something inside the tomb goes TICK, and a spring-loaded spike comes out of the lid. Ezra Tock didn’t trust anyone.'],
     choices: [{ text: 'Try again', to: 'crypt' }],
   },
   tomb: {
+    dark: 'crypt',
     on: [{ flag: 'tombOpen' }, { item: 'windingkey', msg: 'Ezra Tock’s winding key: brass, as long as your arm.' }],
     text: ['Inside the tomb lies Ezra Tock, small and neat, holding a brass winding key as long as your arm, the way other people are buried holding a sword. He doesn’t object when you take it.'],
     choices: [

@@ -38,6 +38,25 @@ test('dark places use up light, and without it tests get harder', () => {
   assert.match(h.choices()[0].detail, /d20\+d12/);
 });
 
+test('one light does a whole dark place; leaving and coming back costs another', () => {
+  const g = new Game(adv, 2); g.begin(make(2, ['torches']));
+  const torches = () => g.c.mundane.find((i) => i.id === 'torches').tokens;
+  g.goto('library'); g.goto('library_nothing'); g.goto('library');
+  assert.equal(torches(), 4);
+  g.goto('hall'); g.goto('library');
+  assert.equal(torches(), 3);
+  const h = new Game(adv, 3); h.begin(make(3, ['rope'])); h.goto('library'); h.goto('mimic_fight');
+  assert.equal(h.dark, true); assert.equal(h.fight.dark, true);   // a fight in the dark is in the dark
+});
+
+test('alchemist’s fire is used up when it is your only way to light something', () => {
+  const g = new Game(adv, 6); g.begin(make(6, ['rope'])); g.c.significant.push({ id: 'fire', name: 'Alchemist’s fire' });
+  g.goto('vault'); g.c.flags.vaultAngry = true;
+  const burn = g.choices().find((c) => c.label === 'Set fire to the ledger');
+  g.choose(burn.i);
+  assert.ok(!g.c.significant.some((i) => i.id === 'fire'));
+});
+
 test('gold beyond what you can carry stays behind', () => {
   const g = new Game(adv, 4); g.begin(make(4)); g.goto('treasure');
   assert.ok(g.c.gold <= 12 * 50);

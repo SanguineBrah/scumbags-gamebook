@@ -126,7 +126,7 @@ export const SECTIONS = {
       key: 'blob', monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
       special: [
         { label: 'Throw salt from your rations into it', if: { item: 'rations' }, flag: 'blobSalt', text: 'The blob flinches from the salt and shrinks back.', dmg: '2d6' },
-        { label: 'Throw burning oil on it', if: { fire: true }, flag: 'blobFire', text: 'It boils, hissing, where the fire hits.', dmg: '3d6' },
+        { label: 'Set fire to it', if: { fire: true }, flag: 'blobFire', text: 'It boils, hissing, where the fire hits.', dmg: '3d6' },
       ],
     },
   },

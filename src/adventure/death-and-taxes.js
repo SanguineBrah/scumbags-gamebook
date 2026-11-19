@@ -258,7 +258,7 @@ export const SECTIONS = {
     choices: [{ text: 'Try again', to: 'sewer' }],
   },
   sewer_in: {
-    dark: true,
+    dark: 'cistern',
     text: ['The tunnel opens into a cistern. Squatting at the edge of the black water, gutting a rat with her teeth, is a fishwife: gills, scales, an apron and arms like hams. She smells of the sea, which is eighty miles away.'],
     choices: [
       { text: 'Offer her some of your rations', to: 'fishwife_fed', if: { item: 'rations' } },
@@ -270,24 +270,29 @@ export const SECTIONS = {
     ],
   },
   fishwife_fed: {
+    dark: 'cistern',
     on: [{ flag: 'hintLedger' }, { item: 'potion', msg: 'She gives you a jar of pickled eels. They are, she insists, medicinal. (Healing potion.)' }], onceOnly: true,
     text: ['She eats the food, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   pollute_win: {
+    dark: 'cistern',
     on: [{ item: 'oil', msg: 'You fill a flask from the edge of the cistern. (Flask of oil.)' }], onceOnly: true,
     text: ['The black water turns blacker and thicker. The fishwife surfaces, gasping, coated head to tail, and flees down the tunnel making a noise like a blocked drain. You feel slightly bad. Only slightly.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   fishwife_ambush: {
+    dark: 'cistern',
     text: ['You creep up behind her, weapon raised.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_fight: {
+    dark: 'cistern',
     text: ['She turns, sees you, and opens her mouth far wider than a mouth should go.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_win: {
+    dark: 'cistern',
     on: [{ gold: 10, msg: 'Her apron pocket holds 10GP and a lot of scales.' }], onceOnly: true,
     text: ['The fishwife slides back into the black water with a sound like a dropped haddock.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
@@ -341,7 +346,7 @@ export const SECTIONS = {
     choices: [{ text: 'Pick yourself up', to: 'hall' }],
   },
   library: {
-    dark: true,
+    dark: 'library',
     text: (c) => [
       'Ledgers fill the shelves from floor to ceiling: every debt Vane ever owned, and he owned all of them.',
       c.flags.mimicDead ? 'TOME RAIDER lies on the floor where you left it, closed for good.' : 'One shelf is different. A single fat book with a gilt spine reads TOME RAIDER, and it is breathing.',
@@ -354,14 +359,17 @@ export const SECTIONS = {
     ],
   },
   mimic_ambush: {
+    dark: 'library',
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
     fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
+    dark: 'library',
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
     fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
+    dark: 'library',
     on: [{ flag: 'mimicDead' }, { gold: 20, msg: 'Pressed between its pages: 20GP, and a bookmark.' }], onceOnly: true,
     text: ['The book-mimic flops shut for the last time. Its sequel, TOME RAIDER II: THE CRADLE OF BITE, is on the shelf next to it, but it seems to be just a book.'],
     choices: [
@@ -370,10 +378,12 @@ export const SECTIONS = {
     ],
   },
   library_nothing: {
+    dark: 'library',
     text: ['You read about four thousand debts. None of them are useful, though you do find out who in town owes money to a ghost.'],
     choices: [{ text: 'Leave the library', to: 'hall' }],
   },
   library_found: {
+    dark: 'library',
     on: [{ flag: 'combo' }, { flag: 'hintLedger' }],
     text: ['Behind the ledgers is a little notebook in Vane’s hand: VAULT — DIAL TO THE NUMBER OF DEBTS FORGIVEN. Under that, three zeroes. Under that, a note to self: “Ledger must never be burnt. If ledger is burnt I will have nothing to count and must REST.” He underlined REST four times.'],
     choices: [{ text: 'Leave the library', to: 'hall' }],
@@ -472,7 +482,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go back to the great hall', to: 'hall' }],
   },
   vault_stairs: {
-    dark: true,
+    dark: 'vault',
     text: (c) => c.flags.assessorsGone
       ? ['The stair winds down to the antechamber and the round iron door. Nobody is collecting tolls now.']
       : ['The stair winds down a long way. At the bottom, in front of a round iron door, two tiny men in tiny armour stand guard, each about a foot tall. One holds a spear like a knitting needle; the other, a bow like a wishbone. “Halt,” says one. “Toll,” says the other. “Ten gold.”'],
@@ -486,11 +496,13 @@ export const SECTIONS = {
     ],
   },
   voice_win: {
+    dark: 'vault',
     on: [{ flag: 'assessorsGone' }],
     text: ['“TOLL-DODGER!” cries a voice from the top of the stairs, which sounds a lot like yours. The little assessors look at each other, then charge up the stairs at shin height, shouting about penalties. They do not come back.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   assessors_fight: {
+    dark: 'vault',
     text: ['“Then you’re assessed,” says the spearman, and they charge, roughly at shin height.'],
     fight: {
       monsters: [
@@ -501,11 +513,13 @@ export const SECTIONS = {
     },
   },
   assessors_win: {
+    dark: 'vault',
     on: [{ flag: 'assessorsGone' }, { gold: 2, msg: 'Their combined wages: 2GP, in tiny coins.' }], onceOnly: true,
     text: ['You stand over the little assessors, feeling enormous in every sense.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   vault_door: {
+    dark: 'vault',
     text: ['The vault door is a disc of black iron as tall as two men, with a dial in the middle and a keyhole beneath it. Someone has scratched NO REFUNDS into the metal.'],
     choices: [
       { text: 'Use the iron key', to: 'vault', if: { item: 'vaultkey' } },
@@ -517,21 +531,23 @@ export const SECTIONS = {
     ],
   },
   vault_needle: {
+    dark: 'vault',
     on: [{ damage: 'd4', from: 'A poisoned needle' }],
     text: ['A little needle springs out of the keyhole and into your thumb. You suck it. It tastes of ink.'],
     choices: [{ text: 'Back to the door', to: 'vault_door' }],
   },
   vault_strain: {
+    dark: 'vault',
     on: [{ damage: 'd4', from: 'The door' }],
     text: ['You heave until your vision goes red. The door remains a door.'],
     choices: [{ text: 'Back to the door', to: 'vault_door' }],
   },
   vault: {
     text: (c) => [
-      'The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts.',
+      'The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts. A single candle burns on a desk in the middle, which is plenty of light to count by.',
       c.flags.ledgerBurnt ? 'Usurer Vane hovers over the ashes of his ledger, thin as smoke and getting thinner, counting on his fingers because there is nothing else left to count. He sees you, and remembers who did it.'
         : c.flags.vaultAngry ? 'Usurer Vane is back at his desk, counting again, but faster now, and he glares at you over the ledger with his copper-penny eyes. “Still in arrears,” he whispers.'
-          : 'At a desk in the middle sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever. He hasn’t looked up. Yet.',
+          : 'At the desk sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever. He hasn’t looked up. Yet.',
     ],
     choices: [
       { text: 'Introduce yourself as the auditor', test: { stat: 'Cha', dd: 12, skill: 'lying' }, pass: 'vault_bluffed', fail: 'vault_fight', if: { flag: 'auditor' }, show: { none: [{ flag: 'vaultAngry' }, { flag: 'ledgerBurnt' }] } },
@@ -643,10 +659,12 @@ export const SECTIONS = {
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
   fishwife_locusts: {
+    dark: 'cistern',
     text: ['Your god scorns you. Instead of food, a swarm of locusts pours out of your sleeves and all over the fishwife. She eats a good number of them, but it doesn’t improve her mood.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_holy: {
+    dark: 'cistern',
     text: ['Your god scorns you. Instead of oil, the cistern turns to holy water, faintly glowing. The fishwife comes up out of it pink, clean and absolutely furious.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },

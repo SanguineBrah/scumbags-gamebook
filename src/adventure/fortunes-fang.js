@@ -317,6 +317,7 @@ export const SECTIONS = {
     choices: [{ text: 'Into the bank', to: 'bank' }],
   },
   count_fight: {
+    dark: 'shroud', litIf: { notFlag: 'shrouded' },   // the candles light it, unless your god has put them out
     on: [{ flag: 'countAngry' }],
     text: ['The Count rises from his chair, and the candles gutter. You feel your luck draining away like warm water out of a bath.'],
     fight: {
@@ -389,6 +390,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the table', to: 'crab_table' }],
   },
   count_shrouded: {
+    dark: 'shroud', on: [{ flag: 'shrouded' }],
     text: ['Your god scorns you. Instead of light, darkness pours out over the card table and puts out every candle in the crypt. Count Fortunato sighs with pleasure. “Ah,” he says, in the dark, very close. “That’s better.”'],
     choices: [{ text: 'Fight him', to: 'count_fight' }],
   },

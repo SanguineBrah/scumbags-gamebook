@@ -21,7 +21,8 @@ export function lightSource(c) {
   return null;
 }
 /** Something that can set things on fire. */
-export const fireSource = (c) => hasItem(c, 'flint') || hasItem(c, 'torches') || (hasItem(c, 'lantern') && hasItem(c, 'oil')) || hasItem(c, 'fire');
+export const fireTool = (c) => (hasItem(c, 'flint') ? 'flint' : hasItem(c, 'torches') ? 'torch' : hasItem(c, 'lantern') && hasItem(c, 'oil') ? 'lantern' : hasItem(c, 'fire') ? 'fire' : null);
+export const fireSource = (c) => !!fireTool(c);
 
 export function canCast(c, spellId) {
   const s = SPELLS[spellId]; if (!s) return false;

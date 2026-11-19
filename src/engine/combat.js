@@ -470,6 +470,7 @@ export function act(g, f, a) {
         const t = test(g, f, { ...sp.test, label: sp.label });
         if (!t.success) { note(f, sp.failText || 'It doesn’t work.'); break; }
       }
+      if (sp.if && sp.if.fire) g.useFire();
       if (sp.flag) c.flags[sp.flag] = true;
       note(f, sp.text, 'good');
       if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }

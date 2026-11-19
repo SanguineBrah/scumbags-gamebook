@@ -35,7 +35,7 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Walk through the flies', to: 'flies_fight', show: { notFlag: 'fliesGone' } },
-      { text: 'Smoke them out with a torch', to: 'flies_smoked', if: { fire: true }, show: { notFlag: 'fliesGone' } },
+      { text: 'Smoke them out', to: 'flies_smoked', if: { fire: true }, show: { notFlag: 'fliesGone' } },
       { text: 'Blow them away with your bellows', to: 'flies_smoked', if: { item: 'bellows' }, show: { notFlag: 'fliesGone' } },
       { text: 'Go round the long way', to: 'clearing', effects: [{ flag: 'longWay' }], show: { notFlag: 'fliesGone' } },
       { text: 'Into the trees', to: 'clearing', show: { flag: 'fliesGone' } },
@@ -100,7 +100,7 @@ export const SECTIONS = {
     text: ['You say something that sounds to the golem, unfortunately, like “peel”. It panics and lashes out.'],
     fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
-      special: [{ label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
+      special: [{ label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
   golem_fight: {
@@ -108,7 +108,7 @@ export const SECTIONS = {
     fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
-        { label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
+        { label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
         { label: 'Let your rat at it', if: { item: 'rat' }, flag: 'ratted', text: 'Your rat runs up its leg and starts eating. The golem stops dead, horrified, and spends a turn trying to shake it off.', stun: 1 },
       ],
     },

@@ -4,7 +4,9 @@ Each section in `src/adventure/death-and-taxes.js` is keyed by a name:
 
 ```js
 library: {
-  dark: true,                                   // uses up light on entry
+  dark: true,                                   // uses up light on entry (or dark: 'crypt': all the
+                                                //   sections of one dark place share a name, and one light does them all;
+                                                //   litIf: { flag: 'fireLit' } or true for a lit spot inside it)
   text: ['Paragraph one.', 'Paragraph two.'],   // or (c) => [...] to vary with the character
   on: [{ gold: 20 }, { item: 'salve' }],        // effects on entry; add onceOnly: true for loot
   choices: [

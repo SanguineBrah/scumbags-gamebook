@@ -115,7 +115,7 @@ export const SECTIONS = {
     fight: { outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
-        { label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
+        { label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
         { label: 'Throw a barrel of oil over it and light it', if: { flag: 'barrel' }, flag: 'barrelUsed', text: 'The oil goes up in a sheet of flame. Heads shriek. Stumps blacken.', dmg: '4d6' },
       ],
     },
@@ -124,7 +124,7 @@ export const SECTIONS = {
     text: (c) => [c.flags.drained ? 'You go down into the mud after it. The hydra, stranded, slow and furious, turns every head it has on you.' : 'You go down to the water’s edge. The hydra is so tangled up in itself that it can only spare three heads to fight you.'],
     fight: { outdoors: true,
       monsters: [{ ...hydra, hp: 20, regen: 2, note: 'Weakened hydra (20 HP); grows back 2 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Back off' },
-      special: [{ label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
+      special: [{ label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
     },
   },
   hydra_dead: {

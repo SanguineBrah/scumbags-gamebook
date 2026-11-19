@@ -51,6 +51,7 @@ export const SECTIONS = {
     choices: [{ text: 'Follow the trail', to: 'lower' }],
   },
   lower: {
+    dark: 'caves',
     redirect: [{ if: { flag: 'slugDead' }, to: 'lair' }],
     text: (c) => [
       'The lower caves are wet, low and coated in slime. Gold coins lie scattered in the trail, all of them chewed. Ahead, something huge is moving in the dark, slowly, with a noise like a bath being emptied.',
@@ -68,16 +69,19 @@ export const SECTIONS = {
     ],
   },
   salt_trap: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug comes round the corner, touches the salt, and stops. It considers the salt for a long time. Then it shrinks, slowly, steaming, to the size of a man, then a dog, then a sad wet sock. In the slime where it was lies everything it ate: a heap of chewed gold.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   pit: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug slides straight into your pit and can’t get out, because slugs don’t climb so much as smear, and the sides are sand. It lies at the bottom, looking up at you. Under it, glinting, is a heap of chewed gold.'],
     choices: [{ text: 'Fish out the gold with your shovel', to: 'slug_gold' }],
   },
   slug_burn: {
+    dark: 'caves', litIf: true,   // the slime is on fire
     on: [{ lose: 'oil' }],
     text: ['The oil catches with a WHOOMPH and races up the slime trail, which turns out to be very flammable. Somewhere ahead, the slug screams, which you didn’t know slugs could do. It comes round the corner on fire.'],
     fight: {
@@ -86,6 +90,7 @@ export const SECTIONS = {
     },
   },
   slug_fight: {
+    dark: 'caves',
     text: ['Thirty feet of slug comes round the corner at a surprising speed, which is to say a walking pace.'],
     fight: {
       monsters: [slug], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
@@ -96,11 +101,13 @@ export const SECTIONS = {
     },
   },
   slug_down: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug collapses, which for a slug is mostly a change of attitude. Under where it lay, in the slime, is a heap of chewed gold.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_gold: {
+    dark: 'caves',
     on: [{ gold: 200, uncapped: true, msg: 'Chewed gold spends the same: 200GP.' }], onceOnly: true,
     text: ['You fill your pockets with gold that has been inside a slug. Above, through a crack in the cave roof, you can hear somebody reading out loud.'],
     choices: [{ text: 'Climb up to the lair', to: 'lair' }],
@@ -202,20 +209,24 @@ export const SECTIONS = {
     choices: [{ text: 'Follow the trail', to: 'lower' }],
   },
   slug_salted: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['Thirty feet of slug turns into thirty feet of salt, which, as far as the slug is concerned, is the worst thing that could possibly have happened. It stands in the tunnel, white and glittering, slowly crumbling. In the slime behind it lies everything it has eaten this year.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_stone: {
+    dark: 'caves',
     text: ['Your god scorns you. Instead of salt, the slug’s skin turns to stone. It is now a thirty-foot slug made of granite, and it is very pleased about it.'],
     fight: { monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
   },
   slug_converts: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug stops. It considers the light of law for a long time. Then it turns round, very slowly, and slides off down the tunnel to find something useful to do with its life. It leaves behind, in a neat pile, everything it has eaten this year.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_deluge: {
+    dark: 'caves',
     text: ['Your god scorns you. Instead of judgement, you get a flood. It roars down the tunnel, and washes the slug, which is a slug, perfectly happily up the cave towards you.'],
     choices: [{ text: 'Brace yourself', to: 'slug_fight' }],
   },

@@ -10,6 +10,9 @@ The rules are the rulebook's, with these changes for a hero who adventures alone
   particular are poor in melee and need something for their first fight.
 - **Ranged scumbags keep a dagger**, so they aren't stuck shooting at d20 while engaged.
 - **Darkness** raises every test to at least a d12, following the rulebook's dim-lighting example.
+  Going into a dark place uses up one light (a torch, a measure of lantern oil, a charge of the
+  glowing slate or of Divine light); moving about inside it, fights included, doesn't. Setting light
+  to things doesn't use up a torch or flint, but a flask of alchemist's fire used to do it is gone.
 - **Distance** is tracked in bands (engaged, short, medium…). Moving one band and acting in the
   same turn is allowed, so a ranged scumbag can fall back and shoot.
 - **Relentless** monsters (animated legs) get back up two rounds after being dropped unless the

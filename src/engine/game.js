@@ -4,7 +4,7 @@ import { Rng, rollExpr } from '../rules/dice.js';
 import { statTest, successChance } from '../rules/tests.js';
 import { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } from '../rules/data.js';
 import { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots, knownSpells } from '../rules/character.js';
-import { check, hasItem, lightSource, itemName, itemRef, canCast } from './conditions.js';
+import { check, hasItem, lightSource, fireTool, itemName, itemRef, canCast } from './conditions.js';
 import { startFight, act, actions } from './combat.js';
 
 
@@ -20,7 +20,7 @@ export class Game {
     this.fight = null;        // fight in progress
     this.result = null;       // last test result: { lines, success, to }
     this.messages = [];       // effect messages for the current section
-    this.dark = false;
+    this.dark = false; this.area = null; this.areaLight = null;   // in a dark place, and whether you brought light into it
     this.visits = {};
   }
 
@@ -38,12 +38,20 @@ export class Game {
     const c = this.c;
     for (const r of s.redirect || []) if (check(c, r.if).ok) { if (r.effects) this.apply(r.effects); return this.goto(r.to); }   // events that interrupt
     this.visits[key] = (this.visits[key] || 0) + 1;
-    // Darkness: entering a dark place uses up light.
+    // Darkness. A dark place is one section (dark: true) or several that share a name (dark: 'crypt').
+    // Going into it uses up one light; moving about inside it doesn't. Some sections are lit anyway
+    // (litIf), say by a fire, and a light is only needed once you go somewhere that isn't.
+    const area = s.dark ? (s.dark === true ? key : s.dark) : null;
+    if (area !== this.area) { this.area = area; this.areaLight = null; }
+    const litHere = s.litIf === true || (s.litIf && check(c, s.litIf).ok);
     this.dark = false;
-    if (s.dark) {
-      const src = lightSource(c);
-      if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
-      else this.spendLight(src);
+    if (area && !litHere) {
+      if (this.areaLight === null) {
+        const src = lightSource(c);
+        if (src) { this.spendLight(src); this.areaLight = true; }
+        else { this.areaLight = false; this.say('You have no light. Until you’re out of here, your tests use at least a d12 difficulty die.', 'bad'); }
+      }
+      this.dark = !this.areaLight;
     }
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
@@ -65,6 +73,12 @@ export class Game {
     it.tokens -= 1;
     this.say(`You light the way with your ${src}. (${itemName(id)}: ${it.tokens} left.)`);
     if (it.tokens <= 0) { c[list] = c[list].filter((x) => x !== it); this.say(`That was the last of your ${itemRef(id).replace(/^the /, '')}.`, 'bad'); }
+  }
+
+  /** Setting light to something. Flint, a torch or a lit lantern can do it again; a flask of alchemist's fire can't. */
+  useFire() {
+    if (fireTool(this.c) !== 'fire') return;
+    this.take('fire'); this.say('You use your alchemist’s fire to light it. That’s the flask gone.', 'bad');
   }
 
   rest() {
@@ -221,6 +235,7 @@ export class Game {
     if (i === 'result') return this.goto(this.result.to);
     const ch = this.section().choices[i];
     if (!check(c, ch.cast ? { ...ch.if, spell: ch.cast } : ch.if).ok) return;
+    if (ch.if && ch.if.fire) this.useFire();
     if (ch.effects) this.apply(ch.effects);
     if (this.dead) return;
     if (ch.test || ch.cast || ch.turn) return this.runTest(ch, opts);
@@ -345,11 +360,11 @@ export class Game {
   isOver() { return this.dead || !!this.section().end; }
   ending() { return this.dead ? 'death' : this.section().end || null; }
 
-  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, dead: !!this.dead, result: this.result, messages: this.messages }); }
+  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, area: this.area, areaLight: this.areaLight, dead: !!this.dead, result: this.result, messages: this.messages }); }
   static load(adventure, json) {
     const d = JSON.parse(json);
     const g = new Game(adventure, 1);
-    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.dead = d.dead; g.result = d.result || null; g.messages = d.messages || [];
+    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.area = d.area ?? null; g.areaLight = d.areaLight ?? null; g.dead = d.dead; g.result = d.result || null; g.messages = d.messages || [];
     // A fight in progress restarts from the top of its section (a FF tradition: no saving mid-fight).
     const s = g.section();
     if (s.fight && !g.dead && !(s.fight.unless && check(g.c, s.fight.unless).ok)) g.fight = startFight(g, s.fight);

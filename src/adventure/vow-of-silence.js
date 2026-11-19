@@ -176,7 +176,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
   },
   cellar: {
-    dark: true,
+    dark: 'cellar',
     text: ['The cellar is full of casks, and smells like a cathedral of cough syrup. On the biggest cask, burnt into the wood in letters a foot high, is the recipe for Shushing Liqueur. It is four lines long. The first three are: GIN. SUGAR. MORE GIN.'],
     choices: [
       { text: 'Copy it out with your quill', to: 'recipe', if: { item: 'quill' } },
@@ -185,11 +185,13 @@ export const SECTIONS = {
     ],
   },
   bottle: {
+    dark: 'cellar',
     on: [{ flag: 'bottle' }, { item: 'liqueur' }],
     text: ['You tuck a bottle of Shushing Liqueur under your habit. It is worth a good deal more than it costs to make.'],
     choices: [{ text: 'Read the recipe', to: 'cellar' }],
   },
   recipe: {
+    dark: 'cellar',
     on: [{ flag: 'recipe' }],
     text: ['The fourth line says: AND DON’T TELL ANYONE. That’s the secret. That’s all of it. Two hundred years of silence to protect a bottle of sweetened gin.'],
     choices: [{ text: 'Leave the abbey', to: 'clatter' }],

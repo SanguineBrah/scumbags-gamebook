@@ -67,7 +67,7 @@ export const SECTIONS = {
     choices: [{ text: 'Into the hall', to: 'hall' }],
   },
   cellar: {
-    dark: true,
+    dark: 'cellar', litIf: { flag: 'boilerLit' },   // the boiler fire lights it once it's going
     text: (c) => [
       c.flags.boilerLit
         ? 'The boiler in the cellar roars happily, and the pipes up to the east wing knock and gurgle.'
@@ -79,6 +79,7 @@ export const SECTIONS = {
     ],
   },
   boiler_fail: {
+    dark: 'cellar',
     on: [{ damage: 'd4', from: 'The boiler' }],
     text: ['The coal catches, splutters and goes out, and a cloud of soot comes out of the firebox and into your face.'],
     choices: [{ text: 'Try again', to: 'cellar' }],

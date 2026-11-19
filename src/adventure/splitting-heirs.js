@@ -148,7 +148,7 @@ export const SECTIONS = {
     fight: {
       monsters: [{ ...glibb, name: 'Professor Glibb', lvl: 4, hp: 12, note: 'The real one; manmoeba; miserly; splits when struck' }, glibb],
       win: 'all_gone', flee: { to: 'reading', label: 'Run for the door' },
-      special: [{ label: 'Throw burning oil over them', if: { fire: true }, flag: 'burnt', text: 'The Glibbs hiss and shrink back from the flames into steaming puddles.', dmg: '3d6' }],
+      special: [{ label: 'Set fire to them', if: { fire: true }, flag: 'burnt', text: 'The Glibbs hiss and shrink back from the flames into steaming puddles.', dmg: '3d6' }],
     },
   },
   all_gone: {

@@ -153,7 +153,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="f7ace08a889b">
+<meta name="build" content="aa27ccf1e11f">
 </head>
 <body>
 <div id="app"></div>
@@ -1040,7 +1040,7 @@ const SECTIONS = {
     choices: [{ text: 'Try again', to: 'sewer' }],
   },
   sewer_in: {
-    dark: true,
+    dark: 'cistern',
     text: ['The tunnel opens into a cistern. Squatting at the edge of the black water, gutting a rat with her teeth, is a fishwife: gills, scales, an apron and arms like hams. She smells of the sea, which is eighty miles away.'],
     choices: [
       { text: 'Offer her some of your rations', to: 'fishwife_fed', if: { item: 'rations' } },
@@ -1052,24 +1052,29 @@ const SECTIONS = {
     ],
   },
   fishwife_fed: {
+    dark: 'cistern',
     on: [{ flag: 'hintLedger' }, { item: 'potion', msg: 'She gives you a jar of pickled eels. They are, she insists, medicinal. (Healing potion.)' }], onceOnly: true,
     text: ['She eats the food, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   pollute_win: {
+    dark: 'cistern',
     on: [{ item: 'oil', msg: 'You fill a flask from the edge of the cistern. (Flask of oil.)' }], onceOnly: true,
     text: ['The black water turns blacker and thicker. The fishwife surfaces, gasping, coated head to tail, and flees down the tunnel making a noise like a blocked drain. You feel slightly bad. Only slightly.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   fishwife_ambush: {
+    dark: 'cistern',
     text: ['You creep up behind her, weapon raised.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_fight: {
+    dark: 'cistern',
     text: ['She turns, sees you, and opens her mouth far wider than a mouth should go.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_win: {
+    dark: 'cistern',
     on: [{ gold: 10, msg: 'Her apron pocket holds 10GP and a lot of scales.' }], onceOnly: true,
     text: ['The fishwife slides back into the black water with a sound like a dropped haddock.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
@@ -1123,7 +1128,7 @@ const SECTIONS = {
     choices: [{ text: 'Pick yourself up', to: 'hall' }],
   },
   library: {
-    dark: true,
+    dark: 'library',
     text: (c) => [
       'Ledgers fill the shelves from floor to ceiling: every debt Vane ever owned, and he owned all of them.',
       c.flags.mimicDead ? 'TOME RAIDER lies on the floor where you left it, closed for good.' : 'One shelf is different. A single fat book with a gilt spine reads TOME RAIDER, and it is breathing.',
@@ -1136,14 +1141,17 @@ const SECTIONS = {
     ],
   },
   mimic_ambush: {
+    dark: 'library',
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
     fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
+    dark: 'library',
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
     fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
+    dark: 'library',
     on: [{ flag: 'mimicDead' }, { gold: 20, msg: 'Pressed between its pages: 20GP, and a bookmark.' }], onceOnly: true,
     text: ['The book-mimic flops shut for the last time. Its sequel, TOME RAIDER II: THE CRADLE OF BITE, is on the shelf next to it, but it seems to be just a book.'],
     choices: [
@@ -1152,10 +1160,12 @@ const SECTIONS = {
     ],
   },
   library_nothing: {
+    dark: 'library',
     text: ['You read about four thousand debts. None of them are useful, though you do find out who in town owes money to a ghost.'],
     choices: [{ text: 'Leave the library', to: 'hall' }],
   },
   library_found: {
+    dark: 'library',
     on: [{ flag: 'combo' }, { flag: 'hintLedger' }],
     text: ['Behind the ledgers is a little notebook in Vane’s hand: VAULT — DIAL TO THE NUMBER OF DEBTS FORGIVEN. Under that, three zeroes. Under that, a note to self: “Ledger must never be burnt. If ledger is burnt I will have nothing to count and must REST.” He underlined REST four times.'],
     choices: [{ text: 'Leave the library', to: 'hall' }],
@@ -1254,7 +1264,7 @@ const SECTIONS = {
     choices: [{ text: 'Go back to the great hall', to: 'hall' }],
   },
   vault_stairs: {
-    dark: true,
+    dark: 'vault',
     text: (c) => c.flags.assessorsGone
       ? ['The stair winds down to the antechamber and the round iron door. Nobody is collecting tolls now.']
       : ['The stair winds down a long way. At the bottom, in front of a round iron door, two tiny men in tiny armour stand guard, each about a foot tall. One holds a spear like a knitting needle; the other, a bow like a wishbone. “Halt,” says one. “Toll,” says the other. “Ten gold.”'],
@@ -1268,11 +1278,13 @@ const SECTIONS = {
     ],
   },
   voice_win: {
+    dark: 'vault',
     on: [{ flag: 'assessorsGone' }],
     text: ['“TOLL-DODGER!” cries a voice from the top of the stairs, which sounds a lot like yours. The little assessors look at each other, then charge up the stairs at shin height, shouting about penalties. They do not come back.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   assessors_fight: {
+    dark: 'vault',
     text: ['“Then you’re assessed,” says the spearman, and they charge, roughly at shin height.'],
     fight: {
       monsters: [
@@ -1283,11 +1295,13 @@ const SECTIONS = {
     },
   },
   assessors_win: {
+    dark: 'vault',
     on: [{ flag: 'assessorsGone' }, { gold: 2, msg: 'Their combined wages: 2GP, in tiny coins.' }], onceOnly: true,
     text: ['You stand over the little assessors, feeling enormous in every sense.'],
     choices: [{ text: 'Go on to the vault door', to: 'vault_door' }],
   },
   vault_door: {
+    dark: 'vault',
     text: ['The vault door is a disc of black iron as tall as two men, with a dial in the middle and a keyhole beneath it. Someone has scratched NO REFUNDS into the metal.'],
     choices: [
       { text: 'Use the iron key', to: 'vault', if: { item: 'vaultkey' } },
@@ -1299,21 +1313,23 @@ const SECTIONS = {
     ],
   },
   vault_needle: {
+    dark: 'vault',
     on: [{ damage: 'd4', from: 'A poisoned needle' }],
     text: ['A little needle springs out of the keyhole and into your thumb. You suck it. It tastes of ink.'],
     choices: [{ text: 'Back to the door', to: 'vault_door' }],
   },
   vault_strain: {
+    dark: 'vault',
     on: [{ damage: 'd4', from: 'The door' }],
     text: ['You heave until your vision goes red. The door remains a door.'],
     choices: [{ text: 'Back to the door', to: 'vault_door' }],
   },
   vault: {
     text: (c) => [
-      'The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts.',
+      'The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts. A single candle burns on a desk in the middle, which is plenty of light to count by.',
       c.flags.ledgerBurnt ? 'Usurer Vane hovers over the ashes of his ledger, thin as smoke and getting thinner, counting on his fingers because there is nothing else left to count. He sees you, and remembers who did it.'
         : c.flags.vaultAngry ? 'Usurer Vane is back at his desk, counting again, but faster now, and he glares at you over the ledger with his copper-penny eyes. “Still in arrears,” he whispers.'
-          : 'At a desk in the middle sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever. He hasn’t looked up. Yet.',
+          : 'At the desk sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever. He hasn’t looked up. Yet.',
     ],
     choices: [
       { text: 'Introduce yourself as the auditor', test: { stat: 'Cha', dd: 12, skill: 'lying' }, pass: 'vault_bluffed', fail: 'vault_fight', if: { flag: 'auditor' }, show: { none: [{ flag: 'vaultAngry' }, { flag: 'ledgerBurnt' }] } },
@@ -1425,10 +1441,12 @@ const SECTIONS = {
     choices: [{ text: 'Try something else', to: 'front_door' }],
   },
   fishwife_locusts: {
+    dark: 'cistern',
     text: ['Your god scorns you. Instead of food, a swarm of locusts pours out of your sleeves and all over the fishwife. She eats a good number of them, but it doesn’t improve her mood.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_holy: {
+    dark: 'cistern',
     text: ['Your god scorns you. Instead of oil, the cistern turns to holy water, faintly glowing. The fishwife comes up out of it pink, clean and absolutely furious.'],
     fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
@@ -2241,6 +2259,7 @@ const SECTIONS = {
     choices: [{ text: 'Into the bank', to: 'bank' }],
   },
   count_fight: {
+    dark: 'shroud', litIf: { notFlag: 'shrouded' },   // the candles light it, unless your god has put them out
     on: [{ flag: 'countAngry' }],
     text: ['The Count rises from his chair, and the candles gutter. You feel your luck draining away like warm water out of a bath.'],
     fight: {
@@ -2313,6 +2332,7 @@ const SECTIONS = {
     choices: [{ text: 'Back to the table', to: 'crab_table' }],
   },
   count_shrouded: {
+    dark: 'shroud', on: [{ flag: 'shrouded' }],
     text: ['Your god scorns you. Instead of light, darkness pours out over the card table and puts out every candle in the crypt. Count Fortunato sighs with pleasure. “Ah,” he says, in the dark, very close. “That’s better.”'],
     choices: [{ text: 'Fight him', to: 'count_fight' }],
   },
@@ -3069,7 +3089,8 @@ function lightSource(c) {
   return null;
 }
 /** Something that can set things on fire. */
-const fireSource = (c) => hasItem(c, 'flint') || hasItem(c, 'torches') || (hasItem(c, 'lantern') && hasItem(c, 'oil')) || hasItem(c, 'fire');
+const fireTool = (c) => (hasItem(c, 'flint') ? 'flint' : hasItem(c, 'torches') ? 'torch' : hasItem(c, 'lantern') && hasItem(c, 'oil') ? 'lantern' : hasItem(c, 'fire') ? 'fire' : null);
+const fireSource = (c) => !!fireTool(c);
 
 function canCast(c, spellId) {
   const s = SPELLS[spellId]; if (!s) return false;
@@ -3116,7 +3137,7 @@ function check(c, cond) {
   return fails.length ? { ok: false, reason: `needs ${fails.join(', ')}` } : { ok: true };
 }
 
-return { hasItem, itemName, itemRef, lightSource, fireSource, canCast, pastFlag, didAdventure, check };
+return { hasItem, itemName, itemRef, lightSource, fireTool, fireSource, canCast, pastFlag, didAdventure, check };
 };
 __defs["src/rules/character.js"] = function(){
 // Character creation and advancement, following "Creating characters" and "Experience and levelling up".
@@ -4861,6 +4882,7 @@ const SECTIONS = {
     choices: [{ text: 'Follow the trail', to: 'lower' }],
   },
   lower: {
+    dark: 'caves',
     redirect: [{ if: { flag: 'slugDead' }, to: 'lair' }],
     text: (c) => [
       'The lower caves are wet, low and coated in slime. Gold coins lie scattered in the trail, all of them chewed. Ahead, something huge is moving in the dark, slowly, with a noise like a bath being emptied.',
@@ -4878,16 +4900,19 @@ const SECTIONS = {
     ],
   },
   salt_trap: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug comes round the corner, touches the salt, and stops. It considers the salt for a long time. Then it shrinks, slowly, steaming, to the size of a man, then a dog, then a sad wet sock. In the slime where it was lies everything it ate: a heap of chewed gold.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   pit: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug slides straight into your pit and can’t get out, because slugs don’t climb so much as smear, and the sides are sand. It lies at the bottom, looking up at you. Under it, glinting, is a heap of chewed gold.'],
     choices: [{ text: 'Fish out the gold with your shovel', to: 'slug_gold' }],
   },
   slug_burn: {
+    dark: 'caves', litIf: true,   // the slime is on fire
     on: [{ lose: 'oil' }],
     text: ['The oil catches with a WHOOMPH and races up the slime trail, which turns out to be very flammable. Somewhere ahead, the slug screams, which you didn’t know slugs could do. It comes round the corner on fire.'],
     fight: {
@@ -4896,6 +4921,7 @@ const SECTIONS = {
     },
   },
   slug_fight: {
+    dark: 'caves',
     text: ['Thirty feet of slug comes round the corner at a surprising speed, which is to say a walking pace.'],
     fight: {
       monsters: [slug], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
@@ -4906,11 +4932,13 @@ const SECTIONS = {
     },
   },
   slug_down: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug collapses, which for a slug is mostly a change of attitude. Under where it lay, in the slime, is a heap of chewed gold.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_gold: {
+    dark: 'caves',
     on: [{ gold: 200, uncapped: true, msg: 'Chewed gold spends the same: 200GP.' }], onceOnly: true,
     text: ['You fill your pockets with gold that has been inside a slug. Above, through a crack in the cave roof, you can hear somebody reading out loud.'],
     choices: [{ text: 'Climb up to the lair', to: 'lair' }],
@@ -5012,20 +5040,24 @@ const SECTIONS = {
     choices: [{ text: 'Follow the trail', to: 'lower' }],
   },
   slug_salted: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['Thirty feet of slug turns into thirty feet of salt, which, as far as the slug is concerned, is the worst thing that could possibly have happened. It stands in the tunnel, white and glittering, slowly crumbling. In the slime behind it lies everything it has eaten this year.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_stone: {
+    dark: 'caves',
     text: ['Your god scorns you. Instead of salt, the slug’s skin turns to stone. It is now a thirty-foot slug made of granite, and it is very pleased about it.'],
     fight: { monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
   },
   slug_converts: {
+    dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug stops. It considers the light of law for a long time. Then it turns round, very slowly, and slides off down the tunnel to find something useful to do with its life. It leaves behind, in a neat pile, everything it has eaten this year.'],
     choices: [{ text: 'Gather up the gold', to: 'slug_gold' }],
   },
   slug_deluge: {
+    dark: 'caves',
     text: ['Your god scorns you. Instead of judgement, you get a flood. It roars down the tunnel, and washes the slug, which is a slug, perfectly happily up the cave towards you.'],
     choices: [{ text: 'Brace yourself', to: 'slug_fight' }],
   },
@@ -5349,7 +5381,7 @@ const SECTIONS = {
     choices: [{ text: 'Into the hall', to: 'hall' }],
   },
   cellar: {
-    dark: true,
+    dark: 'cellar', litIf: { flag: 'boilerLit' },   // the boiler fire lights it once it's going
     text: (c) => [
       c.flags.boilerLit
         ? 'The boiler in the cellar roars happily, and the pipes up to the east wing knock and gurgle.'
@@ -5361,6 +5393,7 @@ const SECTIONS = {
     ],
   },
   boiler_fail: {
+    dark: 'cellar',
     on: [{ damage: 'd4', from: 'The boiler' }],
     text: ['The coal catches, splutters and goes out, and a cloud of soot comes out of the firebox and into your face.'],
     choices: [{ text: 'Try again', to: 'cellar' }],
@@ -6141,7 +6174,7 @@ const SECTIONS = {
     choices: [{ text: 'Go down to the cellar', to: 'cellar' }],
   },
   cellar: {
-    dark: true,
+    dark: 'cellar',
     text: ['The cellar is full of casks, and smells like a cathedral of cough syrup. On the biggest cask, burnt into the wood in letters a foot high, is the recipe for Shushing Liqueur. It is four lines long. The first three are: GIN. SUGAR. MORE GIN.'],
     choices: [
       { text: 'Copy it out with your quill', to: 'recipe', if: { item: 'quill' } },
@@ -6150,11 +6183,13 @@ const SECTIONS = {
     ],
   },
   bottle: {
+    dark: 'cellar',
     on: [{ flag: 'bottle' }, { item: 'liqueur' }],
     text: ['You tuck a bottle of Shushing Liqueur under your habit. It is worth a good deal more than it costs to make.'],
     choices: [{ text: 'Read the recipe', to: 'cellar' }],
   },
   recipe: {
+    dark: 'cellar',
     on: [{ flag: 'recipe' }],
     text: ['The fourth line says: AND DON’T TELL ANYONE. That’s the secret. That’s all of it. Two hundred years of silence to protect a bottle of sweetened gin.'],
     choices: [{ text: 'Leave the abbey', to: 'clatter' }],
@@ -6592,7 +6627,7 @@ const SECTIONS = {
     fight: {
       monsters: [{ ...glibb, name: 'Professor Glibb', lvl: 4, hp: 12, note: 'The real one; manmoeba; miserly; splits when struck' }, glibb],
       win: 'all_gone', flee: { to: 'reading', label: 'Run for the door' },
-      special: [{ label: 'Throw burning oil over them', if: { fire: true }, flag: 'burnt', text: 'The Glibbs hiss and shrink back from the flames into steaming puddles.', dmg: '3d6' }],
+      special: [{ label: 'Set fire to them', if: { fire: true }, flag: 'burnt', text: 'The Glibbs hiss and shrink back from the flames into steaming puddles.', dmg: '3d6' }],
     },
   },
   all_gone: {
@@ -6688,7 +6723,7 @@ const SECTIONS = {
     ],
     choices: [
       { text: 'Walk through the flies', to: 'flies_fight', show: { notFlag: 'fliesGone' } },
-      { text: 'Smoke them out with a torch', to: 'flies_smoked', if: { fire: true }, show: { notFlag: 'fliesGone' } },
+      { text: 'Smoke them out', to: 'flies_smoked', if: { fire: true }, show: { notFlag: 'fliesGone' } },
       { text: 'Blow them away with your bellows', to: 'flies_smoked', if: { item: 'bellows' }, show: { notFlag: 'fliesGone' } },
       { text: 'Go round the long way', to: 'clearing', effects: [{ flag: 'longWay' }], show: { notFlag: 'fliesGone' } },
       { text: 'Into the trees', to: 'clearing', show: { flag: 'fliesGone' } },
@@ -6753,7 +6788,7 @@ const SECTIONS = {
     text: ['You say something that sounds to the golem, unfortunately, like “peel”. It panics and lashes out.'],
     fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
-      special: [{ label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
+      special: [{ label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
   golem_fight: {
@@ -6761,7 +6796,7 @@ const SECTIONS = {
     fight: { outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
-        { label: 'Throw burning oil over it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
+        { label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
         { label: 'Let your rat at it', if: { item: 'rat' }, flag: 'ratted', text: 'Your rat runs up its leg and starts eating. The golem stops dead, horrified, and spends a turn trying to shake it off.', stun: 1 },
       ],
     },
@@ -7464,7 +7499,7 @@ const SECTIONS = {
       key: 'blob', monsters: [blob], win: 'blob_dead', flee: { to: 'great_bath', label: 'Scramble out of the bath' },
       special: [
         { label: 'Throw salt from your rations into it', if: { item: 'rations' }, flag: 'blobSalt', text: 'The blob flinches from the salt and shrinks back.', dmg: '2d6' },
-        { label: 'Throw burning oil on it', if: { fire: true }, flag: 'blobFire', text: 'It boils, hissing, where the fire hits.', dmg: '3d6' },
+        { label: 'Set fire to it', if: { fire: true }, flag: 'blobFire', text: 'It boils, hissing, where the fire hits.', dmg: '3d6' },
       ],
     },
   },
@@ -8088,7 +8123,7 @@ const SECTIONS = {
     choices: [{ text: 'Climb the tower stair', to: 'stair' }],
   },
   crypt: {
-    dark: true,
+    dark: 'crypt',
     text: (c) => [
       'The crypt is quiet, the bells muffled to a hum. Among the bishops’ tombs is a plain one with a clock carved on the lid instead of a face: EZRA TOCK, CLOCKMAKER. HE KEPT GOOD TIME.',
       c.flags.tombOpen ? 'The lid stands open.' : 'The lid has a keyhole in it, shaped like a winding key.',
@@ -8102,21 +8137,25 @@ const SECTIONS = {
     ],
   },
   worn: {
+    dark: 'crypt',
     on: [{ flag: 'triedTomb' }],
     text: ['The inscription round the tomb is tiny and worn, and in a clockmaker’s shorthand. You make out WHEEL, and SUNDAY, and nothing else.'],
     choices: [{ text: 'Back to the tomb', to: 'crypt' }],
   },
   inscription: {
+    dark: 'crypt',
     on: [{ flag: 'readTomb' }],
     text: ['Round the base of the tomb, in tiny letters: MY GRACE RUNS TRUE WHILE HIS FOURTH WHEEL TURNS. IF HE STRAYS, LOOK TO THE FOURTH WHEEL. AND OIL HIM ON A SUNDAY. Somebody, you suspect, has not been oiling him on Sundays.'],
     choices: [{ text: 'Back to the tomb', to: 'crypt' }],
   },
   tomb_trap: {
+    dark: 'crypt',
     on: [{ damage: '2d6', from: 'A clockwork trap' }],
     text: ['Something inside the tomb goes TICK, and a spring-loaded spike comes out of the lid. Ezra Tock didn’t trust anyone.'],
     choices: [{ text: 'Try again', to: 'crypt' }],
   },
   tomb: {
+    dark: 'crypt',
     on: [{ flag: 'tombOpen' }, { item: 'windingkey', msg: 'Ezra Tock’s winding key: brass, as long as your arm.' }],
     text: ['Inside the tomb lies Ezra Tock, small and neat, holding a brass winding key as long as your arm, the way other people are buried holding a sword. He doesn’t object when you take it.'],
     choices: [
@@ -8610,7 +8649,7 @@ const SECTIONS = {
     fight: { outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
-        { label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
+        { label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
         { label: 'Throw a barrel of oil over it and light it', if: { flag: 'barrel' }, flag: 'barrelUsed', text: 'The oil goes up in a sheet of flame. Heads shriek. Stumps blacken.', dmg: '4d6' },
       ],
     },
@@ -8619,7 +8658,7 @@ const SECTIONS = {
     text: (c) => [c.flags.drained ? 'You go down into the mud after it. The hydra, stranded, slow and furious, turns every head it has on you.' : 'You go down to the water’s edge. The hydra is so tangled up in itself that it can only spare three heads to fight you.'],
     fight: { outdoors: true,
       monsters: [{ ...hydra, hp: 20, regen: 2, note: 'Weakened hydra (20 HP); grows back 2 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Back off' },
-      special: [{ label: 'Burn the stumps with your torch as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
+      special: [{ label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
     },
   },
   hydra_dead: {
@@ -8775,7 +8814,7 @@ const SECTIONS = {
     choices: [{ text: 'Go into the ghost train', to: 'ghost_train' }],
   },
   ghost_train: {
-    dark: true,
+    dark: 'train',
     text: (c) => [
       'Inside the ghost train, the little cars sit on their rails. Painted skeletons leer from the walls. At the far end, in the last car, wrapped in a tartan blanket, sits a tiny old man in slippers, holding a scythe that is far too big for him. Its blade shines black, and the dark around it is darker.',
       '“Go away,” says Old Mortimer. “I’m not going. Not now. Not ever. I’ve got it, and while I’ve got it, nobody goes.”',
@@ -8793,11 +8832,13 @@ const SECTIONS = {
     ],
   },
   mortimer_talks: {
+    dark: 'train',
     text: ['You sit in the car next to him. You talk. He tells you about his wife, who died in the spring, and his brother, who died in the war, and how he has outlived everybody, and how he doesn’t want to be the last one to go, and then, it turns out, he doesn’t want to be the last one left either. After a long time, he holds out the scythe to you. “Tell him,” he says, “not yet. But not never. Just… let him come and say hello first.”'],
     on: [{ flag: 'gaveUp' }],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_fight: {
+    dark: 'train',
     text: ['Old Mortimer stands up in the ghost train car, which takes him a while, and swings the scythe. It goes through the car in front of him like paper. It goes through the painted skeleton on the wall. He is a hundred and four, and he is holding Death.'],
     fight: {
       monsters: [mortimer], win: 'scythe_got', flee: { to: 'pier', label: 'Run back out onto the pier' },
@@ -8808,6 +8849,7 @@ const SECTIONS = {
     },
   },
   scythe_got: {
+    dark: 'train',
     on: [{ flag: 'scythe' }, { item: 'scythe' }],
     text: ['You have Death’s scythe. It weighs nothing at all, and it hums, very quietly, a note so low it’s mostly in your teeth. Somewhere along the coast, a bell starts to toll, for the first time in a week.'],
     choices: [
@@ -8854,19 +8896,23 @@ const SECTIONS = {
     choices: [{ text: 'Back to the beach', to: 'prom' }],
   },
   mortimer_eased: {
+    dark: 'train',
     on: [{ flag: 'gaveUp' }],
     text: ['You lay a hand on Old Mortimer’s chest and pray. His breathing eases. Colour comes into his face. He looks at you, astonished. “I haven’t felt this well in twenty years,” he says. He looks at the scythe across his knees, and then, after a long time, he holds it out to you. “I suppose I’ve got a bit longer now,” he says. “I’d rather spend it outside.”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_afflicted: {
+    dark: 'train',
     text: ['Your god scorns you. Instead of easing his heart, your prayer squeezes it. Old Mortimer goes grey and clutches his chest, and would certainly have died, except that nobody can die while he holds the scythe. He just feels dreadful, and he knows exactly whose fault it is.'],
     choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
   },
   mortimer_wiped: {
+    dark: 'train',
     text: ['Old Mortimer blinks, and forgets the last day: the fear, the beach hut, the long walk out along the pier in his slippers. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_confesses: {
+    dark: 'train',
     text: ['Your god scorns you. Instead of forgetting, Old Mortimer relives his most recent sins: the beach hut, the scythe, the long walk out along the pier, and the moment he realised that nobody in the world could die while he held it, and how glad he was. He stands up in the car with the scythe in both hands.'],
     choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
   },
@@ -9211,7 +9257,7 @@ const { Rng, rollExpr } = __req("src/rules/dice.js");
 const { statTest, successChance } = __req("src/rules/tests.js");
 const { DARK_DIE, SPELLS, MUNDANE, SIGNIFICANT, MUNDANE_LIMIT, SIGNIFICANT_LIMIT } = __req("src/rules/data.js");
 const { isSkilled, hasFeature, armourPenalty, makeItem, goldRoom, resetDay, maxAp, magicType, itemSlots, knownSpells } = __req("src/rules/character.js");
-const { check, hasItem, lightSource, itemName, itemRef, canCast } = __req("src/engine/conditions.js");
+const { check, hasItem, lightSource, fireTool, itemName, itemRef, canCast } = __req("src/engine/conditions.js");
 const { startFight, act, actions } = __req("src/engine/combat.js");
 // Spells you can cast from the adventure sheet. Divine opposites (on a critical failure) are handled in sheetEffect.
 const SHEET_SPELLS = ['light', 'abundance', 'heal', 'vivify', 'hysteria', 'consecrate', 'conjuration'];
@@ -9225,7 +9271,7 @@ class Game {
     this.fight = null;        // fight in progress
     this.result = null;       // last test result: { lines, success, to }
     this.messages = [];       // effect messages for the current section
-    this.dark = false;
+    this.dark = false; this.area = null; this.areaLight = null;   // in a dark place, and whether you brought light into it
     this.visits = {};
   }
 
@@ -9243,12 +9289,20 @@ class Game {
     const c = this.c;
     for (const r of s.redirect || []) if (check(c, r.if).ok) { if (r.effects) this.apply(r.effects); return this.goto(r.to); }   // events that interrupt
     this.visits[key] = (this.visits[key] || 0) + 1;
-    // Darkness: entering a dark place uses up light.
+    // Darkness. A dark place is one section (dark: true) or several that share a name (dark: 'crypt').
+    // Going into it uses up one light; moving about inside it doesn't. Some sections are lit anyway
+    // (litIf), say by a fire, and a light is only needed once you go somewhere that isn't.
+    const area = s.dark ? (s.dark === true ? key : s.dark) : null;
+    if (area !== this.area) { this.area = area; this.areaLight = null; }
+    const litHere = s.litIf === true || (s.litIf && check(c, s.litIf).ok);
     this.dark = false;
-    if (s.dark) {
-      const src = lightSource(c);
-      if (!src) { this.dark = true; this.say('You have no light. Until you leave, your tests use at least a d12 difficulty die.', 'bad'); }
-      else this.spendLight(src);
+    if (area && !litHere) {
+      if (this.areaLight === null) {
+        const src = lightSource(c);
+        if (src) { this.spendLight(src); this.areaLight = true; }
+        else { this.areaLight = false; this.say('You have no light. Until you’re out of here, your tests use at least a d12 difficulty die.', 'bad'); }
+      }
+      this.dark = !this.areaLight;
     }
     if (s.rest) this.rest();
     if (s.on) this.apply(s.on, s.onceOnly ? `on:${key}` : null);
@@ -9270,6 +9324,12 @@ class Game {
     it.tokens -= 1;
     this.say(`You light the way with your ${src}. (${itemName(id)}: ${it.tokens} left.)`);
     if (it.tokens <= 0) { c[list] = c[list].filter((x) => x !== it); this.say(`That was the last of your ${itemRef(id).replace(/^the /, '')}.`, 'bad'); }
+  }
+
+  /** Setting light to something. Flint, a torch or a lit lantern can do it again; a flask of alchemist's fire can't. */
+  useFire() {
+    if (fireTool(this.c) !== 'fire') return;
+    this.take('fire'); this.say('You use your alchemist’s fire to light it. That’s the flask gone.', 'bad');
   }
 
   rest() {
@@ -9426,6 +9486,7 @@ class Game {
     if (i === 'result') return this.goto(this.result.to);
     const ch = this.section().choices[i];
     if (!check(c, ch.cast ? { ...ch.if, spell: ch.cast } : ch.if).ok) return;
+    if (ch.if && ch.if.fire) this.useFire();
     if (ch.effects) this.apply(ch.effects);
     if (this.dead) return;
     if (ch.test || ch.cast || ch.turn) return this.runTest(ch, opts);
@@ -9550,11 +9611,11 @@ class Game {
   isOver() { return this.dead || !!this.section().end; }
   ending() { return this.dead ? 'death' : this.section().end || null; }
 
-  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, dead: !!this.dead, result: this.result, messages: this.messages }); }
+  save() { return JSON.stringify({ c: this.c, at: this.at, visits: this.visits, rng: this.rng.state, dark: this.dark, area: this.area, areaLight: this.areaLight, dead: !!this.dead, result: this.result, messages: this.messages }); }
   static load(adventure, json) {
     const d = JSON.parse(json);
     const g = new Game(adventure, 1);
-    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.dead = d.dead; g.result = d.result || null; g.messages = d.messages || [];
+    g.c = d.c; g.at = d.at; g.visits = d.visits; g.rng.state = d.rng; g.dark = d.dark; g.area = d.area ?? null; g.areaLight = d.areaLight ?? null; g.dead = d.dead; g.result = d.result || null; g.messages = d.messages || [];
     // A fight in progress restarts from the top of its section (a FF tradition: no saving mid-fight).
     const s = g.section();
     if (s.fight && !g.dead && !(s.fight.unless && check(g.c, s.fight.unless).ok)) g.fight = startFight(g, s.fight);
@@ -10108,6 +10169,7 @@ function act(g, f, a) {
         const t = test(g, f, { ...sp.test, label: sp.label });
         if (!t.success) { note(f, sp.failText || 'It doesn’t work.'); break; }
       }
+      if (sp.if && sp.if.fire) g.useFire();
       if (sp.flag) c.flags[sp.flag] = true;
       note(f, sp.text, 'good');
       if (sp.dmg) { const t = f.monsters.find(alive); if (t) hurtMonster(g, f, t, rollExpr(rng, sp.dmg), { noBonus: true }); }
