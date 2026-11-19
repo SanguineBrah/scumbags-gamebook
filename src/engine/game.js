@@ -23,7 +23,8 @@ export class Game {
   }
 
   section(key = this.at) { return this.adv.sections[key]; }
-  text(key = this.at) { const t = this.section(key).text || []; return typeof t === 'function' ? t(this.c) : t; }
+  /** A section's text. Text functions get the character and how many times this section has been visited (1 = first time). */
+  text(key = this.at) { const t = this.section(key).text || []; return typeof t === 'function' ? t(this.c, this.visits[key] || 1) : t; }
   number(key = this.at) { return this.adv.numbers[key]; }
 
   begin(character) { this.c = character; this.goto(this.adv.start); }

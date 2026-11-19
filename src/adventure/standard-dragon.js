@@ -103,9 +103,11 @@ export const SECTIONS = {
     choices: [{ text: 'Go up into the lair', to: 'lair' }, { text: 'Follow the slimy trail down', to: 'lower', show: { notFlag: 'slugDead' } }],
   },
   lair: {
-    text: (c) => [
+    text: (c, visits) => [
       'The lair is enormous, and mostly empty. There’s a hoard, but it’s smaller than it should be, and there’s a trail of slime around it. On top of the hoard lies a dragon: old, red, the size of a barn, with one hind leg in a sling and a pair of reading glasses on its nose. It is filling in a form.',
-      '“Ah,” it says, peering at you over its glasses. “You’ll be the adventurer. I’m afraid I have to threaten you. It’s on the form.”',
+      c.flags.dragonAngry ? '“Back again,” it says, without looking up from its form. “I’ve put you down as a recurring nuisance. There’s a box for it.”'
+        : visits > 1 ? '“Ah,” it says, peering at you over its glasses. “You again. Have you thought about my little problem?”'
+          : '“Ah,” it says, peering at you over its glasses. “You’ll be the adventurer. I’m afraid I have to threaten you. It’s on the form.”',
       c.flags.slugDead ? '' : 'Below you, something huge and wet is eating its way through the floor of the hoard.',
     ].filter(Boolean),
     choices: [
@@ -126,6 +128,7 @@ export const SECTIONS = {
     ],
   },
   forgery: {
+    on: [{ flag: 'dragonAngry' }],
     text: ['The dragon reads your form, and then reads it again, and then takes off its glasses. “This,” it says, “is a forgery. That’s a very serious matter. There’s a form for it.” It sets the form on fire, and then you.'],
     fight: { monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
   },
@@ -150,6 +153,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back down to the village', to: 'village' }],
   },
   dragon_fight: {
+    on: [{ flag: 'dragonAngry' }],
     text: (c) => [
       'The dragon sighs, takes off its glasses, and folds them. “Very well,” it says. “It is, after all, on the form.”',
       c.flags.legFixed ? 'It rears up, both legs working, which you are now regretting.' : 'It can’t fly. It doesn’t need to.',
@@ -179,7 +183,7 @@ export const SECTIONS = {
       c.flags.retired
         ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
         : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
-      `That’s ten bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
+      `That’s ${['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][Math.min(10, (c.done || []).length + 1)]} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
     ],
   },
 };

@@ -22,7 +22,9 @@ export const SECTIONS = {
     choices: [{ text: 'Go down the steps', to: 'doors' }],
   },
   doors: {
-    text: (c) => [
+    text: (c) => c.flags.rexAngry ? [
+      'Rex is still at the door, alone, rubbing his knuckles. He sees you coming back down the steps. “You again. If you think I’m—” He waits. Nobody finishes it. “—letting you in,” he says, eventually, by himself.',
+    ] : [
       'At the bottom of the steps, one enormous man in a waistcoat blocks the door. Beside him is a gap exactly his size, where somebody else in a matching waistcoat ought to be standing.',
       '“Evening,” he says. “Dress code. No paupers, no—” He stops, and looks to his left, and waits. Nobody finishes the sentence. His face falls. This is Rex, of the Bouncer Twins. His brother Tex hasn’t been seen for a week, and Rex hasn’t finished a sentence since.',
     ],
@@ -39,6 +41,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go in', to: 'floor' }],
   },
   rex_fight: {
+    on: [{ flag: 'rexAngry' }],
     text: ['“Then you’ll—” says Rex, and waits for a brother who isn’t there, and then just hits you. He fights like half of a team: brilliantly at the front, with nobody at all watching his back.'],
     fight: { monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
@@ -130,11 +133,13 @@ export const SECTIONS = {
   crab_table: {
     text: (c) => c.flags.pinchDown
       ? ['The card table is empty. Somebody has put a lemon where the croupier used to be.']
+      : c.flags.pinchAngry ? ['Mr Pinch is back behind his table, and he clacks a claw at you as you come near. He won’t deal you in again.']
       : ['The Liar’s Dice table is run by Mr Pinch, a croupier-crab the size of an armchair, in a bow tie. He deals with one claw and takes your money with the other. You each roll under a cup and bid on what’s underneath. The trick is lying, and not blinking.'],
     choices: [
-      { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { notFlag: 'pinchDown' } },
-      { text: 'Play a hand with your hand mirror propped against the candlestick, angled under his cup (20GP)', test: { stat: 'Dex', dd: 4, skill: ['skulduggery'] }, pass: 'crab_win', fail: 'pinch_fight', if: { gold: 20, item: 'mirror' }, effects: [GAME], show: { notFlag: 'pinchDown' } },
-      { text: 'Accuse him of cheating', to: 'pinch_fight', show: { notFlag: 'pinchDown' } },
+      { text: 'Play a hand (stake 20GP)', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'] }, pass: 'crab_win', fail: 'crab_lose', if: { gold: 20 }, effects: [GAME], show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
+      { text: 'Play a hand with your hand mirror propped against the candlestick, angled under his cup (20GP)', test: { stat: 'Dex', dd: 4, skill: ['skulduggery'] }, pass: 'crab_win', fail: 'pinch_fight', if: { gold: 20, item: 'mirror' }, effects: [GAME], show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
+      { text: 'Accuse him of cheating', to: 'pinch_fight', show: { none: [{ flag: 'pinchDown' }, { flag: 'pinchAngry' }] } },
+      { text: 'Settle things with him', to: 'pinch_fight', show: { flag: 'pinchAngry', notFlag: 'pinchDown' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
   },
@@ -149,6 +154,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   pinch_fight: {
+    on: [{ flag: 'pinchAngry' }],
     text: ['“Cheating,” says Mr Pinch, “is my job.” He comes across the table claws first.'],
     fight: {
       monsters: [{ name: 'Mr Pinch', lvl: 2, range: 'engaged', ap: 4, onHit: { stat: 'Dex', dd: 4, label: 'keep hold of your purse', text: 'He pinches your purse with his other claw.', effect: 'gold', amount: 10 }, note: 'Croupier-crab; shell (4 AP); on hit, d4 Dex save or he pinches 10GP' }],
@@ -177,12 +183,16 @@ export const SECTIONS = {
   },
   bar_shrug: { text: ['“Never heard of him,” says the barman, polishing a glass with a shaking hand.'], choices: [{ text: 'Back to the floor', to: 'floor' }] },
   cage: {
-    text: ['A skeleton sits in the cashier’s cage behind iron bars, counting coins with bony fingers. Behind it, through a small door, you can see the edge of a strongbox.'],
+    text: (c) => [
+      c.flags.cashierDown ? 'The cashier’s cage stands open. What’s left of the cashier lies in a heap on the floor, still holding a coin.' : 'A skeleton sits in the cashier’s cage behind iron bars, counting coins with bony fingers.',
+      c.flags.cageRobbed ? 'The strongbox behind it is empty.' : 'Behind it, through a small door, you can see the edge of a strongbox.',
+    ],
     choices: [
-      { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' } },
-      { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { notFlag: 'cageRobbed' } },
-      { text: 'Melt the cage lock with acid while it counts', to: 'cage_robbed', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { notFlag: 'cageRobbed' } },
-      { text: 'Lever the bars apart while it counts', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { anyItem: ['prybar', 'pick'] }, show: { notFlag: 'cageRobbed' } },
+      { text: 'Cash in your gold chips', to: 'cash_in', if: { item: 'chips' }, show: { notFlag: 'cashierDown' } },
+      { text: 'Pick the cage lock while it counts', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { item: 'tools' }, show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
+      { text: 'Melt the cage lock with acid while it counts', to: 'cage_robbed', if: { item: 'acid' }, effects: [{ lose: 'acid' }], show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
+      { text: 'Lever the bars apart while it counts', test: { stat: 'Str', dd: 8, skill: ['bruteforce'] }, pass: 'cage_robbed', fail: 'cashier_fight', if: { anyItem: ['prybar', 'pick'] }, show: { none: [{ flag: 'cageRobbed' }, { flag: 'cashierDown' }] } },
+      { text: 'Help yourself to the strongbox', to: 'cage_robbed', show: { flag: 'cashierDown', notFlag: 'cageRobbed' } },
       { text: 'Back to the floor', to: 'floor' },
     ],
   },
@@ -193,19 +203,26 @@ export const SECTIONS = {
   },
   cage_robbed: {
     on: [{ flag: 'cageRobbed' }, { gold: 120 }],
-    text: ['The cage opens. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
+    text: (c) => [c.flags.cashierDown
+      ? 'You step over the cashier and empty the strongbox into your pockets.'
+      : 'The cage opens. The skeleton keeps counting. You help yourself to the strongbox, and it doesn’t look up once. When it finishes counting, it will be very surprised.'],
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   cashier_fight: {
     text: ['The skeleton stops counting. It reaches under the counter and comes up with a cashbox, which it swings at your head.'],
     fight: {
       monsters: [{ name: 'Cashier skeleton', lvl: 2, range: 'engaged', feats: ['undead'], note: 'Undead; counts everything, including your teeth' }],
-      win: 'cage_robbed', flee: { to: 'floor', label: 'Back to the floor' },
+      win: 'cashier_down', flee: { to: 'floor', label: 'Back to the floor' },
     },
+  },
+  cashier_down: {
+    on: [{ flag: 'cashierDown' }],
+    text: ['The cashier comes apart in a clatter of bones and coins. Nobody on the gaming floor looks round. Bones fall over in here all the time.'],
+    choices: [{ text: 'Help yourself to the strongbox', to: 'cage_robbed' }],
   },
   office: {
     text: (c) => [
-      'The staff room is a crypt with a desk in it. On the wall hangs a calendar with every sunrise circled in red, and a hook with a small silver key on it, labelled COFFIN.',
+      c.flags.coffinKey ? 'The staff room is a crypt with a desk in it. On the wall hangs a calendar with every sunrise circled in red, and an empty hook labelled COFFIN.' : 'The staff room is a crypt with a desk in it. On the wall hangs a calendar with every sunrise circled in red, and a hook with a small silver key on it, labelled COFFIN.',
       c.flags.gossip ? 'The barman was right: there isn’t a mirror anywhere.' : '',
     ].filter(Boolean),
     choices: [
@@ -219,16 +236,22 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the floor', to: 'floor' }],
   },
   crypt: {
-    text: (c) => (c.flags.hour || 0) >= 4
+    text: (c) => c.flags.countAwake
+      ? ['Grey light leaks into the private crypt. Count Fortunato is up, hunched beside his coffin with his cloak over his head, hissing at the dawn. He is weak, and furious, and between you and THE BANK.']
+      : (c.flags.hour || 0) >= 4
       ? ['Down the stair, the private crypt is quiet. Grey light leaks through a grating high in the wall: dawn. In the middle of the room, on a velvet dais, stands a black coffin. From inside comes a gentle snoring. Behind it, a great iron door is marked THE BANK.']
+      : c.flags.countWon ? ['Count Fortunato is still at his card table, shuffling your money into his. He doesn’t look up. “Back for more?” he says. “Nobody ever isn’t.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.']
+      : c.flags.countAngry ? ['Count Fortunato is waiting for you this time, standing, with the candles leaning away from him. “You ran,” he says. “Nobody leaves a table of mine in the middle of a hand.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.']
       : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
     choices: [
-      { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4] } },
-      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4] } },
-      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4] } },
-      { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4] } },
-      { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4] } },
-      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4] } },
+      { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Show him the dawn in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
+      { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
+      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
       { text: 'Cast Divine light on the table: the nearest thing to dawn he’s seen in three hundred years', cast: 'light', pass: 'count_dazzled', fail: 'count_fight', show: { below: ['hour', 4] } },
@@ -243,6 +266,14 @@ export const SECTIONS = {
   },
   count_wakes: {
     text: ['A floorboard creaks. The coffin lid creaks back. Count Fortunato sits up, squints at the grey light from the grating, and hisses. Dawn has made him weak and furious.'],
+    on: [{ flag: 'countAwake' }],
+    fight: {
+      monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
+      win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
+    },
+  },
+  count_weak: {
+    text: ['Count Fortunato throws off his cloak and comes at you, squinting, through the grey light.'],
     fight: {
       monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
       win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
@@ -253,7 +284,7 @@ export const SECTIONS = {
     choices: [{ text: 'Open the bank', to: 'bank' }],
   },
   count_won: {
-    on: [{ gold: -1000, msg: 'You lose everything you have.' }],
+    on: [{ gold: -1000, msg: 'You lose everything you have.' }, { flag: 'countWon' }],
     text: ['You cut the deck. Ace. He cuts. Another ace, of a suit you’re fairly sure doesn’t exist. “Double,” he says gently, “or nothing. And you chose nothing.” He sweeps your gold off the table, and you feel your luck drain out through your feet.'],
     choices: [{ text: 'Attack him, since you’ve nothing left to lose', to: 'count_fight' }, { text: 'Crawl back upstairs', to: 'floor' }],
   },
@@ -280,6 +311,7 @@ export const SECTIONS = {
     choices: [{ text: 'Into the bank', to: 'bank' }],
   },
   count_fight: {
+    on: [{ flag: 'countAngry' }],
     text: ['The Count rises from his chair, and the candles gutter. You feel your luck draining away like warm water out of a bath.'],
     fight: {
       monsters: [count], win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
@@ -289,11 +321,12 @@ export const SECTIONS = {
     },
   },
   count_dead: {
+    on: [{ flag: 'countDead' }],
     text: ['Count Fortunato dissolves into a heap of dust and losing lottery tickets. Upstairs, every gambler in Fortune’s Fang suddenly feels much better, and three of them win at once.'],
     choices: [{ text: 'Open the bank', to: 'bank' }],
   },
   bank: {
-    on: [{ gold: 400, msg: 'Thirty years of Lesser Wager’s losses. You take what you can carry.' }], onceOnly: true,
+    on: [{ flag: 'banked' }, { gold: 400, msg: 'Thirty years of Lesser Wager’s losses. You take what you can carry.' }], onceOnly: true,
     text: ['The bank is a vault full of coins, IOUs, deeds, wedding rings, false teeth and a surprising number of goats’ bells. It is everything the town ever lost.', 'In the corner, tied up with a pink ribbon and a label reading LOT 4,117, sits an enormous man in a waistcoat. He looks up hopefully. “Is that—” he says.'],
     choices: [
       { text: 'Untie him', to: 'tex' },
@@ -306,15 +339,19 @@ export const SECTIONS = {
     choices: [{ text: 'Take him upstairs', to: 'exit' }],
   },
   exit: {
-    text: (c) => c.flags.texFree
+    text: (c) => c.flags.texFree && c.flags.rexDown
+      ? ['Rex is still sitting against the wall by the door, where you left him. Tex sits down beside him, back to back, as is their custom, and gently slaps him awake. “Who—” says Rex. “—hit you? This one,” says Tex. They watch you leave in a silence they finish together.']
+      : c.flags.texFree
       ? ['At the door, Rex turns, sees his brother, and drops the money he was counting. “Tex! I thought—” “—you’d never see me again?” “—exactly!” They hug, back to back, as is their custom. Nobody asks you for anything on the way out.']
       : c.flags.rexDown
-        ? ['You walk back through the gaming floor, clinking. Nobody stops you.']
-        : ['At the door, Rex looks at your bulging pockets. “Leaving so—” He waits. “Exit fee,” he says miserably.'],
+        ? ['You walk back through the gaming floor, clinking. Rex is still asleep against the wall by the door. Nobody stops you.']
+        : c.flags.rexFriend
+          ? ['At the door, Rex looks at your bulging pockets, then past you, down the steps, hopefully. “Did you—” You shake your head. He sighs, and waves you out without a word, because he can only manage half of one.']
+          : ['At the door, Rex looks at your bulging pockets. “Leaving so—” He waits. “Exit fee,” he says miserably.'],
     choices: [
-      { text: 'Walk out', to: 'dawn_out', show: { any: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
-      { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
-      { text: 'Fight your way out', to: 'exit_fight', show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }] } },
+      { text: 'Walk out', to: 'dawn_out', show: { any: [{ flag: 'rexDown' }, { flag: 'texFree' }, { flag: 'rexFriend' }] } },
+      { text: 'Pay the exit fee (40GP)', to: 'dawn_out', if: { gold: 40 }, effects: [{ gold: -40 }], show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }, { flag: 'rexFriend' }] } },
+      { text: 'Fight your way out', to: 'exit_fight', show: { none: [{ flag: 'rexDown' }, { flag: 'texFree' }, { flag: 'rexFriend' }] } },
     ],
   },
   exit_fight: {
@@ -324,7 +361,10 @@ export const SECTIONS = {
   dawn_out: {
     end: 'victory',
     text: (c) => [
-      c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes.' : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That is none of your business.',
+      c.flags.countDead ? 'You climb the steps into the churchyard. Behind you, with the Count gone, the gamblers of Lesser Wager have started winning, and they are finding out that the house has nothing left to pay them with.'
+        : c.flags.hour >= 4 ? 'You climb the steps into a grey dawn. In the churchyard, the townsfolk of Lesser Wager are stretching and blinking, and none of them have tripped over anything for minutes. By dusk the Count will be awake again, and hungry.'
+          : c.flags.banked ? 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it, from a bank that is now empty. Somebody will notice in the morning.'
+            : 'You climb the steps into the night air. Behind you, Fortune’s Fang carries on taking money from people who can’t afford it. That is none of your business.',
       `You leave with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}. Every 200GP you squander on a pointless endeavour gains you a level.`,
     ],
   },

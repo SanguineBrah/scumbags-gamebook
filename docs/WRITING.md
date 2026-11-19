@@ -54,6 +54,24 @@ in front of anything that wobbles. Items can be a choice of their own (`if: { it
 test easier (`mods`). The cheaper the item, the more it should be rewarded for being remembered.
 `node tools/affordances.mjs` lists what each adventure uses and never uses.
 
+## Consistency
+
+A section can be reached by many routes, and visited more than once. Before you finish one, ask
+what the player might already have done: killed, befriended, robbed or fled from whoever is in it;
+taken what's described as lying there; put out the fire it mentions. Use flags and text functions
+so the text matches (`text: (c, visits) => ...`: `visits` is 1 on the first visit). Somebody you
+ran away from should remember you; something you took shouldn't still be on the shelf.
+
+What happened in earlier adventures is kept too: when a scumbag finishes an adventure, its flags
+are saved in `c.past[adventureId]`. Use `pastFlag(c, id, flag)` in text, or the `past` and
+`notPast` conditions, when a character or place comes back (Lord Grimsby, the counting house).
+Adventures unlock in chains, so check `after` to see which earlier ones a player must have done,
+and which they might have skipped.
+
+`node tools/states.mjs <id>` plays an adventure many times and lists, for every section, the
+flags that are always or only sometimes set on arrival: read each section against the
+"sometimes" list.
+
 ## Skills
 
 Give every test all the skills that could plausibly cover it, and list any professions that could

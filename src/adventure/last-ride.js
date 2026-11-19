@@ -137,7 +137,7 @@ export const SECTIONS = {
     ],
   },
   punt: {
-    text: ['The punt leaks. Thunder refuses to get in, so Sir Gristle rides round by the bank, “guarding the rear”, and promises to meet you at the farm. Halfway across, the water around you starts to bubble, and a dozen swollen toads surface, glowing faintly and ticking.'],
+    text: (c) => [`The punt leaks. ${c.flags.propped ? 'Thunder refuses to get in, so you send him round by the bank with Sir Gristle tied on top, and hope he knows the way. He does: he has been to the farm before.' : 'Thunder refuses to get in, so Sir Gristle rides round by the bank, “guarding the rear”, and promises to meet you at the farm.'} Halfway across, the water around you starts to bubble, and a dozen swollen toads surface, glowing faintly and ticking.`],
     choices: [
       { text: 'Bail with your bucket and pole on through', test: { stat: 'Str', dd: 6, skill: ['athletics'] }, pass: 'farm_yard', fail: 'toads', if: { item: 'bucket' } },
       { text: 'Pole through as fast as you can', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { item: 'pole' }, dd: 4 }] }, pass: 'farm_yard', fail: 'toads' },
@@ -176,7 +176,9 @@ export const SECTIONS = {
   },
   croaker_story: {
     on: [{ flag: 'story' }],
-    text: ['Old Croaker sighs. “The toads breed in the fen. Thousands of ’em. If I don’t get rid of them, they go off on their own, in the night, in people’s cellars. So I fire them at the village pond, where they go off harmlessly. Mostly. That’s my job. Nobody thanks me.” He looks at Sir Gristle. “Least of all him. He’s the one who hired me, forty years ago.”'],
+    text: (c) => [`Old Croaker sighs. “The toads breed in the fen. Thousands of ’em. If I don’t get rid of them, they go off on their own, in the night, in people’s cellars. So I fire them at the village pond, where they go off harmlessly. Mostly. That’s my job. Nobody thanks me.” ${c.flags.dead
+      ? 'He looks at the knight tied to the horse. “Least of all him. He’s the one who hired me, forty years ago.” He squints. “Is he… all right?”'
+      : 'He looks at Sir Gristle. “Least of all him. He’s the one who hired me, forty years ago.”'}`],
     choices: [
       { text: 'Tell Sir Gristle the truth', to: 'truth', show: { notFlag: 'dead' } },
       { text: 'Offer to help him aim them somewhere better', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Alchemist', 'Hunter'], why: 'you understand trajectories, or toads' }, pass: 'better_aim', fail: 'cannon_fight' },
@@ -212,7 +214,7 @@ export const SECTIONS = {
     text: ['You hammer home the spike and the cannon is useless. Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
     choices: [
       { text: 'Ask him what he means', to: 'croaker_story' },
-      { text: 'Take Sir Gristle home in triumph', to: 'pension_office' },
+      { text: 'Take Sir Gristle home', to: 'pension_office' },
     ],
   },
   dazzled: {
@@ -232,8 +234,14 @@ export const SECTIONS = {
     choices: [
       { text: 'Hear what Croaker has to say', to: 'croaker_story', show: { notFlag: 'heart' } },
       { text: 'Make sure he isn’t revived', to: 'glorious', show: { flag: 'heart' } },
-      { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
+      { text: 'Revive him with smelling salts', to: 'duel_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
+      { text: 'Try to revive him', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'duel_revived', fail: 'glorious', show: { flag: 'heart' } },
     ],
+  },
+  duel_revived: {
+    on: [{ unflag: 'heart' }],
+    text: ['Sir Gristle comes round flat on his back in the farmyard, with a toad sitting on his breastplate. “Did I win?” he asks. Croaker, who has come down to look, says that he did. It seems the kindest thing.'],
+    choices: [{ text: 'Hear what Croaker has to say', to: 'croaker_story' }],
   },
   glory_charge: {
     text: ['You slap Thunder’s rump. The old horse sets off at a canter, a dead knight swaying magnificently in the saddle, sword lashed to his hand. Croaker sees him coming and fires in panic. Toad, knight and horse meet in a tremendous green explosion. Thunder trots out of the smoke unhurt. Sir Gristle does not, being already dead, but the village saw everything.'],
@@ -265,12 +273,13 @@ export const SECTIONS = {
     end: 'victory',
     on: [
       { if: { notFlag: 'dead', flag: 'keepAlive' }, gold: 300, uncapped: true, msg: 'Sir Gristle pays you 300GP, just to see Percival’s face.' },
-      { if: { flag: 'gloriousDeath' }, gold: 300, uncapped: true, msg: 'Percival pays you 300GP out of the pension.' },
-      { if: { flag: 'propped', notFlag: 'gloriousDeath' }, gold: 300, uncapped: true, msg: 'The village swears he fell storming the farm. Percival pays you 300GP out of the pension.' },
+      { if: { flag: 'gloriousDeath', any: [{ flag: 'glory' }] }, gold: 300, uncapped: true, msg: 'Percival pays you 300GP out of the pension.' },
+      { if: { flag: 'propped', notFlag: 'gloriousDeath' }, msg: 'The village swears he fell storming the farm.' },
+      { if: { flag: 'propped', notFlag: 'gloriousDeath', any: [{ flag: 'glory' }] }, gold: 300, uncapped: true, msg: 'Percival pays you 300GP out of the pension.' },
     ],
     text: (c) => [
       c.flags.gloriousDeath || (c.flags.dead && c.flags.propped)
-        ? 'Sir Bertram Gristle is buried with full honours. The Pension Office pays out, Percival weeps for nearly a minute, and the toads keep on coming.'
+        ? `Sir Bertram Gristle is buried with full honours. The Pension Office pays out, Percival weeps for nearly a minute, and the toads keep on coming.${c.flags.glory ? '' : ' Percival never thanks you. You never asked him to.'}`
         : c.flags.dead
           ? 'Sir Bertram Gristle is buried quietly. The Pension Office notes the cause of death as “showing off” and pays nothing. Percival looks at you as if it were your fault, which, in fairness, it might be.'
           : 'Sir Bertram Gristle rides home on Thunder, at the pace of a funeral, and lives another nine years out of spite. Percival’s face is everything he hoped.',

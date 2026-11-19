@@ -1,6 +1,18 @@
 // TORCHES AND PITCHFORKS — escort Lord Grimsby across Blackmire Moor, through a mob of ghostly tenants. For a level 8–9 scumbag.
 // The mob is ghostly: ordinary weapons pass through it. Holy water, magic, a blessed weapon, turning or paperwork all work.
 
+import { pastFlag, didAdventure, lightSource } from '../engine/conditions.js';
+
+// Every scumbag who gets this far has met Lord Grimsby before, at Middle Whelping (Eviction Notice).
+const REUNION = (c) => {
+  const p = (f) => pastFlag(c, 'eviction-notice', f);
+  if (p('burnt')) return 'He brightens when he sees you. “The one who burnt the kobolds out! Splendid. I asked for you specifically. Nobody else would come.”';
+  if (p('kobsStay')) return 'He goes pale when he sees you. “You,” he says. “The one with the deed. The commoner-lover. I’d sooner hire a kobold.” He looks round the empty inn. “I have asked every kobold.”';
+  if (p('kobsLeave') || p('kobsBeaten')) return '“Ah. The eviction specialist,” he says, when he sees you. “You got rid of my kobolds. Now get me past my tenants. It’s practically the same job.”';
+  if (didAdventure(c, 'eviction-notice')) return 'He squints at you. “Middle Whelping,” he says. “You were the one who did nothing whatsoever about my kobolds. Well, you’re cheap, at least. Everyone else has said no.”';
+  return '';
+};
+
 export const META = {
   after: ['unsolved'], id: 'torches-and-pitchforks', title: 'Torches and Pitchforks', levels: '8–9', final: 'grimsby_hall',
   blurb: 'Lord Grimsby has inherited Grimsby Hall, on the far side of Blackmire Moor. So have three hundred years of Grimsbys’ evicted tenants, who rise every night with torches and pitchforks and are, technically, still owed their deposits. He’ll pay 400 gold for an escort. He has asked everyone else.',
@@ -12,10 +24,12 @@ const blob = { name: 'Bog blob', lvl: 6, hp: 36, range: 'engaged', onHit: { stat
 
 export const SECTIONS = {
   start: {
-    text: [
-      'The Tumbledown Inn is the last building before Blackmire Moor, and Lord Grimsby is its only guest. He’s wrapped in three coats and a scarf with his family crest on it. “Four hundred gold,” he says, “to see me to Grimsby Hall by midnight. After midnight, the hall is legally mine, and the tenants can’t touch me. Before midnight, they can.”',
+    text: (c) => [
+      'The Tumbledown Inn is the last building before Blackmire Moor, and Lord Grimsby is its only guest. He’s wrapped in three coats and a scarf with his family crest on it, and he still hasn’t bathed.',
+      REUNION(c),
+      '“Four hundred gold,” he says, “to see me to Grimsby Hall by midnight. Once I’m over the threshold, the hall is legally mine, and the tenants can’t touch me. If I’m not there by midnight, it’s theirs, and so am I.”',
       'The innkeeper, polishing a glass, adds: “Sword goes straight through ’em. Chaplain does blessings in the back, mind. Twenty gold.”',
-    ],
+    ].filter(Boolean),
     choices: [
       { text: 'Have the chaplain bless your weapon (20GP)', to: 'blessed', if: { gold: 20 }, show: { notFlag: 'blessedWeapon' } },
       { text: 'Fill your bucket at the trough and bless the water', cast: 'bless', pass: 'bucket_blessed', fail: 'bucket_oil', if: { item: 'bucket' }, show: { notFlag: 'holyBucket' } },
@@ -39,13 +53,13 @@ export const SECTIONS = {
   },
   grimsby_talk: {
     on: [{ flag: 'knowsDeposits' }],
-    text: ['“Their deposits,” says Grimsby, as if it’s a disease. “My family kept every tenant’s deposit for three hundred years. Damp, wear and tear, that sort of thing. Now they want it back. All of it. With an apology. In writing.” He shudders. “A Grimsby has never written an apology. We don’t own the right sort of ink.”'],
+    text: (c) => [`${didAdventure(c, 'eviction-notice') ? 'You’ve heard Grimsby on the subject of deposits before. ' : ''}“Their deposits,” says Grimsby, as if it’s a disease. “My family kept every tenant’s deposit for three hundred years. Damp, wear and tear, that sort of thing. Now they want it back. All of it. With an apology. In writing.” He shudders. “A Grimsby has never written an apology. We don’t own the right sort of ink.”`],
     choices: [{ text: 'Back to the bar', to: 'start' }],
   },
   moor: {
     text: (c) => [
       'Blackmire Moor is flat, black and soaked. The road wanders off to the left around the bog, past a crossroads with a gibbet on it. The old causeway goes straight across the bog, half sunk, and would save an hour. Grimsby looks at the causeway, then at his shoes.',
-      c.flags.lit ? '' : 'It is very dark.',
+      lightSource(c) ? 'Your light makes a small, brave circle in the dark.' : 'It is very dark.',
     ].filter(Boolean),
     choices: [
       { text: 'Take the causeway across the bog', to: 'bog' },
@@ -74,7 +88,10 @@ export const SECTIONS = {
     choices: [{ text: 'Hurry on to the hall', to: 'gates' }],
   },
   gibbet: {
-    text: (c) => [
+    text: (c) => c.flags.mobAngry ? [
+      'The mob is still at the crossroads, waiting, torches high, pitchforks levelled. The skeleton in the gibbet points at Grimsby. “DEPOOOSIT,” moans the mob, angrier now.',
+      c.flags.knowsDeposits ? 'They want their deposits back, with an apology. In writing.' : '',
+    ].filter(Boolean) : [
       'At the crossroads, a skeleton sways in the gibbet. As you pass, it turns its head. All around you, the fog lights up: torches, a hundred of them, carried by grey, see-through villagers in the clothes of three centuries, every one of them holding a pitchfork. “GRIIIMSBYYYY,” they moan. “DEPOOOSIT.”',
       c.flags.knowsDeposits ? 'They want their deposits back, with an apology. In writing.' : '',
     ].filter(Boolean),
@@ -124,10 +141,11 @@ export const SECTIONS = {
   },
   betrayal: {
     on: [{ flag: 'betrayed' }, { item: 'strongkey' }],
-    text: ['You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear. The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”'],
+    text: (c) => [`${c.flags.thrown ? 'Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear, and the fight goes out of the mob at once.' : 'You step aside. Grimsby is carried off into the fog on a hundred pitchforks, still explaining about wear and tear.'} The skeleton in the gibbet drops a heavy iron key at your feet. “His strongroom,” it says. “Our deposits are in there. We can’t carry gold any more. Spend it on something stupid.”`],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
   mob_fight: {
+    on: [{ flag: 'mobAngry' }],
     text: (c) => [
       'The mob surges. Pitchforks you can see through still go into you.',
       c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
@@ -143,6 +161,7 @@ export const SECTIONS = {
   },
   mob_gone: {
     redirect: [{ if: { flag: 'thrown' }, to: 'betrayal' }],
+    on: [{ flag: 'mobGone' }],
     text: ['The last ghost dissolves into the fog, dropping its pitchfork, which dissolves too. The skeleton in the gibbet shakes its head at you and goes back to swaying.'],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
@@ -162,12 +181,18 @@ export const SECTIONS = {
     ],
   },
   late: {
-    redirect: [{ if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'shortcut' }] }, to: 'late_safe' }],
+    redirect: [{ if: { flag: 'shortcut' }, to: 'late_spare' }, { if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'mobGone' }] }, to: 'late_safe' }],
+    on: [{ flag: 'late' }],
     text: ['Midnight strikes while you’re still struggling with the gate. Behind you, the torches come over the rise.'],
     choices: [{ text: 'Get through the gate however you can', to: 'last_stand' }],
   },
+  late_spare: {
+    text: ['It takes far too long, but you saved an hour in the bog, and you need most of it. The gate groans open with minutes to spare.'],
+    choices: [{ text: 'Inside', to: 'inside' }],
+  },
   late_safe: {
-    text: ['It takes far too long, but nothing comes out of the fog to stop you. Eventually, the gate groans open.'],
+    on: [{ flag: 'late' }],
+    text: (c) => [c.flags.betrayed ? 'Midnight strikes while you’re still at the gate. It doesn’t matter now. Eventually, the gate groans open.' : 'Midnight strikes while you’re still at the gate, and Grimsby whimpers, but nothing comes out of the fog. There’s nobody left out there to come. Eventually, the gate groans open.'],
     choices: [{ text: 'Inside', to: 'inside' }],
   },
   last_stand: {
@@ -182,13 +207,20 @@ export const SECTIONS = {
     text: (c) => [
       c.flags.betrayed
         ? 'Grimsby Hall is cold and empty, and nobody will ever live in it again. The strongroom is under the stairs.'
-        : 'The clock in the hall strikes midnight as Grimsby crosses the threshold. “Mine,” he says, and kisses the floor, which is a mistake. The strongroom is under the stairs.',
+        : c.flags.late ? 'It is well past midnight when Grimsby crosses the threshold. “Mine,” he says anyway, without much conviction, and kisses the floor, which is a mistake. The strongroom is under the stairs.'
+          : 'The clock in the hall strikes midnight as Grimsby crosses the threshold. “Mine,” he says, and kisses the floor, which is a mistake. The strongroom is under the stairs.',
     ],
     choices: [
       { text: 'Open the strongroom with the skeleton’s key', to: 'strongroom', if: { item: 'strongkey' } },
-      { text: 'Pick the strongroom lock while Grimsby is busy kissing the floor', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'strongroom', fail: 'grimsby_hall', if: { item: 'tools' }, show: { notItem: 'strongkey' } },
-      { text: 'Collect your fee and leave', to: 'grimsby_hall' },
+      { text: 'Pick the strongroom lock while Grimsby is busy kissing the floor', test: { stat: 'Dex', dd: 12, skill: ['skulduggery'] }, pass: 'strongroom', fail: 'strongroom_caught', if: { item: 'tools' }, show: { notItem: 'strongkey', notFlag: 'betrayed' } },
+      { text: 'Collect your fee and leave', to: 'grimsby_hall', show: { notFlag: 'betrayed' } },
+      { text: 'Leave', to: 'grimsby_hall', show: { flag: 'betrayed' } },
     ],
+  },
+  strongroom_caught: {
+    text: ['Your pick snaps in the lock with a ping. Grimsby looks up from the floor. “That,” he says, “is a deduction.” He takes the price of the lock out of your fee, then the price of the pick, then a charge for the inconvenience.'],
+    on: [{ flag: 'deducted' }],
+    choices: [{ text: 'Take what’s left of your fee', to: 'grimsby_hall' }],
   },
   strongroom: {
     on: [{ lose: 'strongkey' }, { flag: 'deposits' }, { gold: 300, uncapped: true, msg: 'Three hundred years of deposits: 300GP in old coin.' }], onceOnly: true,
@@ -197,10 +229,17 @@ export const SECTIONS = {
   },
   grimsby_hall: {
     end: 'victory',
-    on: [{ if: { flag: 'delivered' }, gold: 400, uncapped: true, msg: 'Lord Grimsby pays your fee, minus a deduction for wear and tear. Then he puts the deduction back.' }],
+    on: [
+      { if: { flag: 'delivered', notFlag: 'deducted' }, gold: 400, uncapped: true, msg: 'Lord Grimsby pays your fee, minus a deduction for wear and tear. Then he puts the deduction back.' },
+      { if: { flag: 'delivered', any: [{ flag: 'deducted' }] }, gold: 250, uncapped: true, msg: 'Lord Grimsby pays your fee, minus deductions: 250GP.' },
+    ],
     text: (c) => [
       c.flags.delivered
-        ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.' : 'Grimsby locks every door in the hall and sits up all night with a candle. The torches circle the hall till dawn. He’ll be fine. Probably.')
+        ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.'
+          : c.flags.mobGone ? 'Grimsby Hall is quiet that night, and every night after. The tenants are gone for good, and so is the last claim on their deposits. Grimsby is delighted. He never thanks you.'
+            : c.flags.ghostArmy ? 'The ghosts stand guard round Grimsby Hall all night on your orders, torches high. Grimsby sits up with a candle, finding this no comfort at all.'
+              : c.flags.late ? 'The hall isn’t legally his, and the tenants know it. Grimsby locks every door and sits up all night with a candle while the torches circle the hall till dawn. He’ll be fine. Probably.'
+                : 'The hall is legally his now, and the tenants know it. They circle it once with their torches, out of habit, and go back to the moor to wait for the next Grimsby.')
         : c.flags.betrayed ? 'Out on the moor, the torches have gone out. Somewhere in the fog, a lord is still explaining about wear and tear.'
           : 'You leave Grimsby to the mob. He has three hundred years of explaining to do.',
       c.flags.deposits && !c.flags.betrayed ? 'You may not have mentioned the strongroom.' : '',

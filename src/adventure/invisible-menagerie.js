@@ -22,6 +22,18 @@ export const SECTIONS = {
       { text: 'Go and see what landed in the field', to: 'saucer' },
     ],
   },
+  gate: {
+    text: (c) => [
+      c.flags.brunoAngry ? 'You’re back at the menagerie gate. Bruno stands in front of it with his arms folded, watching you, and every so often he cracks his knuckles.' : 'You’re back at the menagerie gate. The posters flap in the wind. Inside, a crowd laughs at nothing.',
+      c.flags.visitorGone ? 'The field behind the tent is empty, apart from a scorched circle in the grass.' : 'In the field behind the tent, something silver hums.',
+    ],
+    choices: [
+      { text: 'Pay 5GP and go in like everyone else', to: 'big_top', if: { gold: 5 }, effects: [{ gold: -5 }] },
+      { text: 'Slip under the canvas', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'big_top', fail: 'strongman', show: { notFlag: 'brunoAngry' } },
+      { text: 'Fight Bruno for the gate', to: 'bruno_fight', show: { flag: 'brunoAngry' } },
+      { text: 'Go back to the field', to: 'saucer', show: { notFlag: 'visitorGone' } },
+    ],
+  },
   strongman: {
     text: ['A hand like a ham lifts you out from under the canvas by your collar. It belongs to Bruno, the menagerie’s strongman, who is also its ticket inspector, cook and vet. “Five gold,” he says, “or I fold you.”'],
     choices: [
@@ -36,53 +48,64 @@ export const SECTIONS = {
     choices: [{ text: 'Go into the big top', to: 'big_top' }],
   },
   bruno_fight: {
+    on: [{ flag: 'brunoAngry' }],
     text: ['Bruno rolls up his sleeves. He has a tattoo of his own name on each arm, in case he forgets.'],
-    fight: { monsters: [{ name: 'Bruno', lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'start', label: 'Run for the gate' } },
+    fight: { monsters: [{ name: 'Bruno', lvl: 4, range: 'engaged', onHit: { stat: 'Str', dd: 6, label: 'stay upright', text: 'He folds you.', effect: 'prone' }, note: 'Strongman, ticket inspector, cook and vet; on hit, d6 Str save or be folded (prone)' }], win: 'bruno_down', flee: { to: 'gate', label: 'Back off' } },
   },
   bruno_down: {
     text: ['Bruno sits down in the sawdust and decides you can go in for free.'],
     choices: [{ text: 'Go into the big top', to: 'big_top' }],
   },
   saucer: {
-    text: (c) => [
+    text: (c) => c.flags.visitorAngry ? [
+      'The Visitor is waiting by its craft with its hairdryer raised. “YOU AGAIN,” it says. “HOSTILE SPECIMEN. I HAVE RECALIBRATED.”',
+    ] : c.flags.visitorDeal ? [
+      'The Visitor is still by its craft, studying the tent through its tube. It waves at you with three fingers. “BRING THE APE,” it says. “I HAVE PREPARED A SMALL CAGE AND A VERY LARGE BANANA.”',
+    ] : c.flags.visitorFriend ? [
+      'The Visitor is still by its craft, studying the tent through its tube. It nods at you, politely, as one rare thing to another.',
+    ] : [
       'In the field behind the tent sits a silver disc the size of a haystack, humming. Beside it stands a small grey person in a silver suit, holding a pistol shaped like a hairdryer. It is studying the menagerie tent through a tube. It turns its enormous black eyes on you.',
       '“GREETINGS,” it says, in a voice like a wet finger on glass. “I AM COLLECTING SPECIMENS. YOUR PLANET’S INVISIBLE APE IS VERY RARE. ARE YOU RARE?”',
     ],
     choices: [
-      { text: 'Show it the glowing slate', to: 'visitor_trade', if: { item: 'ipad' } },
-      { text: 'Hand it the time-traveller’s business card', to: 'visitor_card', if: { item: 'card' } },
-      { text: 'Say you’re very common, and offer to help it catch the ape', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages', 'lying'], profs: ['Envoy'], why: 'diplomacy is your trade' }, pass: 'visitor_deal', fail: 'visitor_fight' },
+      { text: 'Show it the glowing slate', to: 'visitor_trade', if: { item: 'ipad' }, show: { notFlag: 'visitorAngry' } },
+      { text: 'Hand it the time-traveller’s business card', to: 'visitor_card', if: { item: 'card' }, show: { notFlag: 'visitorAngry' } },
+      { text: 'Say you’re very common, and offer to help it catch the ape', test: { stat: 'Cha', dd: 8, skill: ['social', 'languages', 'lying'], profs: ['Envoy'], why: 'diplomacy is your trade' }, pass: 'visitor_deal', fail: 'visitor_fight', show: { none: [{ flag: 'visitorAngry' }, { flag: 'visitorDeal' }, { flag: 'visitorFriend' }] } },
+      { text: 'Offer to help it catch the ape', to: 'visitor_deal', show: { flag: 'visitorFriend', notFlag: 'visitorDeal' } },
       { text: 'Attack it', to: 'visitor_fight' },
-      { text: 'Back away to the tent', to: 'start' },
+      { text: 'Back away to the tent', to: 'gate' },
     ],
   },
   visitor_trade: {
     on: [{ lose: 'ipad' }, { gold: 150, msg: 'It pays you in small heavy coins with no faces. A fence will take them as 150GP.' }, { flag: 'visitorFriend' }], onceOnly: true,
     text: ['The Visitor takes the slate in both hands and makes a sound like a kettle. “PRIMITIVE,” it says reverently. “WONDERFULLY PRIMITIVE. IT IS AT ONE PER CENT.” It pays you handsomely and promises not to disintegrate you.'],
-    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'start' }],
+    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'gate' }],
   },
   visitor_card: {
     on: [{ lose: 'card' }, { flag: 'visitorFriend' }],
     text: ['The Visitor reads the card. “DISRUPTOR,” it says. “THOUGHT LEADER.” It looks at you with something like fear. “YOU ARE FROM THE SAME SPECIES AS THAT ONE. HE TRIED TO SELL ME A TIMESHARE.” It decides you are too dangerous to disintegrate.'],
-    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'start' }],
+    choices: [{ text: 'Offer to help it catch the ape', to: 'visitor_deal' }, { text: 'Go back to the tent', to: 'gate' }],
   },
   visitor_deal: {
     on: [{ flag: 'visitorDeal' }],
     text: ['“ACCEPTABLE,” says the Visitor. “BRING THE APE TO MY CRAFT. I SHALL PAY YOU IN ANY QUANTITY OF YOUR YELLOW METAL. I HAVE A GREAT DEAL OF IT. IT IS USELESS.”'],
-    choices: [{ text: 'Go back to the tent', to: 'start' }],
+    choices: [{ text: 'Go back to the tent', to: 'gate' }],
   },
   visitor_fight: {
+    on: [{ flag: 'visitorAngry' }, { unflag: 'visitorDeal' }],
     text: ['The Visitor raises its hairdryer. “HOSTILE,” it says sadly. “AS PREDICTED.”'],
-    fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'start', label: 'Dive behind the tent' } },
+    fight: { monsters: [visitor], distance: 2, win: 'visitor_down', flee: { to: 'gate', label: 'Dive behind the tent' } },
   },
   visitor_down: {
     on: [{ flag: 'visitorGone' }, { gold: 100, msg: 'Inside the craft: a sack of useless yellow metal. 100GP.' }], onceOnly: true,
     text: ['The Visitor retreats into its craft, which takes off silently and vanishes into the clouds. It leaves behind a sack of gold and a very bad review of your planet.'],
-    choices: [{ text: 'Go back to the tent', to: 'start' }],
+    choices: [{ text: 'Go back to the tent', to: 'gate' }],
   },
   big_top: {
     text: (c) => [
-      'Inside the big top, a crowd of villagers stares at a ring of empty cages while Professor Peculius, in a top hat and a cape covered in eyes, describes what they can’t see. “And here,” he cries, “the INVISIBLE APE!” A cage door rattles. The crowd laughs. Something in the cage grunts, and the smell reaches the back row.',
+      c.flags.profDown
+        ? 'Inside the big top, a crowd of villagers stares at a ring of empty cages. With nobody to describe what they can’t see, they are starting to suspect they have been had.'
+        : `Inside the big top, a crowd of villagers stares at a ring of empty cages while Professor Peculius, in a top hat and a cape covered in eyes, describes what they can’t see. ${c.flags.apeSold || c.flags.apeDown ? '“And here,” he cries, “the INVISIBLE APE!” Nothing happens. He taps the cage. Nothing happens again. The crowd applauds the best bit yet.' : '“And here,” he cries, “the INVISIBLE APE!” A cage door rattles. The crowd laughs. Something in the cage grunts, and the smell reaches the back row.'}`,
       'There’s a food stall selling flour cakes, the professor’s caravan behind a curtain, an aviary roped off at the back, and a pen of straw marked DO NOT TOUCH.',
       c.flags.flour ? 'Your pockets are full of flour.' : '',
     ].filter(Boolean),

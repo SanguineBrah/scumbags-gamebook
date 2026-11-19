@@ -342,9 +342,13 @@ export const SECTIONS = {
   },
   library: {
     dark: true,
-    text: ['Ledgers fill the shelves from floor to ceiling: every debt Vane ever owned, and he owned all of them. One shelf is different. A single fat book with a gilt spine reads TOME RAIDER, and it is breathing.'],
+    text: (c) => [
+      'Ledgers fill the shelves from floor to ceiling: every debt Vane ever owned, and he owned all of them.',
+      c.flags.mimicDead ? 'TOME RAIDER lies on the floor where you left it, closed for good.' : 'One shelf is different. A single fat book with a gilt spine reads TOME RAIDER, and it is breathing.',
+    ],
     choices: [
-      { text: 'Search the shelves for anything useful', test: { stat: 'Int', dd: 8, skill: ['analysis', 'languages'], why: 'reading old ledgers' }, pass: 'library_found', fail: 'mimic_fight', show: { notFlag: 'combo' } },
+      { text: 'Search the shelves for anything useful', test: { stat: 'Int', dd: 8, skill: ['analysis', 'languages'], why: 'reading old ledgers' }, pass: 'library_found', fail: 'mimic_fight', show: { none: [{ flag: 'combo' }, { flag: 'mimicDead' }] } },
+      { text: 'Search the shelves for anything useful', test: { stat: 'Int', dd: 8, skill: ['analysis', 'languages'], why: 'reading old ledgers' }, pass: 'library_found', fail: 'library_nothing', show: { flag: 'mimicDead', notFlag: 'combo' } },
       { text: 'Stab the suspicious book', to: 'mimic_ambush', show: { notFlag: 'mimicDead' } },
       { text: 'Leave the library', to: 'hall' },
     ],
@@ -377,6 +381,7 @@ export const SECTIONS = {
   gallery: {
     text: (c) => c.flags.knightGone
       ? ['The gallery is quiet. The portraits of debtors look down at you, and the empty plinth at the end looks down at nothing.']
+      : c.flags.knightAngry ? ['Sir Reginald Overdraft is back on his plinth, guarding the purse. His visor follows you down the gallery with a long, rusty squeal. “Breach of contract,” he says. “Noted.”']
       : [
         'Portraits of debtors line the gallery, each labelled with what they owed and what Vane took instead. At the far end, on a plinth marked COLLATERAL, stands a knight in full armour, rusted solid. A fat purse hangs on the wall behind him.',
         'The visor squeaks open. “Sir Reginald Overdraft,” says a hollow voice. “Pledged against a loan of twenty gold, in the year of the wet harvest. I am to guard this gallery until the debt is paid.” He has been standing there for forty-one years.',
@@ -401,6 +406,7 @@ export const SECTIONS = {
     choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
   },
   knight_fight: {
+    on: [{ flag: 'knightAngry' }],
     text: ['“Theft from the collateral,” booms Sir Reginald, “is a breach of contract.” He steps down from the plinth and draws a sword that has rusted into a sort of club.'],
     fight: {
       monsters: [{ name: 'Sir Reginald Overdraft', lvl: 2, hp: 6, range: 'engaged', ap: 6, note: 'Defaulted knight, forty-one years without lunch (6 HP); repossessed plate armour (6 AP)' }],
@@ -419,11 +425,12 @@ export const SECTIONS = {
   },
   office: {
     text: (c) => [
-      'The Chief Clerk’s office holds a desk, a chair, a coat stand and a framed certificate for Most Punctual Clerk, 1,000 Years Running. The desk has one drawer and one lock.',
-      c.flags.auditor ? 'There’s a note on the desk in a shaky hand: “For the Auditor. With compliments. Please don’t.”' : '',
+      'The Chief Clerk’s office holds a desk, a chair, a coat stand and a framed certificate for Most Punctual Clerk, 1,000 Years Running.',
+      c.flags.drawer ? 'The desk drawer hangs open, empty.' : 'The desk has one drawer and one lock.',
+      c.flags.auditor && !c.flags.drawer ? 'There’s a note on the desk in a shaky hand: “For the Auditor. With compliments. Please don’t.”' : '',
     ].filter(Boolean),
     choices: [
-      { text: 'Read the note for the auditor', to: 'office_drawer', show: { flag: 'auditor' } },
+      { text: 'Read the note for the auditor', to: 'office_note', show: { flag: 'auditor', notFlag: 'drawer' } },
       { text: 'Pick the lock', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'office_drawer', fail: 'office_jam', if: { item: 'tools' }, show: { notFlag: 'drawer' } },
       { text: 'Lever it open', test: { stat: 'Str', dd: 4, skill: 'bruteforce' }, pass: 'office_drawer', fail: 'office_noise', if: { item: 'prybar' }, show: { notFlag: 'drawer' } },
       { text: 'Smash it open', test: { stat: 'Str', dd: 12, skill: 'bruteforce' }, pass: 'office_drawer', fail: 'office_noise', show: { notFlag: 'drawer' } },
@@ -454,6 +461,10 @@ export const SECTIONS = {
     on: [{ flag: 'impDead' }],
     text: ['The imp bursts into a puddle of ink and a smell of sealing wax. Among the splashes is a contract with your name on it, which you eat, to be safe.'],
     choices: [{ text: 'Try the drawer again', to: 'office' }, { text: 'Go back to the great hall', to: 'hall' }],
+  },
+  office_note: {
+    text: ['Inside the note is a small brass key, and a list of everything in the drawer, initialled. The drawer opens with it as smoothly as a confession.'],
+    choices: [{ text: 'Open the drawer', to: 'office_drawer' }],
   },
   office_drawer: {
     on: [{ flag: 'drawer' }, { item: 'vaultkey' }, { gold: 25, msg: 'Under the key: 25GP in a tin marked BRIBES (INCOMING).' }], onceOnly: true,
@@ -516,16 +527,25 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the door', to: 'vault_door' }],
   },
   vault: {
-    text: ['The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts. At a desk in the middle sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever.', 'He hasn’t looked up. Yet.'],
+    text: (c) => [
+      'The door swings open on a room full of gold: chests of it, sacks of it, heaps of it on the floor like snowdrifts.',
+      c.flags.ledgerBurnt ? 'Usurer Vane hovers over the ashes of his ledger, thin as smoke and getting thinner, counting on his fingers because there is nothing else left to count. He sees you, and remembers who did it.'
+        : c.flags.vaultAngry ? 'Usurer Vane is back at his desk, counting again, but faster now, and he glares at you over the ledger with his copper-penny eyes. “Still in arrears,” he whispers.'
+          : 'At a desk in the middle sits Usurer Vane, or what’s left of him. He is grey, translucent and counting. An enormous ledger lies open in front of him, and he moves a finger down it, line by line, forever. He hasn’t looked up. Yet.',
+    ],
     choices: [
-      { text: 'Introduce yourself as the auditor', test: { stat: 'Cha', dd: 12, skill: 'lying' }, pass: 'vault_bluffed', fail: 'vault_fight', if: { flag: 'auditor' } },
-      { text: 'Pay your taxes', to: 'vault_taxes', if: { gold: 50 }, effects: [{ gold: -50 }] },
+      { text: 'Introduce yourself as the auditor', test: { stat: 'Cha', dd: 12, skill: 'lying' }, pass: 'vault_bluffed', fail: 'vault_fight', if: { flag: 'auditor' }, show: { none: [{ flag: 'vaultAngry' }, { flag: 'ledgerBurnt' }] } },
+      { text: 'Pay your taxes', to: 'vault_taxes', if: { gold: 50 }, effects: [{ gold: -50 }], show: { notFlag: 'ledgerBurnt' } },
       { text: 'Turn him', turn: { dd: 6 }, pass: 'vault_turned', chaos: 'vault_obeys', fail: 'vault_fight', if: { magic: 'divine' } },
-      { text: 'Sneak over and set fire to the ledger', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'vault_burnt', fail: 'vault_fight', if: { fire: true } },
-      { text: 'Attack him while he counts', to: 'vault_ambush' },
+      { text: 'Sneak over and set fire to the ledger', test: { stat: 'Dex', dd: 8, skill: 'skulduggery' }, pass: 'vault_burnt', fail: 'vault_fight', if: { fire: true }, show: { none: [{ flag: 'vaultAngry' }, { flag: 'ledgerBurnt' }] } },
+      { text: 'Set fire to the ledger', to: 'vault_burnt', if: { fire: true }, show: { flag: 'vaultAngry', notFlag: 'ledgerBurnt' } },
+      { text: 'Attack him while he counts', to: 'vault_ambush', show: { none: [{ flag: 'vaultAngry' }, { flag: 'ledgerBurnt' }] } },
+      { text: 'Fight him', to: 'vault_fight', show: { flag: 'vaultAngry', notFlag: 'ledgerBurnt' } },
+      { text: 'Finish him', to: 'vault_fade', show: { flag: 'ledgerBurnt' } },
     ],
   },
   vault_fight: {
+    on: [{ flag: 'vaultAngry' }],
     text: ['The ghost looks up. His eyes are two copper pennies. “You,” he whispers, “are in ARREARS.” He rises, and his hands are cold enough to burn.'],
     fight: {
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
@@ -534,6 +554,7 @@ export const SECTIONS = {
     },
   },
   vault_ambush: {
+    on: [{ flag: 'vaultAngry' }],
     text: ['You come at him from behind while he’s mid-column.'],
     fight: {
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
@@ -549,35 +570,48 @@ export const SECTIONS = {
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
     },
   },
+  vault_fade: {
+    text: ['Vane comes at you out of the ashes, fading fast but not going quietly.'],
+    fight: {
+      monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], hp: 6, note: 'Undead; fading fast' }],
+      win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
+    },
+  },
   vault_bluffed: {
+    on: [{ flag: 'vaneGone' }],
     text: ['“The auditor,” breathes Vane. “At last.” He pushes the ledger towards you with trembling hands. “Everything is accounted for. Everything.” You sign at the bottom. With a sigh of the deepest satisfaction, Usurer Vane fades away, his books finally closed.'],
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   vault_taxes: {
+    on: [{ flag: 'vaneGone' }],
     text: ['You place fifty gold on the desk. Vane stops counting. He looks at the coins, then at you, for a long moment. “Paid,” he whispers. “In full.” He stamps the ledger and fades away, at peace. Nobody has ever paid him willingly before.'],
     choices: [{ text: 'Take the rest', to: 'treasure' }],
   },
   vault_turned: {
+    on: [{ flag: 'vaneTurned' }],
     text: ['You thrust out your holy symbol. Vane shrieks and flees through the wall, leaving the ledger and every coin he ever stole behind him. He will be back, but not tonight.'],
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   vault_obeys: {
-    on: [{ gold: 50, msg: 'He shows you a secret drawer with another 50GP in it. “For your trouble, master.”' }], onceOnly: true,
+    on: [{ flag: 'vaneServes' }, { gold: 50, msg: 'He shows you a secret drawer with another 50GP in it. “For your trouble, master.”' }], onceOnly: true,
     text: ['You present your symbol of glorious entropy. Vane’s copper eyes glaze over and he bows. “Master,” he whispers. “What would you have me count?” You tell him to count the gold into sacks for you. He is very, very good at it.'],
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   vault_won: {
+    on: [{ flag: 'vaneGone' }],
     text: ['Usurer Vane comes apart like wet paper, still muttering figures, and is gone.'],
     choices: [{ text: 'Fill your pockets', to: 'treasure' }],
   },
   treasure: {
-    on: [{ item: 'abacus' }, { gold: 600, msg: 'You stuff your pockets, your pack, your boots and your hat with gold.' }], onceOnly: true,
+    on: [{ flag: 'looted' }, { item: 'abacus' }, { gold: 600, msg: 'You stuff your pockets, your pack, your boots and your hat with gold.' }], onceOnly: true,
     text: ['There is more here than you could ever carry. That doesn’t stop you trying. Every 50 gold fills one of your significant item slots, so you take all you have room for and leave the rest, weeping a little.'],
     choices: [{ text: 'Head back up the stairs', to: 'escape' }],
   },
   escape: {
-    text: (c) => (c.flags.bureaucratDead || c.flags.appointment || c.flags.auditor || c.flags.sneaked)
-      ? ['You stagger up the spiral stair, clinking like a cutlery drawer, and out through the front door into the evening air. Nobody stops you. Nobody is left to.']
+    text: (c) => c.flags.bureaucratDead ? ['You stagger up the spiral stair, clinking like a cutlery drawer, and out through the front door into the evening air. Nobody stops you. Nobody is left to.']
+      : c.flags.auditor ? ['You stagger up the spiral stair, clinking like a cutlery drawer, and out through the front door. From inside a cupboard, a small voice wishes the auditor a pleasant evening.']
+      : c.flags.appointment ? ['You stagger up the spiral stair, clinking like a cutlery drawer. At the front door, the moustache stamps your Form 7B a third time, with a stamp that says CONCLUDED, and holds the door for you. He doesn’t look at your pockets. It isn’t on the form.']
+      : c.flags.sneaked ? ['You stagger up the spiral stair, clinking like a cutlery drawer, and tiptoe past the front desk. The moustache is doing his crossword and doesn’t look up. You are out in the evening air before he gets seven across.']
       : ['You stagger up the spiral stair, clinking like a cutlery drawer. At the front door, a militant bureaucrat stands with his arms folded and a form in his hand. “Exit tax,” he says. “Ten per cent. Fifty gold. Form 9C.”'],
     choices: [
       { text: 'Walk out', to: 'town', show: { any: [{ flag: 'bureaucratDead' }, { flag: 'appointment' }, { flag: 'auditor' }, { flag: 'sneaked' }] } },

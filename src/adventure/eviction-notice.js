@@ -1,4 +1,17 @@
 // EVICTION NOTICE — evict a kobold siege-pyramid from the town square. For a level 4–5 scumbag.
+import { pastFlag, didAdventure } from '../engine/conditions.js';
+
+// What the scumbag left behind at Usurer Vane's counting house, in Death and Taxes.
+const COUNTING_HOUSE = (c) => {
+  const p = (f) => pastFlag(c, 'death-and-taxes', f);
+  const ghost = p('vaneGone') ? 'and no ghost at all: you saw to that'
+    : p('vaneServes') ? 'and one ghost, who does exactly what he’s told and loves counting things'
+      : p('vaneTurned') ? 'and one ghost, who runs away from holy symbols and comes back when nobody’s looking'
+        : 'and only one ghost, possibly none';
+  const gold = p('looted') ? ', a vault you emptied yourself' : '';
+  const chef = c.past && c.past['death-and-taxes'] && !p('chefDead') ? ', a kitchen with a homunculus who makes excellent soup' : '';
+  return `dry, deep, quiet, with a wine cellar, a library${chef}${gold}, ${ghost}`;
+};
 
 export const META = {
   after: ['mothers-kitchen'], id: 'eviction-notice', title: 'Eviction Notice', levels: '4–5', final: 'payday',
@@ -182,7 +195,7 @@ export const SECTIONS = {
     choices: [{ text: 'Climb the ladder', to: 'council' }],
   },
   troll_jam: {
-    on: [{ flag: 'trollGone' }, { lose: 'spikes' }],
+    on: [{ flag: 'trollGone' }, { flag: 'trollJammed' }, { lose: 'spikes' }],
     text: ['You hammer the spikes into the treadmill’s gears. It lurches, groans and locks solid. Gnasher, mid-stride, falls over, decides this is a sign, and goes to sleep.'],
     choices: [{ text: 'Climb the ladder', to: 'council' }],
   },
@@ -200,7 +213,8 @@ export const SECTIONS = {
   },
   council: {
     text: (c) => c.flags.councilDone
-      ? ['The council floor is quiet now. The kobolds are packing.']
+      ? [c.flags.kobsStay ? 'The council floor is loud now. The kobolds are planning a party.' : c.flags.kobsBeaten ? 'The council floor is empty. The kobolds have gone.' : 'The council floor is quiet now. The kobolds are packing.']
+      : c.flags.snikAngry ? ['Grandmother Snik is waiting for you at the head of the table, ladle in hand. Thirty kobolds turn round on their buckets. “Back again,” she says. “Say your piece, then. Quickly.”']
       : [
         'The middle floor is a meeting hall. Thirty kobolds sit on upturned buckets, arguing about the rent. At the head of the table, in a shawl and spectacles, sits Grandmother Snik, the oldest kobold anyone has ever seen. She raps the table with a ladle, and the room goes silent.',
         '“Well,” she says. “Grimsby’s errand-runner. Say your piece.”',
@@ -220,10 +234,11 @@ export const SECTIONS = {
   },
   new_home: {
     on: [{ flag: 'councilDone' }, { flag: 'kobsLeave' }],
-    text: ['You describe the Counting House: dry, deep, quiet, with a wine cellar, a library and only one ghost, possibly none. Grandmother Snik’s eyes gleam behind her spectacles. “How much?” she asks. “Free,” you say. “The last owner is beyond collecting.” The room erupts. Kobolds begin packing at once. Snik pats your hand. “Take what you want from upstairs,” she says. “Except the jar.”'],
+    text: (c) => [`You describe the Counting House: ${COUNTING_HOUSE(c)}. Grandmother Snik’s eyes gleam behind her spectacles. “How much?” she asks. “Free,” you say. ${pastFlag(c, 'death-and-taxes', 'vaneServes') ? '“The last owner works for me now.”' : '“The last owner is beyond collecting.”'} The room erupts. Kobolds begin packing at once. Snik pats your hand. “Take what you want from upstairs,” she says. “Except the jar.”`],
     choices: [{ text: 'Climb up to the top floor', to: 'apex' }],
   },
   snik_angry: {
+    on: [{ flag: 'snikAngry' }],
     text: ['Grandmother Snik’s ladle comes down on the table like a gavel. “Then you’re no better than him,” she says. Around the room, thirty kobolds pick up thirty buckets.'],
     fight: {
       monsters: [{ name: 'Grandmother Snik', lvl: 4, hp: 16, range: 'short', note: 'Kobold matriarch (16 HP); hurls her ladle and catches it again' }, slinger],
@@ -249,7 +264,8 @@ export const SECTIONS = {
   },
   jar: {
     on: [{ flag: 'jar' }, { item: 'savings' }],
-    text: (c) => [c.flags.councilDone ? 'You take the jar. Nobody stops you. Somewhere below, Grandmother Snik will notice soon, and she will not be surprised. That’s worse, somehow.' : 'You take the jar. It is very heavy, and nobody sees.'],
+    text: (c) => [c.flags.kobsBeaten ? 'You take the jar. The kobolds left without it. They left in a hurry, because of you.'
+      : c.flags.councilDone ? 'You take the jar. Nobody stops you. Somewhere below, Grandmother Snik will notice soon, and she will not be surprised. That’s worse, somehow.' : 'You take the jar. It is very heavy, and nobody sees.'],
     choices: [{ text: 'Back to the room', to: 'apex' }],
   },
   salvage: {
@@ -258,7 +274,9 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the room', to: 'apex' }],
   },
   burn: {
-    text: (c) => [`You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
+    text: (c) => [c.flags.kobsBeaten
+      ? `You strike a light. The empty pyramid goes up like a haystack. The kobolds, trudging out of town with their buckets, stop on the hill to watch their home burn, and then keep walking. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`
+      : `You strike a light. The lamp-oil-soaked planks catch at once, and the pyramid goes up like a haystack. Kobolds pour out of every hatch, carrying children, buckets and furniture, and run screaming into the night. In a few minutes there is nothing left in the square but a heap of glowing cartwheels${c.flags.jar ? '' : ' and a melted jar that used to hold their savings'}.`],
     on: [{ flag: 'burnt' }],
     choices: [{ text: 'Go and collect your fee', to: 'payday' }],
   },
@@ -270,12 +288,12 @@ export const SECTIONS = {
       { sell: { item: 'savings', gold: 150, text: 'You break open the kobolds’ savings jar' } },
     ],
     text: (c) => [
-      c.flags.kobsStay
-        ? 'You tell Lord Grimsby that the square is common land, the kobolds are commoners, and he has been charging illegal rent for twelve years. He goes a colour you’ve never seen on a human face and refuses to pay you. The kobolds throw a party in the square that lasts three days.'
-        : c.flags.burnt
-          ? 'Lord Grimsby surveys the smoking ruin of his square with satisfaction and pays you in full. Somewhere out in the dark, thirty homeless kobolds are telling each other a story about you. It isn’t a nice one.'
+      c.flags.burnt
+        ? `Lord Grimsby surveys the smoking ruin of his square with satisfaction and pays you in full. Somewhere out in the dark, thirty homeless kobolds are telling each other a story about you. It isn’t a nice one.`
+        : c.flags.kobsStay
+          ? 'You tell Lord Grimsby that the square is common land, the kobolds are commoners, and he has been charging illegal rent for twelve years. He goes a colour you’ve never seen on a human face and refuses to pay you. The kobolds throw a party in the square that lasts three days.'
           : c.flags.kobsLeave
-            ? 'The pyramid rolls out of Middle Whelping at dawn, heading for Gallows Hill, with Gnasher at the wheel and Grandmother Snik waving from the top. Lord Grimsby pays you, and never finds out where they went.'
+            ? `The pyramid rolls out of Middle Whelping at dawn, heading for Gallows Hill, ${c.flags.trollJammed ? 'pulled on ropes by thirty kobolds, since the treadmill is full of your spikes,' : c.flags.trollFriend ? 'with Gnasher, now on a proper wage, at the wheel,' : 'with Gnasher at the wheel,'} and Grandmother Snik waving from the top. Lord Grimsby pays you, and never finds out where they went.`
             : c.flags.kobsBeaten
               ? 'The kobolds are gone. Lord Grimsby pays you, eventually, after counting it twice.'
               : 'The pyramid is still in the square, and the kobolds are still in it. Lord Grimsby pays you nothing, and says so, loudly, from a safe distance.',

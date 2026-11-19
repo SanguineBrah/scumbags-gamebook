@@ -5,7 +5,7 @@ const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn
 import { Game } from '../engine/game.js';
 import { Rng } from '../rules/dice.js';
 import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } from '../rules/data.js';
-import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS } from '../rules/character.js';
+import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS, recordAdventure } from '../rules/character.js';
 import { alive } from '../engine/combat.js';
 
 const SAVE_KEY = 'scumbags-gamebook-v2';
@@ -364,8 +364,8 @@ let clearTimer = null;
 function clearSaveSoon() { clearTimeout(clearTimer); clearTimer = setTimeout(clearSave, 0); }
 
 function finishAdventure(c) {
-  c.done = [...new Set([...(c.done || []), adv.id])];
-  c.flags = {}; c.prone = false; c.blocking = false;
+  recordAdventure(c, adv.id);
+  c.prone = false; c.blocking = false;
   keepScumbag(c); clearSave();
   const before = new Set(revealedFor({ ...c, done: (c.done || []).filter((x) => x !== adv.id) }).map((a) => a.id));
   const fresh = availableFor(c).filter((a) => !before.has(a.id)).map((a) => a.title);

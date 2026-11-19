@@ -36,10 +36,12 @@ export const SECTIONS = {
     choices: [{ text: 'Try another way', to: 'cottage' }],
   },
   cat_flap: {
-    text: ['The cat flap swings shut behind you with a BANG that echoes through the cottage. On the other side, in a basket the size of a haycart, an enormous ginger cat opens one eye. A brass tag on its collar reads TIDDLES.'],
+    text: (c) => [c.flags.tiddlesAngry
+      ? 'The cat flap swings shut behind you with another BANG. Tiddles is waiting on the other side, wide awake this time, tail lashing.'
+      : 'The cat flap swings shut behind you with a BANG that echoes through the cottage. On the other side, in a basket the size of a haycart, an enormous ginger cat opens one eye. A brass tag on its collar reads TIDDLES.'],
     on: [NOISE()],
     choices: [
-      { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight' },
+      { text: 'Freeze and hope', test: { stat: 'Dex', dd: 8, save: true }, pass: 'kitchen', fail: 'tiddles_fight', show: { notFlag: 'tiddlesAngry' } },
       { text: 'Let your rat go as a distraction', to: 'tiddles_rat', if: { item: 'rat' } },
       { text: 'Offer it your rations', to: 'tiddles_fed', if: { item: 'rations' } },
       { text: 'Fight it', to: 'tiddles_fight' },
@@ -56,6 +58,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go on into the kitchen', to: 'kitchen' }],
   },
   tiddles_fight: {
+    on: [{ flag: 'tiddlesAngry' }],
     text: ['Tiddles stretches, which takes a while, and then pounces, which doesn’t.'],
     fight: {
       monsters: [{ name: 'Tiddles', lvl: 4, range: 'engaged', onHit: { stat: 'Dex', dd: 6, label: 'stay on your feet', text: 'A paw pins you to the floor.', effect: 'prone' }, note: 'Enormous ginger cat; on hit, d6 Dex save or be pinned (prone)' }],
@@ -70,8 +73,12 @@ export const SECTIONS = {
   kitchen: {
     redirect: [{ if: { atLeast: ['noise', 3], notFlag: 'motherHome' }, to: 'mother_back' }],
     text: (c) => [
-      'Mother’s kitchen is a cathedral of crockery. Table legs rise like tree trunks to a tabletop forty feet up. A dresser towers against one wall, and a door to the larder stands ajar. At the far end, a fire crackles in a hearth you could hold a barn dance in. On the mantelpiece above it, catching the firelight, sits the Golden Turnip.',
-      c.flags.motherAsleep ? 'Mother is asleep in her rocking chair by the fire, snoring like a landslide.' : (c.flags.noise || 0) ? 'Somewhere outside, the humming has stopped. Mother is listening.' : 'Through the window, you can hear Mother humming by the well.',
+      'Mother’s kitchen is a cathedral of crockery. Table legs rise like tree trunks to a tabletop forty feet up. A dresser towers against one wall, and a door to the larder stands ajar.',
+      (c.flags.fireOut ? 'At the far end, a hearth you could hold a barn dance in sits cold and dripping.' : 'At the far end, a fire crackles in a hearth you could hold a barn dance in.')
+        + (c.flags.turnip ? (c.significant.some((i) => i.id === 'turnip') ? ' The mantelpiece above it is bare. The Golden Turnip is in your arms.' : ' The mantelpiece above it is bare.') : ` On the mantelpiece above it, ${c.flags.fireOut ? 'gleaming' : 'catching the firelight'}, sits the Golden Turnip.`),
+      c.flags.motherAsleep ? `Mother is asleep in her rocking chair by the ${c.flags.fireOut ? 'cold hearth, wrapped in a shawl' : 'fire'}, snoring like a landslide.`
+        : c.flags.motherOut ? 'Out in the garden, Mother is calling for a lamb that isn’t there.'
+          : (c.flags.noise || 0) ? 'Somewhere outside, the humming has stopped. Mother is listening.' : 'Through the window, you can hear Mother humming by the well.',
       'A doorway leads to the nursery.',
     ],
     choices: [
@@ -166,9 +173,10 @@ export const SECTIONS = {
     choices: [{ text: 'Climb down', to: 'kitchen' }],
   },
   mantel_climb: {
-    text: ['The fire roars below the mantelpiece. Climbing the chimney breast means going up through the heat.'],
+    text: (c) => [c.flags.fireOut ? 'The hearth is cold and wet now. The chimney breast is an easy climb, if you don’t mind soot.' : 'The fire roars below the mantelpiece. Climbing the chimney breast means going up through the heat.'],
     choices: [
-      { text: 'Climb up through the heat', test: { stat: 'Str', dd: 12, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 8 }] }, pass: 'mantel', fail: 'mantel_burn' },
+      { text: 'Climb up through the heat', test: { stat: 'Str', dd: 12, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 8 }] }, pass: 'mantel', fail: 'mantel_burn', show: { notFlag: 'fireOut' } },
+      { text: 'Climb the cool chimney breast', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'mantel', fail: 'mantel_slip', show: { flag: 'fireOut' } },
       { text: 'Put the fire out with your bucket first', to: 'fire_out', if: { item: 'bucket' }, show: { notFlag: 'fireOut' } },
       { text: 'Go round by the table instead', to: 'kitchen' },
     ],
@@ -205,6 +213,7 @@ export const SECTIONS = {
   nursery: {
     text: (c) => c.flags.babyAsleep
       ? ['The baby is asleep in its cot, sucking a thumb the size of a ham.']
+      : c.flags.babyUpset ? ['The baby is still grizzling in its cot, red in the face. It sees you and holds out its arms, not sure whether to cry again or play.']
       : ['In a cot the size of a barn sits the baby: forty feet of chubby, curious hill giant in a bonnet. It sees you, and its face lights up. “TOY,” it says, and reaches through the bars.'],
     choices: [
       { text: 'Give it its rattle', to: 'baby_rattle', if: { item: 'rattle' }, show: { notFlag: 'babyAsleep' } },
@@ -229,7 +238,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
   },
   baby_cries: {
-    on: [NOISE(2)],
+    on: [NOISE(2), { flag: 'babyUpset' }],
     text: ['Your singing voice is not what it was. The baby’s lip wobbles, and then it starts to cry: a sound like a herd of cattle falling down a well. Outside, the humming stops dead.'],
     fight: {
       monsters: [{ name: 'The baby', lvl: 4, hp: 20, range: 'engaged', feats: ['topple', 'coward'], note: 'Infant hill giant (20 HP); falls over at the end of each turn; gives up at half health' }],
@@ -242,7 +251,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the kitchen', to: 'kitchen' }],
   },
   bedroom: {
-    text: ['You climb in at the bedroom window. The bed is a valley of patchwork. On the dressing table, a hairbrush the size of a hedge. Something large moves among its bristles.'],
+    text: (c) => [c.flags.louse ? 'The bed is a valley of patchwork. On the dressing table, the hairbrush is still, and the louse lies on its back beside it.' : 'You climb in at the bedroom window. The bed is a valley of patchwork. On the dressing table, a hairbrush the size of a hedge. Something large moves among its bristles.'],
     choices: [
       { text: 'Search the dressing table', to: 'louse_fight', show: { notFlag: 'louse' } },
       { text: 'Creep downstairs to the kitchen', to: 'kitchen' },
@@ -268,6 +277,7 @@ export const SECTIONS = {
     ],
   },
   mother_out: {
+    on: [{ flag: 'motherOut' }],
     text: ['“Baa,” says the garden, plaintively. Mother sighs, picks up her bucket again, and goes back outside to look for a lamb. She will be some time. Hill-giant lambs are very easy to find, and this one isn’t there.'],
     choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },

@@ -25,6 +25,11 @@ export function canCast(c, spellId) {
   return true;
 }
 
+/** Something the scumbag did in an earlier adventure: a flag that was set when they finished it. */
+export const pastFlag = (c, adventureId, flag) => !!(c.past && c.past[adventureId] && c.past[adventureId][flag]);
+/** Whether the scumbag finished an adventure (even before past flags were recorded). */
+export const didAdventure = (c, adventureId) => (c.done || []).includes(adventureId);
+
 /** Evaluate a condition object. Returns { ok, reason } where reason is shown on a locked choice. */
 export function check(c, cond) {
   if (!cond) return { ok: true };
@@ -36,6 +41,8 @@ export function check(c, cond) {
   if (cond.flag) need(!!c.flags[cond.flag], cond.flagText || 'something you haven’t learned');
   if (cond.notFlag) need(!c.flags[cond.notFlag], cond.notFlagText || 'already done');
   if (cond.gold) need(c.gold >= cond.gold, `${cond.gold}GP`);
+  if (cond.past) need(pastFlag(c, cond.past[0], cond.past[1]), cond.pastText || 'something you did before');
+  if (cond.notPast) need(!pastFlag(c, cond.notPast[0], cond.notPast[1]), cond.notPastText || 'something you didn’t do before');
   if (cond.atLeast) need((c.flags[cond.atLeast[0]] || 0) >= cond.atLeast[1], cond.atLeastText || 'more of something');
   if (cond.below) need((c.flags[cond.below[0]] || 0) < cond.below[1], cond.belowText || 'less of something');
   if (cond.level) need(c.level >= cond.level, `level ${cond.level}`);

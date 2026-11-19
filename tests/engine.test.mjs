@@ -134,3 +134,15 @@ test('the town: inn, market, apothecary and fence', async () => {
   assert.equal(town.sellPrice('hat'), 370);
   c.gold = 0; assert.equal(town.restAtInn(c), null);
 });
+
+test('finishing an adventure remembers what happened in it', async () => {
+  const { recordAdventure } = await import('../src/rules/character.js');
+  const { pastFlag, check } = await import('../src/engine/conditions.js');
+  const c = make(24); c.flags = { burnt: 1, homeGold: 300 };
+  recordAdventure(c, 'eviction-notice');
+  assert.deepEqual(c.flags, {}); assert.ok(c.done.includes('eviction-notice'));
+  assert.ok(pastFlag(c, 'eviction-notice', 'burnt'));
+  assert.ok(!pastFlag(c, 'eviction-notice', 'homeGold'));
+  assert.ok(check(c, { past: ['eviction-notice', 'burnt'] }).ok);
+  assert.ok(!check(c, { notPast: ['eviction-notice', 'burnt'] }).ok);
+});

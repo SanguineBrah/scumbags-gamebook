@@ -134,3 +134,11 @@ export function levelUp(rng, c) {
   resetDay(c);
   return { level: c.level, hpRoll, statRolls };
 }
+
+/** Close an adventure: mark it done and remember what happened in it (its flags) for later adventures. */
+export function recordAdventure(c, adventureId) {
+  c.done = [...new Set([...(c.done || []), adventureId])];
+  const { homeGold, ...flags } = c.flags || {};
+  c.past = { ...(c.past || {}), [adventureId]: flags };
+  c.flags = {};
+}

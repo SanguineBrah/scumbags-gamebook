@@ -56,19 +56,22 @@ export const SECTIONS = {
     choices: [{ text: 'Get up and think again', to: 'spire' }],
   },
   doorman: {
-    text: (c) => [
-      'The doorman measures every guest with a long stick marked in feet. He is tall himself, and makes sure everybody knows it.',
-      c.mundane.some((i) => i.id === 'stilts') ? 'You totter up the steps on your stilts, coat flapping round your ankles, which are somewhere near his chest.' : 'He looks down at you. A long way down.',
-    ],
+    text: (c) => c.flags.doormanAngry
+      ? ['The doorman sees you coming back and raises his measuring stick like a sword. “YOU,” he says. Behind him, the pikemen start turning round again.']
+      : [
+        'The doorman measures every guest with a long stick marked in feet. He is tall himself, and makes sure everybody knows it.',
+        c.mundane.some((i) => i.id === 'stilts') ? 'You totter up the steps on your stilts, coat flapping round your ankles, which are somewhere near his chest.' : 'He looks down at you. A long way down.',
+      ],
     choices: [
-      { text: 'Hand over your invitation and stand very still', test: { stat: 'Dex', dd: 4, save: true }, pass: 'admitted', fail: 'wobble', if: { item: 'invitation' }, show: STILTS },
-      { text: 'Compliment his height', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry' },
-      { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }] },
+      { text: 'Hand over your invitation and stand very still', test: { stat: 'Dex', dd: 4, save: true }, pass: 'admitted', fail: 'wobble', if: { item: 'invitation' }, show: { item: 'stilts', notFlag: 'doormanAngry' } },
+      { text: 'Compliment his height', test: { stat: 'Cha', dd: 8, skill: ['social', 'lying'] }, pass: 'admitted', fail: 'doorman_angry', show: { notFlag: 'doormanAngry' } },
+      { text: 'Bribe him (10GP)', to: 'admitted', if: { gold: 10 }, effects: [{ gold: -10 }], show: { notFlag: 'doormanAngry' } },
+      { text: 'Have it out with him', to: 'doorman_angry', show: { flag: 'doormanAngry' } },
       { text: 'Go round to the kitchen door', to: 'kitchen_door' },
     ],
   },
   glued: {
-    on: [{ lose: 'glue' }],
+    on: [{ lose: 'glue' }, { flag: 'guest' }],
     text: ['You dab glue on your soles and plant your feet. The wind blows. You don’t. The doorman measures you, finds nothing to object to, and waves you in. You will be getting off these stilts with a chisel.'],
     choices: [{ text: 'Go inside', to: 'long_hall' }],
   },
@@ -81,6 +84,7 @@ export const SECTIONS = {
     ],
   },
   doorman_angry: {
+    on: [{ flag: 'doormanAngry' }],
     text: ['“Short,” he announces to the queue. “SHORT!” The guests gasp. Two pikemen turn, very slowly, because their pikes are twenty feet long.'],
     fight: { monsters: [{ name: 'Doorman', lvl: 1, range: 'engaged', note: 'Measuring stick; very tall; very offended' }, pikeman], distance: 1, win: 'doorman_win', flee: { to: 'kitchen_door', label: 'Run round the side of the house' } },
   },
@@ -95,9 +99,11 @@ export const SECTIONS = {
     choices: [{ text: 'Go inside', to: 'long_hall' }],
   },
   kitchen_door: {
-    text: ['The kitchen door is exactly your height. Behind it, Mrs Stump, the cook, is beating a pudding as if it owes her money. She is four foot three and has worked here for thirty years, and in all that time nobody has once looked her in the eye without kneeling.'],
+    text: (c) => c.flags.stumpCross
+      ? ['Mrs Stump is still beating her pudding, and still bitter. She sees you in the doorway and points the whisk at you without turning round.']
+      : ['The kitchen door is exactly your height. Behind it, Mrs Stump, the cook, is beating a pudding as if it owes her money. She is four foot three and has worked here for thirty years, and in all that time nobody has once looked her in the eye without kneeling.'],
     choices: [
-      { text: 'Sympathise with her', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'stump_friend', fail: 'stump_cross' },
+      { text: 'Sympathise with her', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'stump_friend', fail: 'stump_cross', show: { notFlag: 'stumpCross' } },
       { text: 'Offer her a cut of the takings', to: 'stump_friend', effects: [{ flag: 'stumpCut' }] },
       { text: 'Sneak in behind her', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'kitchen', fail: 'stump_cross' },
       { text: 'Go back round the front', to: 'doorman' },
@@ -109,6 +115,7 @@ export const SECTIONS = {
     choices: [{ text: 'Step into the kitchen', to: 'kitchen' }],
   },
   stump_cross: {
+    on: [{ flag: 'stumpCross' }],
     text: ['Mrs Stump turns round with the whisk raised. “Another one,” she says. “Out.” She is surprisingly strong for a pudding-beater, and you find yourself back in the yard with batter in your hair.'],
     choices: [{ text: 'Go round the front', to: 'doorman' }, { text: 'Try the scaffolding', to: 'spire' }],
   },
@@ -126,9 +133,9 @@ export const SECTIONS = {
   },
   long_hall: {
     text: (c) => [
-      'The Long Hall is ninety feet long and sixty high, and the party fills it from the floor to about nine feet up. Guests on stilts drink from three-foot glasses. Six pikemen stand along the walls, their pikes vanishing into the gloom above. Up on a balcony, a small man in an enormous coat waits to make a speech: Lord Altimus Longshanks himself.',
-      c.flags.speech ? 'The Lord’s speech is over. The guests have gone back to drinking.' : '',
-    ].filter(Boolean),
+      'The Long Hall is ninety feet long and sixty high, and the party fills it from the floor to about nine feet up. Guests on stilts drink from three-foot glasses. Six pikemen stand along the walls, their pikes vanishing into the gloom above.',
+      c.flags.speech ? 'Up on the balcony, Lord Altimus Longshanks has finished his speech and is accepting compliments on it. The guests have gone back to drinking.' : 'Up on a balcony, a small man in an enormous coat waits to make a speech: Lord Altimus Longshanks himself.',
+    ],
     choices: [
       { text: 'Pick some pockets', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: STILTS, dd: 12 }] }, pass: 'pockets', fail: 'pocket_topple', show: { notFlag: 'pockets' } },
       { text: 'Drink from a three-foot glass', test: { stat: 'Con', dd: 6, save: true }, pass: 'drink_good', fail: 'drink_truth', show: { notFlag: 'drank' } },
@@ -181,10 +188,15 @@ export const SECTIONS = {
       c.mundane.some((i) => i.id === 'stilts') ? 'On stilts, it’s like climbing a ladder with your legs tied together.' : '',
     ].filter(Boolean),
     choices: [
+      { text: 'Hail a sedan chair, like the guest you are', to: 'sedan', show: { flag: 'guest' } },
       { text: 'Climb', test: { stat: 'Str', dd: 8, skill: ['athletics'], mods: [{ if: STILTS, dd: 12 }] }, pass: 'gallery', fail: 'stair_fall' },
       { text: 'Take off your stilts first', to: 'staircase_quiet', show: STILTS, effects: [{ lose: 'stilts' }, { msg: 'You leave the stilts behind a pillar.' }] },
       { text: 'Back to the party', to: 'long_hall' },
     ],
+  },
+  sedan: {
+    text: ['Two footmen lift you, chair, stilts and all, and carry you up the Grand Staircase while you wave graciously at the people below. At the top, they set you down and hold out their hands. You shake them both.'],
+    choices: [{ text: 'Into the gallery', to: 'gallery' }],
   },
   staircase_quiet: {
     text: ['You haul yourself up the giant steps one at a time, like a toddler climbing into bed.'],
@@ -197,14 +209,15 @@ export const SECTIONS = {
   },
   gallery: {
     text: (c) => [
-      'The gallery holds portraits of the Lord, each one taller than the last. The newest is forty feet high and unfinished. Halfway up a very long ladder beside it, a painter in a beret is clinging on for dear life.',
-      c.flags.painterDown ? 'Signor Vertigo has gone home to lie down on something flat.' : '“Help,” he says faintly. “I have been up here three days. I am Signor Vertigo. It is not a stage name.”',
+      'The gallery holds portraits of the Lord, each one taller than the last. The newest is forty feet high and unfinished.',
+      c.flags.painterDown ? 'The painter’s ladder still leans against it. Signor Vertigo has gone home to lie down on something flat.' : 'Halfway up a very long ladder beside it, a painter in a beret is clinging on for dear life. “Help,” he says faintly. “I have been up here three days. I am Signor Vertigo. It is not a stage name.”',
       'Further along, a corridor leads to the Lord’s bedroom, and a landing beyond that leads up to the vault.',
     ],
     choices: [
       { text: 'Talk the painter down', test: { stat: 'Cha', dd: 6, skill: ['social', 'medicine'], why: 'calming people down' }, pass: 'painter_down', fail: 'painter_stuck', show: { notFlag: 'painterDown' } },
       { text: 'Lower him on your rope', to: 'painter_down', if: { item: 'rope' }, show: { notFlag: 'painterDown' } },
-      { text: 'Climb to the top of the frame', test: { stat: 'Dex', dd: 12, skill: ['athletics'] }, pass: 'frame_top', fail: 'frame_fall', show: { notFlag: 'gotKey' } },
+      { text: 'Climb the painter’s ladder to the top of the frame', to: 'frame_top', show: { flag: 'painterDown', notFlag: 'gotKey' } },
+      { text: 'Climb to the top of the frame', test: { stat: 'Dex', dd: 12, skill: ['athletics'] }, pass: 'frame_top', fail: 'frame_fall', show: { none: [{ flag: 'gotKey' }, { flag: 'painterDown' }] } },
       { text: 'Go to the Lord’s bedroom', to: 'bedroom' },
       { text: 'Go up to the vault', to: 'hounds' },
       { text: 'Go back down to the party', to: 'long_hall' },
@@ -216,8 +229,10 @@ export const SECTIONS = {
   },
   painter_down: {
     on: [{ flag: 'painterDown' }, { flag: 'keyHigh' }],
-    text: ['Signor Vertigo reaches the floor and kisses it. “I owe you my life,” he says. “And a secret. The key to the vault: his Lordship hides it on top of his newest portrait. I painted around it for three days.” He leaves the ladder where it is.'],
-    choices: [{ text: 'Climb the ladder to the top of the frame', to: 'frame_top' }, { text: 'Back to the gallery', to: 'gallery' }],
+    text: (c) => [c.flags.gotKey
+      ? 'Signor Vertigo reaches the floor and kisses it. “I owe you my life,” he says. “And a secret. The key to the vault: his Lordship hides it on top of his newest portrait.” He sees it in your hand. “Ah. You knew.” He leaves the ladder where it is.'
+      : 'Signor Vertigo reaches the floor and kisses it. “I owe you my life,” he says. “And a secret. The key to the vault: his Lordship hides it on top of his newest portrait. I painted around it for three days.” He leaves the ladder where it is.'],
+    choices: [{ text: 'Climb the ladder to the top of the frame', to: 'frame_top', show: { notFlag: 'gotKey' } }, { text: 'Back to the gallery', to: 'gallery' }],
   },
   frame_fall: {
     on: [{ damage: 'd4', from: 'The fall' }],
@@ -226,7 +241,7 @@ export const SECTIONS = {
   },
   frame_top: {
     on: [{ flag: 'gotKey' }, { item: 'vaultkey' }],
-    text: (c) => [c.flags.keyHigh ? 'On top of the frame, in forty years of dust, lies a long iron key.' : 'On top of the frame, to your surprise, lies a long iron key. The Lord likes to keep things high up.', 'Down below, the painted Lord stares out of the canvas, nine feet tall and smiling. In real life he is five foot two.'],
+    text: (c) => [c.flags.keyHigh ? 'On top of the frame, in three days of dust, lies a long iron key.' : 'On top of the frame, to your surprise, lies a long iron key. The Lord likes to keep things high up.', 'Down below, the painted Lord stares out of the canvas, nine feet tall and smiling. In real life he is five foot two.'],
     choices: [{ text: 'Climb down', to: 'gallery' }],
   },
   bedroom: {
