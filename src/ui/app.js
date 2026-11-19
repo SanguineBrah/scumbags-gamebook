@@ -48,7 +48,13 @@ function setRoster(list) { try { localStorage.setItem(ROSTER_KEY, JSON.stringify
 function keepScumbag(c) { setRoster([JSON.parse(JSON.stringify(c)), ...roster().filter((x) => x.id !== c.id)]); }
 function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 
-function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); window.scrollTo(0, 0); }
+/** Back to the top of the page. Some mobile browsers nudge the page down again a moment later
+ *  (the address bar settling, or the top bar changing size), so check again once things have settled. */
+function toTop() {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  for (const ms of [50, 300]) setTimeout(() => { if (window.scrollY > 0 && window.scrollY < 120) window.scrollTo({ top: 0, behavior: 'instant' }); }, ms);
+}
+function go(screen) { ui.screen = screen; ui.sheetOpen = false; render(); toTop(); }
 
 // ---------- screens
 // The top bar is one fixed element that lives outside the app and only has its contents swapped.
@@ -333,7 +339,7 @@ function pick(i, opts) {
   const g = ui.game; const before = g.at; ui.castOpen = false; ui.castSpell = null;
   g.choose(i, opts);
   render();
-  if (g.at !== before || g.isOver()) window.scrollTo(0, 0);
+  if (g.at !== before || g.isOver()) toTop();
 }
 
 function fightView() {

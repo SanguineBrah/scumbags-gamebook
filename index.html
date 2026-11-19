@@ -20,7 +20,7 @@
     --sheet-w: 320px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
+  html, body { margin: 0; overflow-anchor: none; }   /* the page is redrawn wholesale; don't let the browser 'helpfully' keep the old scroll spot */
   body {
     background: var(--paper); color: var(--ink); font-family: var(--serif);
     font-size: clamp(17px, 1.05rem + 0.2vw, 20px); line-height: 1.55;
