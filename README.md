@@ -1,6 +1,6 @@
-# Ten Bad Ideas — Scumbags! gamebooks
+# A Book of Bad Ideas — Scumbags! gamebooks
 
-Ten classic adventures for one scumbag, using the
+classic adventures for one scumbag, using the
 **Scumbags!** RPG rules: roll-under d20 + difficulty die stat tests, skills from your
 profession, attacks against a d8, defending with Str or Dex against the monster's die,
 AP before HP, light that runs out, 50GP per significant item slot, and levelling up by
