@@ -29,6 +29,10 @@ export function startFight(g, def) {
     def, round: 1, monsters: def.monsters.map((m) => makeMonster(rng, m)), distance: def.distance || 0,
     log: [], over: false, won: false, lost: false, fired: false, dark: g.dark && !def.lit,
   };
+  // Number lookalikes, so you can tell which goblin you're hitting.
+  const count = {}, seen = {};
+  for (const m of f.monsters) count[m.name] = (count[m.name] || 0) + 1;
+  for (const m of f.monsters) if (count[m.name] > 1) m.name = `${m.name} ${seen[m.name] = (seen[m.name] || 0) + 1}`;
   if (def.surprise) for (const m of f.monsters) m.unaware = true;
   note(f, def.intro || 'Fight!');
   if (def.surprise) note(f, 'They haven’t noticed you. Every success on your first attack is a critical success.');

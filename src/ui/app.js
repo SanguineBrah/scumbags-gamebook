@@ -4,7 +4,7 @@ import { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, slee
 const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
 import { Game } from '../engine/game.js';
 import { Rng } from '../rules/dice.js';
-import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } from '../rules/data.js';
+import { QUALITIES, PROFESSIONS, STATS, STAT_NAMES, MUNDANE, SIGNIFICANT, SPELLS, SKILL_NAMES, ENDEAVOURS, LEVEL_COST, WEIGHT_NAME, WEAPON_DIE, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, BANDS, WEAPONS } from '../rules/data.js';
 import { rollOrigins, createCharacter, startingWeapons, randomName, profOf, qualityOf, isSkilled, knownSpells, magicType, slotsUsed, wasteForLevel, resetDay, maxAp, hasFeature, HERO_HP_BONUS, STARTING_EXTRAS, recordAdventure } from '../rules/character.js';
 import { alive } from '../engine/combat.js';
 
@@ -14,7 +14,7 @@ let adv = buildAdventure(ADVENTURES[0].id);
 const root = document.getElementById('app');
 const rng = new Rng();
 
-const ui = { screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
+const ui = { castOpen: false, castSpell: null, screen: 'title', game: null, create: null, sheetOpen: false, sheetMsg: '', ending: null, char: null, townMsg: '' };
 
 // ---------- tiny DOM helper
 function h(tag, props, ...kids) {
@@ -301,7 +301,7 @@ function sectionView() {
 }
 
 function pick(i, opts) {
-  const g = ui.game; const before = g.at;
+  const g = ui.game; const before = g.at; ui.castOpen = false; ui.castSpell = null;
   g.choose(i, opts);
   render();
   if (g.at !== before || g.isOver()) window.scrollTo(0, 0);
@@ -326,9 +326,44 @@ function fightView() {
     h('div', { class: 'small' }, `You: ${Math.max(0, c.hp)}/${c.maxHp} HP${c.armour ? `, ${c.ap} AP` : ''}${c.blocking ? ', blocking' : ''}${c.prone ? ', prone' : ''}`),
     h('div', { class: 'bar you' }, h('i', { style: `width:${Math.max(0, 100 * c.hp / c.maxHp)}%` })),
     h('div', { class: 'log' }, f.log.map((l) => h('div', { class: l.kind === 'roll' ? 'roll-l' : l.kind }, l.text))),
-    acts.length > 0 && h('div', { class: 'actions' }, acts.map((a, i) => h('button', { class: `btn${i === 0 ? ' primary' : ' ghost'}`, onclick: () => { g.fightAct(a); render(); } }, a.label))),
+    !f.over && fightButtons(g, acts),
   );
 }
+
+/** Fight actions, with spells tucked into a spellbook: a level 10 caster has dozens of them. */
+function fightButtons(g, acts) {
+  const doIt = (a) => { ui.castOpen = false; ui.castSpell = null; g.fightAct(a); render(); };
+  const casts = acts.filter((a) => a.id === 'cast'); const others = acts.filter((a) => a.id !== 'cast');
+  const spells = [...new Set(casts.map((a) => a.spell))];
+  const book = ui.castOpen && casts.length ? spellbook(casts, spells, doIt) : null;
+  return [
+    h('div', { class: 'actions' },
+      others.map((a, i) => h('button', { class: `btn${i === 0 ? ' primary' : ' ghost'}`, onclick: () => doIt(a) }, a.label)),
+      casts.length > 0 && h('button', { class: `btn${ui.castOpen ? '' : ' ghost'} cast-toggle`, 'aria-expanded': String(!!ui.castOpen), onclick: () => { ui.castOpen = !ui.castOpen; ui.castSpell = null; render(); } },
+        ui.castOpen ? 'Put the spellbook away' : `Cast a spell (${spells.length} to hand)`)),
+    book];
+}
+
+function spellbook(casts, spells, doIt) {
+  const pick = ui.castSpell && casts.filter((a) => a.spell === ui.castSpell);
+  if (pick && pick.length) {   // choose a target
+    const sp = SPELLS[ui.castSpell];
+    return h('div', { class: 'spellbook' },
+      h('div', { class: 'small' }, h('b', null, sp.name), ` (level ${sp.lvl}): ${sp.text}`),
+      h('div', { class: 'actions' }, pick.map((a) => h('button', { class: 'btn ghost', onclick: () => doIt(a) }, `At the ${targetName(a)}`)),
+        h('button', { class: 'btn ghost', onclick: () => { ui.castSpell = null; render(); } }, 'Back to the spellbook')));
+  }
+  const byLevel = spells.slice().sort((x, y) => SPELLS[x].lvl - SPELLS[y].lvl);
+  return h('div', { class: 'spellbook' }, h('div', { class: 'opts' }, byLevel.map((id) => {
+    const mine = casts.filter((a) => a.spell === id); const sp = SPELLS[id];
+    const warn = mine[0].label.includes(' — ') ? mine[0].label.split(' — ').at(-1) : '';
+    return h('button', { class: 'opt', onclick: () => { if (mine.length === 1) doIt(mine[0]); else { ui.castSpell = id; render(); } } },
+      h('span', null, h('b', null, sp.name), h('span', { class: 'lvl' }, ` level ${sp.lvl}`),
+        mine[0].target && h('span', { class: 'note' }, mine.length === 1 ? `At the ${targetName(mine[0])}` : 'Choose a target'),
+        h('span', { class: 'note' }, sp.text), warn && h('span', { class: 'note warn' }, warn)));
+  })));
+}
+const targetName = (a) => ui.game.fight.monsters.find((m) => m.uid === a.target).name;
 
 function endingView() {
   const g = ui.game; const c = g.c; const end = g.ending();
