@@ -12,8 +12,8 @@ const mortimer = { name: 'Old Mortimer, with a scythe', lvl: 9, hp: 30, range: '
 export const SECTIONS = {
   start: {
     text: [
-      'Death sits in a deckchair on Brinemouth beach, in a knotted handkerchief and a black bathing costume, with his robe folded neatly beside him. He is quite sunburnt, for a skeleton. HELLO, he says. He doesn’t say it out loud. You just know he’s said it. I WAS HOPING YOU’D COME. NOT FOR THE USUAL REASON.',
-      'MY SCYTHE, he says, WAS TAKEN FROM MY BEACH HUT ON TUESDAY. I HAVE NOT HAD A HOLIDAY IN FOUR THOUSAND YEARS. I WOULD RATHER NOT HAVE TO LOOK FOR IT MYSELF. He looks out to sea. IT IS VERY DANGEROUS IN THE WRONG HANDS. IT IS QUITE DANGEROUS IN MINE.',
+      'Death sits in a deckchair on Brinemouth beach, in a knotted handkerchief and a black bathing costume, with his robe folded neatly beside him. He is quite sunburnt, for a skeleton. “Hello,” he says, in a voice like a door closing quietly in another room. “I was hoping you’d come. Not for the usual reason.”',
+      '“My scythe,” he says, “was taken from my beach hut on Tuesday. I haven’t had a holiday in four thousand years, and I’d rather not spend this one looking for it.” He looks out to sea. “It’s very dangerous in the wrong hands. It’s quite dangerous in mine.”',
     ],
     choices: [
       { text: 'Look at his beach hut', to: 'hut' },
@@ -141,14 +141,14 @@ export const SECTIONS = {
   },
   sold_scythe: {
     on: [{ flag: 'soldScythe' }],
-    text: ['The necromancer pays a fortune, in old coins, and walks off down the pier with the scythe over his shoulder, whistling. Down on the beach, Death watches him go, and then looks at you. I WILL SEE YOU LATER, he says. You know exactly what he means.'],
+    text: ['The necromancer pays a fortune, in old coins, and walks off down the pier with the scythe over his shoulder, whistling. Down on the beach, Death watches him go, and then looks at you. “See you later,” he says, pleasantly. You know exactly what he means.'],
     choices: [{ text: 'Leave Brinemouth, quickly', to: 'season_ends' }],
   },
   returned: {
     on: [{ lose: 'scythe' }, { flag: 'returned' }],
     text: (c) => [
-      'You give Death his scythe. He weighs it in his hand, and sighs, a sound like wind in a churchyard. THANK YOU, he says. IT IS GOOD TO HAVE IT BACK. AND IT IS NOT.',
-      c.flags.gaveUp ? 'You tell him what Old Mortimer said. Death is quiet for a while. TELL HIM, he says, I WILL COME AND SAY HELLO FIRST. I ALWAYS DO. PEOPLE JUST DON’T NOTICE.' : 'He looks along the pier towards the ghost train. MORTIMER, he says. I KNOW. I WILL BE GENTLE.',
+      'You give Death his scythe. He weighs it in his hand, and sighs, a sound like wind in a churchyard. “Thank you,” he says. “It’s good to have it back. And it isn’t.”',
+      c.flags.gaveUp ? 'You tell him what Old Mortimer said. Death is quiet for a while. “Tell him I’ll come and say hello first,” he says. “I always do. People just don’t notice.”' : 'He looks along the pier towards the ghost train. “Mortimer,” he says. “I know. I’ll be gentle.”',
     ],
     choices: [{ text: 'Sit with him a while', to: 'season_ends' }],
   },
