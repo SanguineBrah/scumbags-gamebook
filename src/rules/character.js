@@ -59,7 +59,7 @@ export function createCharacter(rng, origins, choices) {
   return c;
 }
 
-// (gamebook) Like the potion choice in a classic gamebook: one significant item to start with.
+// (gamebook) Like the potion choice at the start of a classic gamebook: one significant item to start with.
 export const STARTING_EXTRAS = ['potion', 'fire', 'salve', 'acid'];
 
 export function startingWeapons(c) {
