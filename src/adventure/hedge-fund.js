@@ -152,7 +152,7 @@ export const SECTIONS = {
   },
   teeth: {
     on: [{ flag: 'teethDone' }],
-    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “I do a cure. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
+    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “But it’s only a simple curse. Even I can do simple ones. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
     choices: [{ text: 'Back to business', to: 'kitchen' }],
   },
   small_print: {

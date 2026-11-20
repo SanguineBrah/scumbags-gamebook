@@ -49,7 +49,7 @@ alternatives.
 - **Neville's curse waits.** The rulebook's reverse centaur turns a bitten character within d4
   weeks. Here a failed save against Neville's bite (the `flag` on a monster's `onHit`) only shows
   at the end of the career: in the finale's closing text and the write-up. Turning mid-career would
-  change every later adventure.
+  change every later adventure. It counts as a simple curse, so Dogmatic scumbags ignore it.
 - **Careers end.** The rulebook has no end. Here, finishing any job at the top level opens a last
   one, Final Demand, which ends the career however it goes; scumbags can also retire from town.
   A scumbag who has noticed Snoad's handiwork in six adventures also gets a secret alternative,

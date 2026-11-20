@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="f82e61976e61">
+<meta name="build" content="1de253fa5ca3">
 </head>
 <body>
 <div id="app"></div>
@@ -5655,7 +5655,7 @@ const META = {
 };
 
 const heavy = { name: 'Sid’s heavy', lvl: 2, hp: 6, range: 'engaged', note: 'Never bathes; knuckles like walnuts' };
-const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4', flag: 'cursed' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more, and catch his curse' };
+const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4', flag: 'cursed', curse: true }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more, and catch his curse' };
 
 const SECTIONS = {
   start: {
@@ -9788,7 +9788,7 @@ const SECTIONS = {
   },
   teeth: {
     on: [{ flag: 'teethDone' }],
-    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “I do a cure. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
+    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “But it’s only a simple curse. Even I can do simple ones. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
     choices: [{ text: 'Back to business', to: 'kitchen' }],
   },
   small_print: {
@@ -10850,7 +10850,9 @@ function monsterAttack(g, f, m) {
     const s = test(g, f, { stat: o.stat, dd: o.dd, skill: `save:${o.stat}`, label: `${o.stat} save: ${o.label}`, reroll: 'rerollSave' });
     if (!s.success) {
       note(f, o.text, 'bad');
-      if (o.flag) c.flags[o.flag] = true;   // e.g. a curse that shows itself later
+      // e.g. a curse that shows itself later; a simple curse (`curse: true`) is ignored by the Dogmatic
+      if (o.flag && o.curse && hasFeature(c, 'noCurse')) note(f, 'You are Dogmatic, and you don’t believe in curses. This one takes the hint.', 'good');
+      else if (o.flag) c.flags[o.flag] = true;
       if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
       if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
       if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), null);
