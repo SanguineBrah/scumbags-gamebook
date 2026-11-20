@@ -30,7 +30,7 @@ export const SECTIONS = {
   },
   shopkeepers: {
     on: [{ flag: 'askedShops' }, { flag: 'knowsMum' }],
-    text: ['The ironmonger tells you there are five of them, and that they don’t like to get close: wizards never do. The greengrocer tells you they’re just kids, really, and bored. The baker’s boy, very quietly, tells you that Spike Wimbledon’s mother works at the bakery on the corner, and doesn’t know what her son is up to. “She thinks he’s at school,” he says. “Doing well.”'],
+    text: ['The ironmonger tells you there are six of them, and that they don’t like to get close: wizards never do. The greengrocer tells you they’re just kids, really, and bored. The baker’s boy, very quietly, tells you that Spike Wimbledon’s mother works at the bakery on the corner, and doesn’t know what her son is up to. “She thinks he’s at school,” he says. “Doing well.”'],
     choices: [{ text: 'Back to the high street', to: 'muttering' }],
   },
   shopkeepers_scared: {
@@ -129,7 +129,7 @@ export const SECTIONS = {
       monsters: [delinquent, delinquent],
       distance: 1, win: 'spike_fight', flee: { to: 'muttering', label: 'Run for it' },
       special: [
-        { label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorBolt', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and comes straight back at the wizard who cast it.', failText: 'You get the angle wrong, and the bolt takes the mirror out of your hand.', dmg: '6' },
+        { label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorBolt', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and comes straight back at the wizard who cast it.', failText: 'You get the angle wrong, and the bolt takes the skin off your knuckles instead.', dmg: '6' },
         { label: 'Throw a bucket of water on the Grease', if: { item: 'bucket' }, flag: 'degreased', text: 'The Grease turns to soapy foam. Two wizards slip in it themselves.', stun: 1 },
       ],
     },
@@ -138,7 +138,7 @@ export const SECTIONS = {
     text: (c) => [c.flags.offered ? 'Spike rolls up his sleeves. “No hard feelings,” he says, and greases the floor under you.' : 'Spike steps over his gang, both wands raised. “Right,” he says. “My turn.”'],
     fight: {
       monsters: [spike], distance: 1, win: 'spike_down', flee: { to: 'muttering', label: 'Run for it' },
-      special: [{ label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorSpike', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and goes straight back into Spike’s moustache.', failText: 'You get the angle wrong, and the bolt takes the mirror out of your hand.', dmg: '8' }],
+      special: [{ label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorSpike', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and goes straight back into Spike’s moustache.', failText: 'You get the angle wrong, and the bolt takes the skin off your knuckles instead.', dmg: '8' }],
     },
   },
   spike_down: {
@@ -161,9 +161,9 @@ export const SECTIONS = {
       { if: { flag: 'grimoireSold' }, gold: 450, uncapped: true, msg: 'The man in the next town pays 450GP for the grimoire.' },
     ],
     text: (c) => [
-      c.flags.mumDone ? 'The inspectors arrive on Friday to find the Collegium spotless, the grimoire on the Headmistress’s desk, and five delinquent wizards writing lines under the eye of a small floury woman with a rolling pin. The Headmistress gives Mrs Wimbledon a job.'
-        : c.flags.surrendered ? 'The inspectors arrive on Friday to find the grimoire on the Headmistress’s desk and five delinquent wizards in detention. They are very impressed. The Headmistress takes all the credit.'
-          : c.flags.grimoireSold ? 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Its pupils are sent home. In Muttering, a gang of five young wizards starts a new business sitting other people’s exams.'
+      c.flags.mumDone ? `The inspectors arrive on Friday to find the Collegium spotless, the grimoire on the Headmistress’s desk, and ${c.flags.gangThinned ? 'three' : 'five'} delinquent wizards writing lines under the eye of a small floury woman with a rolling pin. The Headmistress gives Mrs Wimbledon a job.`
+        : c.flags.surrendered ? `The inspectors arrive on Friday to find the grimoire on the Headmistress’s desk and ${c.flags.gangThinned ? 'three' : 'five'} delinquent wizards in detention. They are very impressed. The Headmistress takes all the credit.`
+          : c.flags.grimoireSold ? 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Its pupils are sent home. In Muttering, a gang of young wizards starts a new business sitting other people’s exams.'
             : 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Headmistress Grimble does not pay you, and puts you on a list.',
       `You leave Muttering with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
@@ -184,7 +184,7 @@ export const SECTIONS = {
     choices: [{ text: 'March them back to the Collegium, in a line', to: 'headmistress' }],
   },
   humbled_self: {
-    text: ['Your god scorns you. Instead of doubling, you shrink to a quarter of your size. Five teenage wizards look down at you. There is a short silence, and then a great deal of laughter, and then the wands come up.'],
+    text: ['Your god scorns you. Instead of doubling, you shrink to a quarter of your size. A ring of teenage wizards look down at you. There is a short silence, and then a great deal of laughter, and then the wands come up.'],
     choices: [{ text: 'Fight', to: 'gang_fight' }],
   },
   spike_humbled: {
@@ -193,7 +193,6 @@ export const SECTIONS = {
     choices: [{ text: 'March them all back to the Collegium, in a line', to: 'headmistress' }],
   },
   spike_emboldened: {
-    on: [{ flag: 'offered' }],
     text: ['Your god scorns you. Instead of shrinking, Spike grows to twice his size, and bumps his head on the foundry roof. His gang cheer. Spike looks down at you and grins.'],
     choices: [{ text: 'Fight him', to: 'spike_fight' }],
   },

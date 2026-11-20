@@ -174,7 +174,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Ask him why he fires toads at the village', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'croaker_story', fail: 'cannon_fight' },
       { text: 'Climb up and spike his cannon with an iron spike', test: { stat: 'Dex', dd: 8, skill: ['athletics', 'skulduggery'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'spikes' } },
-      { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' } },
+      { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' }, effects: [{ lose: 'glue' }, { flag: 'gluedCannon' }] },
       { text: 'Dazzle him with your hand mirror', to: 'dazzled', if: { item: 'mirror' } },
       { text: 'Cast Chosen on yourself, and walk up to the cannon through the toads', cast: 'chosen', pass: 'chosen_walk', fail: 'cannon_fight', critFail: 'pariah_walk' },
       { text: 'Cast Humble on the cannon', cast: 'humble', pass: 'cannon_shrunk', fail: 'cannon_fight', critFail: 'cannon_grown' },
@@ -223,8 +223,8 @@ export const SECTIONS = {
     choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
   },
   spiked: {
-    on: [{ flag: 'spiked' }, { lose: 'spikes' }],
-    text: ['You hammer home the spike and the cannon is useless. Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
+    on: [{ flag: 'spiked' }, { if: { notFlag: 'gluedCannon' }, lose: 'spikes' }],
+    text: (c) => [`${c.flags.gluedCannon ? 'You fill the touch-hole with glue, and the cannon is useless.' : 'You hammer home the spike and the cannon is useless.'} Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”`],
     choices: [
       { text: 'Ask him what he means', to: 'croaker_story' },
       { text: 'Take Sir Gristle home', to: 'pension_office' },

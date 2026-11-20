@@ -86,8 +86,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'cabinet_fight', show: { none: [{ flag: 'fileFound' }, { flag: 'cabinetDone' }] } },
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'file_lost', show: { flag: 'cabinetDone', notFlag: 'fileFound' } },
-      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' } },
-      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' } },
+      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' } , effects: [{ lose: 'padlock' }] },
+      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' } , effects: [{ lose: 'glue' }] },
       { text: 'Go to the Hall of Forms', to: 'forms' },
     ],
   },

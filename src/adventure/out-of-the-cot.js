@@ -145,8 +145,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Agree to lead the baby into his net', to: 'square', effects: [{ flag: 'snareDeal' }], show: { notFlag: 'snareDeal' } },
       { text: 'Pour acid on the net while his back is turned', to: 'sabotaged', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
-      { text: 'Spike the harpoon gun', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'spikes' } },
-      { text: 'Glue the harpoon into the barrel', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'glue' } },
+      { text: 'Spike the harpoon gun', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'spikes' }, effects: [{ lose: 'spikes' }] },
+      { text: 'Glue the harpoon into the barrel', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'glue' }, effects: [{ lose: 'glue' }] },
       { text: 'Cast Invisibility on yourself, and wreck his gear while he’s looking right at it', cast: 'invisibility', pass: 'sabotaged', fail: 'snare_fight', show: { notFlag: 'snareFixed' } },
       { text: 'Tell him the council has cancelled the job', test: { stat: 'Cha', dd: 10, skill: ['lying'] }, pass: 'snare_leaves', fail: 'snare_fight' },
       { text: 'Back to the square', to: 'square' },
