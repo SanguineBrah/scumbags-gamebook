@@ -98,7 +98,7 @@ export const SECTIONS = {
   traveller_fight: {
     text: ['He backs away, fumbling at his belt, and produces a small black crossbow with no string. “I don’t want to use this,” he says, and then uses it. It goes BANG.'],
     fight: { outdoors: true,
-      monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture-capitalist; iPad; handgun (2d6+lvl damage)' }],
+      monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture capitalist; glowing slate; handgun (2d6+lvl damage)' }],
       distance: 2, win: 'traveller_loot', flee: { to: 'hill', label: 'Run up the hill' },
     },
   },
@@ -180,7 +180,7 @@ export const SECTIONS = {
   },
   front_fight: {
     text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
-    fight: { outdoors: true,
+    fight: { key: 'bureaucrat', outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'front_win', flee: { to: 'hill', label: 'Retreat down the hill' },
     },
@@ -284,12 +284,12 @@ export const SECTIONS = {
   fishwife_ambush: {
     dark: 'cistern',
     text: ['You creep up behind her, weapon raised.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_fight: {
     dark: 'cistern',
     text: ['She turns, sees you, and opens her mouth far wider than a mouth should go.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_win: {
     dark: 'cistern',
@@ -361,12 +361,12 @@ export const SECTIONS = {
   mimic_ambush: {
     dark: 'library',
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { key: 'mimic', monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
     dark: 'library',
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { key: 'mimic', monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
     dark: 'library',
@@ -407,13 +407,13 @@ export const SECTIONS = {
   },
   knight_paid: {
     on: [{ flag: 'knightGone' }],
-    text: ['You count twenty gold into his gauntlet. He looks at it for a long time. “Paid,” he says, and climbs down off the plinth with a noise like a dropped kitchen. “I am free. I shall go home.” He bows, takes the purse off the wall, hands it to you, and clanks away to find out what year it is.'],
-    choices: [{ text: 'Open the purse', to: 'gallery_purse' }],
+    text: (c) => [`You count twenty gold into his gauntlet. He looks at it for a long time. “Paid,” he says, and climbs down off the plinth with a noise like a dropped kitchen. “I am free. I shall go home.” He bows${c.flags.purse ? '' : ', takes the purse off the wall, hands it to you,'} and clanks away to find out what year it is.`],
+    choices: [{ text: 'Open the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   knight_freed: {
     on: [{ flag: 'knightGone' }],
     text: ['You explain, gently, that Vane has been dead for twenty years and that a contract with a dead man is a contract with nobody. Sir Reginald thinks about this for a full minute. Then he weeps, loudly, inside his helmet, thanks you, and clanks off into the dark to find his wife, who has remarried twice.'],
-    choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
+    choices: [{ text: 'Take the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   knight_fight: {
     on: [{ flag: 'knightAngry' }],
@@ -426,7 +426,7 @@ export const SECTIONS = {
   knight_win: {
     on: [{ flag: 'knightGone' }],
     text: ['Sir Reginald topples off his plinth with a final clang. “Default,” he whispers, “at last.” His armour is too rusty to sell, which is the only reason you don’t.'],
-    choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
+    choices: [{ text: 'Take the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   gallery_purse: {
     on: [{ flag: 'purse' }, { gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
@@ -563,7 +563,7 @@ export const SECTIONS = {
   vault_fight: {
     on: [{ flag: 'vaultAngry' }],
     text: ['The ghost looks up. His eyes are two copper pennies. “You,” he whispers, “are in ARREARS.” He rises, and his hands are cold enough to burn.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
       special: [{ flag: 'ledgerBurnt', label: 'Set fire to the ledger', if: { fire: true }, text: 'The ledger goes up like a bonfire of receipts. Vane screams. He has nothing left to count.' }],
@@ -572,7 +572,7 @@ export const SECTIONS = {
   vault_ambush: {
     on: [{ flag: 'vaultAngry' }],
     text: ['You come at him from behind while he’s mid-column.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
       surprise: true, win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
       special: [{ flag: 'ledgerBurnt', label: 'Set fire to the ledger', if: { fire: true }, text: 'The ledger goes up like a bonfire of receipts. Vane screams. He has nothing left to count.' }],
@@ -581,14 +581,14 @@ export const SECTIONS = {
   vault_burnt: {
     on: [{ flag: 'ledgerBurnt' }],
     text: ['The ledger catches, curls and blazes. Vane leaps up, clutching at the burning pages. “My accounts! My beautiful accounts!” With nothing left to count, he begins to fade, but he is not going quietly.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], hp: 8, note: 'Undead; fading fast' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
     },
   },
   vault_fade: {
     text: ['Vane comes at you out of the ashes, fading fast but not going quietly.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], hp: 6, note: 'Undead; fading fast' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
     },
@@ -638,10 +638,15 @@ export const SECTIONS = {
   },
   exit_fight: {
     text: ['“Refusal noted,” he says, and reaches for his stamps.'],
-    fight: { outdoors: true,
+    fight: { key: 'bureaucrat', outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
-      distance: 1, win: 'town',
+      distance: 1, win: 'exit_win',
     },
+  },
+  exit_win: {
+    on: [{ flag: 'bureaucratDead' }],
+    text: ['The bureaucrat goes down in a flurry of carbon copies. With his last breath he stamps your hand EXEMPT, which is the nicest thing he has ever done for anyone.'],
+    choices: [{ text: 'Go home', to: 'town' }],
   },
   town: {
     end: 'victory',
@@ -661,12 +666,12 @@ export const SECTIONS = {
   fishwife_locusts: {
     dark: 'cistern',
     text: ['Your god scorns you. Instead of food, a swarm of locusts pours out of your sleeves and all over the fishwife. She eats a good number of them, but it doesn’t improve her mood.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_holy: {
     dark: 'cistern',
     text: ['Your god scorns you. Instead of oil, the cistern turns to holy water, faintly glowing. The fishwife comes up out of it pink, clean and absolutely furious.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   hall_oil: {
     on: [{ lose: 'rations' }, { item: 'oil', msg: 'Your rations are soaked through with lamp oil. You throw them away, and keep the oil.' }],

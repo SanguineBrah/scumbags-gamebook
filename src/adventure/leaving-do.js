@@ -139,7 +139,7 @@ export const SECTIONS = {
     },
   },
   vex_fight_weak: {
-    fight: { monsters: [{ ...vexilla, hp: 12 }], distance: 1, win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the kitchens and out' } },
+    fight: { key: 'vex', monsters: [{ ...vexilla, hp: 12 }], distance: 1, win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the kitchens and out' } },
     text: ['Vexilla gets up out of the wreckage of the stage, singed and furious, for one more go.'],
   },
   vex_down: {
@@ -191,7 +191,7 @@ export const SECTIONS = {
   },
   vex_stone: {
     text: ['Your god scorns you. Instead of salt, Vexilla’s skin turns to stone. She looks at her grey hands, and smiles, and is twice as hard to kill.'],
-    fight: { monsters: [{ ...vexilla, hp: vexilla.hp * 2, note: `${vexilla.note}; skin of stone (double HP)` }], win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the door' } },
+    fight: { key: 'vex', monsters: [{ ...vexilla, hp: vexilla.hp * 2, note: `${vexilla.note}; skin of stone (double HP)` }], win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the door' } },
   },
   vex_swerve: {
     text: ['Vexilla’s bolt leaves her wand, comes at you, and swerves at the last moment, as if embarrassed, into the banshee, who hits a note that breaks every glass in the tower. Vexilla throws another. It swerves into the cake. She stares at her wand.'],

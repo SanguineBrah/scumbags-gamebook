@@ -150,7 +150,7 @@ export const SECTIONS = {
   },
   kitchen: {
     on: [{ add: ['quarters', 1] }, { flag: 'soupDone' }, { heal: '3d6' }],
-    text: ['The homunculus is still there, on his stool, stirring. His tiny chef’s hat has gone grey. “Soup?” he asks. It is the best soup you have ever had, and you have had it before. You tell him so. He is, unfortunately, still adorable.'],
+    text: ['The homunculus is still there, on his stool, stirring. His tiny chef’s hat has gone grey. “Soup?” he asks. “Not the master’s,” he adds, quickly. It is the best soup you have ever had. He is, unfortunately, still adorable.'],
     choices: [{ text: 'Back to the hall', to: 'house' }],
   },
   clock: {

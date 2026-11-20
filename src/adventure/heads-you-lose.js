@@ -112,7 +112,7 @@ export const SECTIONS = {
   },
   hydra_fight: {
     text: (c) => [c.flags.cauterised ? 'The hydra, scorched and smoking, comes up out of the water at you with every head it has left.' : 'The hydra comes up out of the water at you, eleven heads at once.'],
-    fight: { outdoors: true,
+    fight: { key: 'hydra', outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
         { label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
@@ -122,7 +122,7 @@ export const SECTIONS = {
   },
   hydra_weak: {
     text: (c) => [c.flags.drained ? 'You go down into the mud after it. The hydra, stranded, slow and furious, turns every head it has on you.' : 'You go down to the water’s edge. The hydra is so tangled up in itself that it can only spare three heads to fight you.'],
-    fight: { outdoors: true,
+    fight: { key: 'hydra', outdoors: true,
       monsters: [{ ...hydra, hp: 20, regen: 2, note: 'Weakened hydra (20 HP); grows back 2 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Back off' },
       special: [{ label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
     },
@@ -166,7 +166,7 @@ export const SECTIONS = {
   },
   hydra_small: {
     text: ['The hydra shrinks to a quarter of its size, which is still the size of a cart horse, with eleven heads the size of a dog’s. They look at each other in alarm. You go down to the water’s edge to meet them.'],
-    fight: { monsters: [{ ...hydra, hp: 10, regen: 1, note: 'A shrunken hydra (10 HP); grows back 1 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' }, outdoors: true },
+    fight: { key: 'hydra', monsters: [{ ...hydra, hp: 10, regen: 1, note: 'A shrunken hydra (10 HP); grows back 1 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' }, outdoors: true },
   },
   hydra_big: {
     text: ['Your god scorns you. Instead of shrinking, the hydra grows to twice its size. The reservoir is suddenly much too small for it. It climbs out.'],

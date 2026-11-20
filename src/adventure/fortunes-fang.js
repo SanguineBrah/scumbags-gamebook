@@ -44,7 +44,7 @@ export const SECTIONS = {
   rex_fight: {
     on: [{ flag: 'rexAngry' }],
     text: ['“Then you’ll—” says Rex, and waits for a brother who isn’t there, and then just hits you. He fights like half of a team: brilliantly at the front, with nobody at all watching his back.'],
-    fight: { monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
+    fight: { key: 'rex', monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
   rex_win: {
     on: [{ flag: 'rexDown' }, { gold: 20, msg: 'His tips jar: 20GP.' }], onceOnly: true,
@@ -96,7 +96,7 @@ export const SECTIONS = {
   caught: {
     on: [{ gold: -20 }],
     text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. Rex looks up from the door.'],
-    fight: {
+    fight: { key: 'rex',
       unless: { any: [{ flag: 'rexDown' }, { flag: 'rexFriend' }] },
       monsters: [rex], win: 'rex_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
     },
@@ -273,14 +273,14 @@ export const SECTIONS = {
   count_wakes: {
     text: ['A floorboard creaks. The coffin lid creaks back. Count Fortunato sits up, squints at the grey light from the grating, and hisses. Dawn has made him weak and furious.'],
     on: [{ flag: 'countAwake' }],
-    fight: {
+    fight: { key: 'count',
       monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
       win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
     },
   },
   count_weak: {
     text: ['Count Fortunato throws off his cloak and comes at you, squinting, through the grey light.'],
-    fight: {
+    fight: { key: 'count',
       monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
       win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
     },
@@ -363,7 +363,7 @@ export const SECTIONS = {
   },
   exit_fight: {
     text: ['“Then you’ll—” says Rex, and there’s nobody to finish it.'],
-    fight: { monsters: [rex], win: 'dawn_out' },
+    fight: { key: 'rex', monsters: [rex], win: 'dawn_out' },
   },
   dawn_out: {
     end: 'victory',

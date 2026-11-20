@@ -76,16 +76,16 @@ export const SECTIONS = {
   lab_bang: {
     on: [{ damage: '2d6', from: 'The furnace' }],
     text: ['The furnace catches with a WHUMP that takes your eyebrows and puts the homunculi on the ceiling. They come down angry.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'furnace', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'furnace', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   homunculi: {
     on: [{ flag: 'pagesTorn' }],
     text: ['The pages tear. The homunculi gasp in horror. That was the professor’s notebook. They pick up test tubes.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   homunculi_again: {
     text: ['A volley of test tubes comes down off the cupboard.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   lab_after: {
     text: ['The homunculi retreat into a cupboard and slam the door. The notebook is in pieces on the floor, but one piece is legible.'],

@@ -51,7 +51,7 @@ export const SECTIONS = {
   },
   caught: {
     text: ['The clerk peers at you over his spectacles. “Irregular,” he says, and rings a little bell. A door opens, and a bureaucrat in a cardigan comes out with an armful of rubber stamps.'],
-    fight: { monsters: [bureaucrat], distance: 1, win: 'forms', flee: { to: 'start', label: 'Back out into the queue' } },
+    fight: { key: 'bureaucrat', monsters: [bureaucrat], distance: 1, win: 'forms', flee: { to: 'start', label: 'Back out into the queue' } },
   },
   delivery: {
     text: ['At the delivery entrance, porters unload cartloads of paper. A foreman checks every cart against a list.'],
@@ -140,7 +140,7 @@ export const SECTIONS = {
   vault_alarm: {
     on: [{ damage: 'd6', from: 'A trap' }],
     text: ['The second lock fires a dart into your thumb, and a bell rings somewhere. The clerk wakes up, sees you, and goes for help.'],
-    fight: { monsters: [bureaucrat], distance: 1, win: 'vault_in', flee: { to: 'forms', label: 'Run' } },
+    fight: { key: 'bureaucrat', monsters: [bureaucrat], distance: 1, win: 'vault_in', flee: { to: 'forms', label: 'Run' } },
   },
   vault_in: {
     on: [{ flag: 'vaultDone' }, { gold: 250, msg: 'The Exchequer’s petty cash. You take what you can carry.' }], onceOnly: true,

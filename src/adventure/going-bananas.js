@@ -98,14 +98,14 @@ export const SECTIONS = {
   },
   golem_panics: {
     text: ['You say something that sounds to the golem, unfortunately, like “peel”. It panics and lashes out.'],
-    fight: { outdoors: true,
+    fight: { key: 'golem', outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [{ label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
   golem_fight: {
     text: ['The golem draws itself up to its full nine feet, and comes at you swinging bunches.'],
-    fight: { outdoors: true,
+    fight: { key: 'golem', outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
         { label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },

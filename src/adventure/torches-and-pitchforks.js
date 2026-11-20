@@ -153,7 +153,7 @@ export const SECTIONS = {
       'The mob surges. Pitchforks you can see through still go into you.',
       c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
     ],
-    fight: { outdoors: true,
+    fight: { key: 'mob', outdoors: true,
       monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
       special: [
         { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },
@@ -202,7 +202,7 @@ export const SECTIONS = {
   },
   last_stand: {
     text: ['The mob catches you at the gate. There’s no talking now.'],
-    fight: { outdoors: true,
+    fight: { key: 'mob', outdoors: true,
       monsters: [{ ...mob, hp: 24 }], distance: 1, win: 'inside', flee: { to: 'grimsby_hall', label: 'Leave Grimsby to them and run' },
       special: [{ label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' }],
     },

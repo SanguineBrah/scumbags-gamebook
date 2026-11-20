@@ -108,7 +108,7 @@ export const SECTIONS = {
   },
   sponge_fight: {
     text: ['The sponge heaves itself up over the rim of the bath, wet and enormous, and comes at you with a noise like a mop going into a bucket.'],
-    fight: {
+    fight: { key: 'sponge',
       monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }],
       win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' },
       special: [{ label: 'Wring it out', test: { stat: 'Str', dd: 6, skill: 'bruteforce' }, flag: 'wrung', text: 'You get both arms round it and twist. Thirty years of bathwater comes out in a flood, and the sponge goes limp.', failText: 'It’s too wet to get a grip on.', win: true }],
@@ -161,7 +161,7 @@ export const SECTIONS = {
   lord_fight: {
     on: [{ flag: 'lordAngry' }],
     text: ['Lord Mudlark comes out of the sty at you with his stick. The pig watches, with interest, from a safe distance.'],
-    fight: { outdoors: true,
+    fight: { key: 'mudlark', outdoors: true,
       monsters: [mudlark],
       win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' },
       special: [{ label: 'Throw a bucket of water over him', if: { item: 'bucket' }, flag: 'splashed', text: 'He gets a bucket of water full in the face and stops dead, gasping, as if you’d thrown acid. It’s the first water that’s touched him in thirty years.', stun: 1 }],
@@ -232,7 +232,7 @@ export const SECTIONS = {
   },
   sponge_fed: {
     text: ['Your god scorns you. Instead of locusts, a day’s rations fall into the bath. The sponge drinks them, grows a foot, and comes over the rim at you, wanting more.'],
-    fight: { monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }], win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' } },
+    fight: { key: 'sponge', monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }], win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' } },
   },
   tripped: {
     text: ['Lord Mudlark’s feet go out from under him, and he goes face down in the mud with a noise like a cow sitting in custard. He comes up blowing bubbles, and by then you are sitting on him. He comes along, dripping, but he comes.'],
@@ -245,7 +245,7 @@ export const SECTIONS = {
   lord_waterwalks: {
     on: [{ flag: 'lordAngry' }],
     text: ['Your god scorns you. Instead of growing heavy, Lord Mudlark grows light, and steps up onto the surface of the sty as if it were a parquet floor. He walks across the top of the mud to you, delighted, and hits you with his stick.'],
-    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
+    fight: { key: 'mudlark', outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
   },
   crumpets: {
     text: ['A trough of hot buttered crumpets appears in the bathroom, and the smell comes down the stairs and out into the sty. Lord Mudlark’s nose twitches. “Crumpets,” he says, and climbs out of the mud, and follows his nose indoors, past you, without a word.'],
@@ -254,7 +254,7 @@ export const SECTIONS = {
   sty_locusts: {
     on: [{ flag: 'lordAngry' }],
     text: ['Your god scorns you. Instead of crumpets, a swarm of locusts comes down on the sty. The pig eats a few. Lord Mudlark, covered in insects, decides that this is your fault, which it is.'],
-    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
+    fight: { key: 'mudlark', outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
   },
 };
 

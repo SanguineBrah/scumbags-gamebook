@@ -295,7 +295,7 @@ export const SECTIONS = {
   },
   hounds_fight: {
     text: ['The hounds come at you all knees and teeth.'],
-    fight: { ceiling: 'high',
+    fight: { key: 'hounds', ceiling: 'high',
       monsters: [
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
@@ -442,7 +442,7 @@ export const SECTIONS = {
   },
   hounds_locusts: {
     text: ['Your god scorns you. Instead of dinner, a swarm of locusts pours out across the landing. The hounds snap at them, eat a few, and then decide you are the larger snack.'],
-    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { key: 'hounds', ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   hounds_buckled: {
     on: [{ flag: 'houndsGone' }],
@@ -451,7 +451,7 @@ export const SECTIONS = {
   },
   hounds_light: {
     text: ['Your god scorns you. Instead of getting heavier, the hounds can walk on water for ten minutes. There is no water on the landing, so it makes no difference at all, except that they’ve noticed you.'],
-    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { key: 'hounds', ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   ned_felled: {
     on: [{ flag: 'nedGone' }],

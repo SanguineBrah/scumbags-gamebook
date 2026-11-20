@@ -84,7 +84,7 @@ export const SECTIONS = {
     dark: 'caves', litIf: true,   // the slime is on fire
     on: [{ lose: 'oil' }],
     text: ['The oil catches with a WHOOMPH and races up the slime trail, which turns out to be very flammable. Somewhere ahead, the slug screams, which you didn’t know slugs could do. It comes round the corner on fire.'],
-    fight: {
+    fight: { key: 'slug',
       monsters: [{ ...slug, hp: 26 }], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
       special: [{ label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' }],
     },
@@ -92,7 +92,7 @@ export const SECTIONS = {
   slug_fight: {
     dark: 'caves',
     text: ['Thirty feet of slug comes round the corner at a surprising speed, which is to say a walking pace.'],
-    fight: {
+    fight: { key: 'slug',
       monsters: [slug], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
       special: [
         { label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' },
@@ -147,7 +147,7 @@ export const SECTIONS = {
   forgery: {
     on: [{ flag: 'dragonAngry' }],
     text: ['The dragon reads your form, and then reads it again, and then takes off its glasses. “This,” it says, “is a forgery. That’s a very serious matter. There’s a form for it.” It sets the form on fire, and then you.'],
-    fight: { monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
+    fight: { key: 'dragon', monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
   },
   leg: {
     on: [{ flag: 'legFixed' }],
@@ -175,7 +175,7 @@ export const SECTIONS = {
       'The dragon sighs, takes off its glasses, and folds them. “Very well,” it says. “It is, after all, on the form.”',
       c.flags.legFixed ? 'It rears up, both legs working, which you are now regretting.' : 'It can’t fly. It doesn’t need to.',
     ],
-    fight: {
+    fight: { key: 'dragon',
       monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for the cave mouth' },
       special: [
         { label: 'Hold up your mirror and let it see the state of itself', if: { item: 'mirror' }, flag: 'dragonMirror', text: 'The dragon sees its reflection: old, grey round the snout, glasses askew. It stops, stricken, for a moment.', stun: 1 },
@@ -217,7 +217,7 @@ export const SECTIONS = {
   slug_stone: {
     dark: 'caves',
     text: ['Your god scorns you. Instead of salt, the slug’s skin turns to stone. It is now a thirty-foot slug made of granite, and it is very pleased about it.'],
-    fight: { monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
+    fight: { key: 'slug', monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
   },
   slug_converts: {
     dark: 'caves',
