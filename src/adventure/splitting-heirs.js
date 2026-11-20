@@ -144,7 +144,7 @@ export const SECTIONS = {
   },
   real_fight: {
     on: [{ flag: 'betrayed' }],
-    text: ['“Cedric sent you,” says the real Professor Glibb, getting up from the fire. “Of course he did.” He comes at you, and the other twenty-nine come too, out of family feeling.'],
+    text: (c) => [`“Cedric sent you,” says the real Professor Glibb, getting up from the fire. “Of course he did.” He comes at you, and ${c.flags.lidded ? 'down in the cellar, twenty-nine copies start hammering on the door out of family feeling. One of them has already got out.' : 'the nearest copy comes too, out of family feeling.'}`],
     fight: {
       monsters: [{ ...glibb, name: 'Professor Glibb', lvl: 4, hp: 12, note: 'The real one; manmoeba; miserly; splits when struck' }, glibb],
       win: 'all_gone', flee: { to: 'reading', label: 'Run for the door' },

@@ -137,14 +137,19 @@ export const SECTIONS = {
       { text: 'Four fingers, flat, on the back of the hand', to: 'cellar', show: { flag: 'knowsSignal' } },
       { text: 'Guess a sign', test: { stat: 'Int', dd: 12, skill: ['languages'], profs: ['Envoy'], why: 'you know a lot of gestures' }, pass: 'cellar', fail: 'wrong_sign', show: { notFlag: 'knowsSignal' } },
       { text: 'Cast Tongues on yourself, and read the monks’ sign language like a book', cast: 'tongues', pass: 'signs_read', fail: 'wrong_sign', critFail: 'signs_silent', show: { notFlag: 'knowsSignal' } },
-      { text: 'Throw your voice into the refectory, where nobody has spoken for forty years', cast: 'voice', pass: 'voice_lure', fail: 'wrong_sign' },
-      { text: 'Wait till he dozes, oil the hinges with your flask of oil, and slip in without a creak', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'cellar', fail: 'wrong_sign', if: { item: 'oil' }, effects: [{ lose: 'oil' }], show: { notFlag: 'knowsSignal' } },
+      { text: 'Throw your voice into the refectory, where nobody has spoken for forty years', cast: 'voice', pass: 'voice_lure', fail: 'door_noticed' },
+      { text: 'Wait till he dozes, oil the hinges with your flask of oil, and slip in without a creak', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'cellar', fail: 'door_noticed', if: { item: 'oil' }, effects: [{ lose: 'oil' }], show: { notFlag: 'knowsSignal' } },
       { text: 'Back to the cloister', to: 'cloister' },
     ],
   },
   wrong_sign: {
     on: [NOISE()],
     text: ['The monk looks at your hand, and his eyebrows go up very slowly. Whatever you just said in sign, it was not polite. He turns, very deliberately, and goes to fetch somebody.'],
+    choices: [{ text: 'Back to the cloister', to: 'cloister' }],
+  },
+  door_noticed: {
+    on: [NOISE()],
+    text: ['The monk at the door turns round and looks at you, and his eyebrows go up very slowly. He doesn’t need to say anything. He couldn’t if he wanted to. He goes, very deliberately, to fetch somebody.'],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   octavius_comes: {

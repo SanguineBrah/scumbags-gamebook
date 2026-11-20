@@ -77,7 +77,7 @@ export const SECTIONS = {
       { text: 'Give it your rations', to: 'oats', if: { item: 'rations' }, show: { notFlag: 'fed' } },
       { text: 'Dress the old wound under its armour with your healer’s kit', to: 'dressed', if: { item: 'healerskit' }, show: { notFlag: 'fed' } },
       { text: 'Cast Heal on the old wound under its armour', cast: 'heal', pass: 'healed', fail: 'stable', critFail: 'harmed', show: { notFlag: 'fed' } },
-      { text: 'Unbuckle its armour while it eats', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
+      { text: 'Unbuckle its armour while it trusts you', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
       { text: 'Show it its reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrored' } },
       { text: 'Glue its shoes to the stable floor', to: 'glued', if: { item: 'glue' }, show: { notFlag: 'glued' } },
       { text: 'Back to the tents', to: 'tents' },
@@ -162,7 +162,7 @@ export const SECTIONS = {
   },
   trampled: {
     on: [{ damage: '2d6', from: 'A warhorse' }],
-    text: ['The rope tightens, and the black horse drags you the length of the lists, through the barrier and into the pie stall.'],
+    text: ['The black horse comes down the lists like an avalanche and takes you with it, through the barrier and into the pie stall.'],
     choices: [{ text: 'Get up', to: 'lists' }],
   },
   fight: {
@@ -209,7 +209,7 @@ export const SECTIONS = {
     choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
   },
   galvanised_horse: {
-    text: ['Your god scorns you. Instead of peace, the black horse is filled with unholy vigour. Steam comes out of its visor. It finishes its charge, turns at the end of the lists, and comes back for you on foot.'],
+    text: ['Your god scorns you. Instead of peace, the black horse is filled with unholy vigour. Steam comes out of its visor. It finishes its charge, turns at the end of the lists, and comes back for you. You are on foot.'],
     fight: { outdoors: true, monsters: [{ ...knightmare, name: 'The Knightmare (galvanised)', feats: [...(knightmare.feats || []), 'dealD6'], note: `${knightmare.note}; galvanised: +d6 damage` }], win: 'horse_down', flee: { to: 'stable', label: 'Vault the barrier and run' } },
   },
   joust_galv: {

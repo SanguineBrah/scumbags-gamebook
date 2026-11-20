@@ -69,7 +69,7 @@ export const SECTIONS = {
       { text: 'Cast Tongues on the golem, so it can say what it wants', cast: 'tongues', pass: 'golem_speaks', fail: 'golem_panics', critFail: 'golem_silent', show: { notFlag: 'golemTrusts' } },
       { text: 'Cast Command on it: “Come with me”', cast: 'command', pass: 'golem_commanded', fail: 'golem_panics' },
       { text: 'Lead it to the Duke’s hothouse, over the hill', to: 'road', show: { flag: 'golemTrusts' } },
-      { text: 'Cast Famine on it, so it smells rotten and nobody wants to eat it', cast: 'famine', pass: 'famine', fail: 'golem_panics', critFail: 'custard', show: { notFlag: 'villagersGone' } },
+      { text: 'Cast Famine, and let the locusts make it look thoroughly unappetising', cast: 'famine', pass: 'famine', fail: 'golem_panics', critFail: 'custard', show: { notFlag: 'villagersGone' } },
       { text: 'Attack it', to: 'golem_fight' },
       { text: 'Rope it and drag it back to the Guild', test: { stat: 'Str', dd: 10, skill: ['athletics'] }, pass: 'dragged', fail: 'golem_fight', if: { anyItem: ['rope', 'chain'] } },
     ],
@@ -88,7 +88,7 @@ export const SECTIONS = {
   },
   famine: {
     on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }, { flag: 'rotten' }],
-    text: ['A wave of brown spreads over the golem, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
+    text: ['A swarm of locusts pours out of your sleeves, settles on the golem, takes one bite each, and leaves in disgust. Where they bit, a wave of brown spreads over it, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
     choices: [{ text: 'Back to the golem', to: 'clearing' }],
   },
   golem_talk: {
