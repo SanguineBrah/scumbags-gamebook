@@ -134,7 +134,7 @@ export const SECTIONS = {
   },
   mob_flees: {
     on: [{ flag: 'turned' }],
-    text: ['You raise your holy symbol, and the mob falls back, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
+    text: ['The mob falls back before you, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
   mob_obeys: {
@@ -186,7 +186,7 @@ export const SECTIONS = {
     ],
   },
   late: {
-    redirect: [{ if: { flag: 'shortcut' }, to: 'late_spare' }, { if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'mobGone' }] }, to: 'late_safe' }],
+    redirect: [{ if: { flag: 'shortcut' }, to: 'late_spare' }, { if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'mobGone' }, { flag: 'turned' }] }, to: 'late_safe' }],
     on: [{ flag: 'late' }],
     text: ['Midnight strikes while you’re still struggling with the gate. Behind you, the torches come over the rise.'],
     choices: [{ text: 'Get through the gate however you can', to: 'last_stand' }],
@@ -197,7 +197,7 @@ export const SECTIONS = {
   },
   late_safe: {
     on: [{ flag: 'late' }],
-    text: (c) => [c.flags.betrayed ? 'Midnight strikes while you’re still at the gate. It doesn’t matter now. Eventually, the gate groans open.' : 'Midnight strikes while you’re still at the gate, and Grimsby whimpers, but nothing comes out of the fog. There’s nobody left out there to come. Eventually, the gate groans open.'],
+    text: (c) => [c.flags.betrayed ? 'Midnight strikes while you’re still at the gate. It doesn’t matter now. Eventually, the gate groans open.' : `Midnight strikes while you’re still at the gate, and Grimsby whimpers, but nothing comes out of the fog. ${c.flags.turned ? 'The tenants are busy elsewhere tonight.' : 'There’s nobody left out there to come.'} Eventually, the gate groans open.`],
     choices: [{ text: 'Inside', to: 'inside' }],
   },
   last_stand: {
@@ -224,7 +224,7 @@ export const SECTIONS = {
     ],
   },
   strongroom_caught: {
-    text: ['Your pick snaps in the lock with a ping. Grimsby looks up from the floor. “That,” he says, “is a deduction.” He takes the price of the lock out of your fee, then the price of the pick, then a charge for the inconvenience.'],
+    text: ['The lock holds, with a loud and expensive-sounding ping. Grimsby looks up from the floor. “That,” he says, “is a deduction.” He takes the price of the lock out of your fee, then the price of the pick, then a charge for the inconvenience.'],
     on: [{ flag: 'deducted' }],
     choices: [{ text: 'Take what’s left of your fee', to: 'grimsby_hall' }],
   },
@@ -244,7 +244,8 @@ export const SECTIONS = {
         ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.'
           : c.flags.mobGone ? 'Grimsby Hall is quiet that night, and every night after. The tenants are gone for good, and so is the last claim on their deposits. Grimsby is delighted. He never thanks you.'
             : c.flags.ghostArmy ? 'The ghosts stand guard round Grimsby Hall all night on your orders, torches high. Grimsby sits up with a candle, finding this no comfort at all.'
-              : c.flags.late ? 'The hall isn’t legally his, and the tenants know it. Grimsby locks every door and sits up all night with a candle while the torches circle the hall till dawn. He’ll be fine. Probably.'
+              : c.flags.late && !c.flags.turned ? 'The hall isn’t legally his, and the tenants know it. Grimsby locks every door and sits up all night with a candle while the torches circle the hall till dawn. He’ll be fine. Probably.'
+                : c.flags.late ? 'The hall isn’t legally his, but the tenants are too busy elsewhere to notice tonight. Grimsby sits up with a candle anyway, waiting for them to find out.'
                 : 'The hall is legally his now, and the tenants know it. They circle it once with their torches, out of habit, and go back to the moor to wait for the next Grimsby.')
         : c.flags.betrayed ? 'Out on the moor, the torches have gone out. Somewhere in the fog, a lord is still explaining about wear and tear.'
           : 'You leave Grimsby to the mob. He has three hundred years of explaining to do.',

@@ -126,14 +126,15 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   porcupine: {
-    text: ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
+    text: (c) => c.flags.porcupineSeen ? ['The porcupine is still sitting on the keys, white with flour or dripping wet, and glaring.'] : ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
     choices: [
-      { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' } },
-      { text: 'Cast True sight, and look at the pen as it really is', cast: 'truesight', pass: 'porcupine_seen', fail: 'porcupine' },
-      { text: 'Cast Dispel magic on the straw, and end its invisibility', cast: 'dispel', pass: 'porcupine_seen', fail: 'porcupine' },
-      { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }] },
-      { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' } },
-      { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight' },
+      { text: 'Deal with the porcupine', to: 'porcupine_seen', show: { flag: 'porcupineSeen' } },
+      { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' }, show: { notFlag: 'porcupineSeen' } },
+      { text: 'Cast True sight, and look at the pen as it really is', cast: 'truesight', pass: 'porcupine_seen', fail: 'porcupine', show: { notFlag: 'porcupineSeen' } },
+      { text: 'Cast Dispel magic on the straw, and end its invisibility', cast: 'dispel', pass: 'porcupine_seen', fail: 'porcupine', show: { notFlag: 'porcupineSeen' } },
+      { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }], show: { notFlag: 'porcupineSeen' } },
+      { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' }, show: { notFlag: 'porcupineSeen' } },
+      { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight', show: { notFlag: 'porcupineSeen' } },
       { text: 'Back to the ring', to: 'big_top' },
     ],
   },
@@ -171,7 +172,7 @@ export const SECTIONS = {
     ],
   },
   aviary_noise: {
-    text: ['Your pick snaps with a ping. On its platform, the invisible ostrich stands up, which you can tell because the platform sighs with relief.'],
+    text: ['The lock stays shut, and something gives a loud metallic ping. On its platform, the invisible ostrich stands up, which you can tell because the platform sighs with relief.'],
     choices: [{ text: 'Back to the ring before anyone comes', to: 'big_top' }],
   },
   aviary_in: {
@@ -263,7 +264,7 @@ export const SECTIONS = {
     },
   },
   safe_jam: {
-    text: ['Your pick snaps off in the lock. The safe stays shut. The professor’s empty cape watches you from the floor.'],
+    text: ['The safe stays shut. It was built by someone who expected people like you. The professor’s empty cape watches you from the floor.'],
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   professor_down: {

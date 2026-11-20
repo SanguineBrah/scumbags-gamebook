@@ -78,7 +78,7 @@ export const SECTIONS = {
     dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug slides straight into your pit and can’t get out, because slugs don’t climb so much as smear, and the sides are sand. It lies at the bottom, looking up at you. Under it, glinting, is a heap of chewed gold.'],
-    choices: [{ text: 'Fish out the gold with your shovel', to: 'slug_gold' }],
+    choices: [{ text: 'Fish out the gold', to: 'slug_gold' }],
   },
   slug_burn: {
     dark: 'caves', litIf: true,   // the slime is on fire
@@ -166,7 +166,7 @@ export const SECTIONS = {
   retired: {
     on: [{ flag: 'retired' }, { item: 'scale', msg: 'The dragon gives you one of its scales: proof of removal, for the mayor.' }, { gold: 300, uncapped: true, msg: 'And a share of the hoard: 300GP.' }],
     onceOnly: true,
-    text: ['The dragon signs its retirement with a claw and a great deal of satisfaction. It gives you a scale for the mayor, and a share of the hoard for yourself. Then it limps or strides, depending on its leg, out of the cave mouth, spreads its wings, and is gone south, getting smaller, towards somewhere warm.'],
+    text: (c) => [`The dragon signs its retirement with a claw and a great deal of satisfaction. It gives you a scale for the mayor, and a share of the hoard for yourself. ${c.flags.legFixed ? 'Then it strides out of the cave mouth, spreads its wings, and is gone south, getting smaller, towards somewhere warm.' : 'Then it packs its hoard into a sack and limps out of the cave mouth and away down the mountain, heading south, towards somewhere warm. At that speed it should be there by spring.'}`],
     choices: [{ text: 'Back down to the village', to: 'village' }],
   },
   dragon_fight: {

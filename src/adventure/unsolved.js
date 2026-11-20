@@ -114,11 +114,11 @@ export const SECTIONS = {
     ],
   },
   whistle: {
-    text: ['You blow the whistle through the keyhole. The invigilator straightens, looks at a clock that stopped six weeks ago, says “PENS DOWN,” opens the door from the inside, and walks out of the library and across the quad and away, very fast. She has been waiting for that sound for a long time.'],
+    text: (c) => [`You blow the whistle${c.flags.invigAngry ? '' : ' through the keyhole'}. The invigilator straightens, looks at a clock that stopped six weeks ago, says “PENS DOWN,” ${c.flags.invigAngry ? 'and walks out' : 'opens the door from the inside, and walks out'} of the library and across the quad and away, very fast. She has been waiting for that sound for a long time.`],
     choices: [{ text: 'Into the library', to: 'reading_room' }],
   },
   library_open: {
-    text: ['The library door hangs open where you left it. The invigilator is back in the middle of the reading room, perfectly still, facing the door. Facing you.'],
+    text: ['The library door stands open. The invigilator is back in the middle of the reading room, perfectly still, facing the door. Facing you.'],
     choices: [
       { text: 'Blow your watchman’s whistle: it sounds exactly like the end of an exam', to: 'whistle', if: { item: 'whistle' } },
       { text: 'Go in anyway', to: 'invigilator' },
@@ -191,7 +191,7 @@ export const SECTIONS = {
       { text: 'Cast True sight, and see it as it really is', cast: 'truesight', pass: 'cube_seen', fail: 'hall', show: { notFlag: 'cubeSeen' } },
       { text: 'Cast Freeze time, and walk round it while it stands still', cast: 'freeze', pass: 'cube_frozen', fail: 'hall', show: { notFlag: 'cubeFrozen' } },
       { text: 'Cast Petition, and ask your god how it turns', cast: 'petition', pass: 'cube_petition', fail: 'hall', critFail: 'cube_intervention', show: { notFlag: 'cubePetition' } },
-      { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight' },
+      { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight', effects: [{ unflag: 'smite' }] },
       { text: 'Back out of the hall', to: 'quad' },
     ],
   },
@@ -207,7 +207,7 @@ export const SECTIONS = {
   },
   cube_fight: {
     on: [{ flag: 'cubeAngry' }],
-    text: ['You get it wrong. The cube stops turning. Space around you creases like paper, and a corner that isn’t there comes at you very fast.'],
+    text: (c) => [`${c.flags.smite ? 'Scorched and furious, the cube' : 'You get it wrong. The cube'} stops turning. Space around you creases like paper, and a corner that isn’t there comes at you very fast.`],
     fight: {
       monsters: [cube], distance: 1, win: 'cube_broken', flee: { to: 'quad', label: 'Run out of the hall' },
       special: [{ label: 'Try to turn it again, mid-fight', test: { stat: 'Int', dd: 8, skill: 'analysis' }, flag: 'midTurn', text: 'Your hand finds the edge that isn’t there, and turns. The cube folds up into a point and vanishes.', failText: 'It slips through your fingers, laughing in your teeth.', win: true }],
@@ -265,7 +265,7 @@ export const SECTIONS = {
     choices: [{ text: 'Back', to: 'hall' }],
   },
   cube_intervention: {
-    on: [{ flag: 'cubePetition' }],
+    on: [{ flag: 'cubePetition' }, { flag: 'smite' }],
     text: ['Your god scorns you. Instead of an answer, you get action. A bolt of holy fire comes down through the roof of the Great Hall and hits the cube, which does not like it, and decides it was you.'],
     choices: [{ text: 'Brace yourself', to: 'cube_fight' }],
   },
