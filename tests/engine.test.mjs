@@ -114,7 +114,7 @@ test('a big item makes room by leaving coins behind', () => {
 
 test('every adventure is complete and its final section is a victory', async () => {
   const { ADVENTURES, buildAdventure } = await import('../src/adventure/index.js');
-  assert.equal(ADVENTURES.length, 29);
+  assert.equal(ADVENTURES.length, 30);
   for (const a of ADVENTURES) {
     const b = buildAdventure(a.id);
     assert.equal(b.numbers.start, 1);
@@ -141,6 +141,18 @@ test('adventures are revealed a level band at a time, and none can be repeated',
   for (const a of ADVENTURES) if (!d.done.includes(a.id)) d.done.push(a.id);
   assert.equal(availableFor(d).length, 0);
   assert.equal(revealedFor(d).length, ADVENTURES.length);
+});
+
+test('the secret finale only goes up once enough of Snoad’s handiwork has been noticed', async () => {
+  const { availableFor, revealedFor } = await import('../src/adventure/index.js');
+  const c = make(24);
+  c.done = ['death-and-taxes', 'standard-dragon']; c.past = {};
+  const ids = () => availableFor(c).map((a) => a.id);
+  assert.ok(ids().includes('final-demand') && !ids().includes('hedge-fund'));
+  for (const id of ['legging-it', 'going-bananas', 'wrong-way-round', 'detention', 'out-of-the-cot']) { c.done.push(id); c.past[id] = { snoadClue: true }; }
+  assert.ok(!ids().includes('hedge-fund'));
+  c.past['standard-dragon'] = { snoadClue: true };
+  assert.ok(ids().includes('hedge-fund') && revealedFor(c).some((a) => a.id === 'hedge-fund'));
 });
 
 test('the town: inn, market, apothecary and fence', async () => {
@@ -263,4 +275,7 @@ test('every adventure has a line in the career write-up, and the finale ends it'
   assert.equal(w.lines.length, ADVENTURES.filter((a) => !a.finale).length);
   assert.match(w.ending, /more time/);
   assert.ok(w.lines.every((l) => typeof l === 'string' && l.endsWith('.')));
+  c.past['hedge-fund'] = { racket: true };
+  assert.match(careerWriteUp(c, 'finale', 'hedge-fund').ending, /business/);
+  assert.match(careerWriteUp(c, 'died', 'hedge-fund').ending, /Wartleby/);
 });

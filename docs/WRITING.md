@@ -80,6 +80,7 @@ ran away from should remember you; something you took shouldn't still be on the 
 What happened in earlier adventures is kept too: when a scumbag finishes an adventure, its flags
 are saved in `c.past[adventureId]`. Use `pastFlag(c, id, flag)` in text, or the `past` and
 `notPast` conditions, when a character or place comes back (Lord Grimsby, the counting house).
+The `did` condition (`show: { did: 'detention' }`) checks that an adventure was played at all.
 Adventures unlock a level band at a time, so only Death and Taxes (band 1) is certain to have been
 played before any other; anything else might have been skipped. Use `didAdventure(c, id)` to tell
 the difference between "skipped it" and "played it before memory was recorded", and always write
@@ -96,8 +97,9 @@ open cause of Legging It and Going Bananas, and the quiet cause of a few other m
 note on Neville's race card, Mother's sleeping charm, the chalked SERVICED. S. in the clock room,
 a hat in the blob, a receipt in the Bursar's office, Ned's cabbages, a mention in Detention.
 Keep these hints rare, short and deniable. Never let anyone in a story join the dots, and never
-bend a plot to fit him. Every section with a hint sets the `snoadClue` flag, so the clues can be
-counted across a career with `pastFlag(c, id, 'snoadClue')`.
+bend a plot to fit him. Every section with a hint sets the `snoadClue` flag. A scumbag with the
+flag in six adventures gets the secret finale, Hedge Fund (`META.unlock` in `hedge-fund.js`), whose
+opening lists the clues they found. A new hint means a new line in its `CLUES` list.
 
 ## Skills
 

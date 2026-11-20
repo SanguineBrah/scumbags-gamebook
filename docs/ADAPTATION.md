@@ -48,6 +48,8 @@ alternatives.
   at the inn or in a ditch.
 - **Careers end.** The rulebook has no end. Here, finishing any job at the top level opens a last
   one, Final Demand, which ends the career however it goes; scumbags can also retire from town.
+  A scumbag who has noticed Snoad's handiwork in six adventures also gets a secret alternative,
+  Hedge Fund, offered alongside it.
   Either way they get a write-up of every job they did (`src/adventure/career.js`).
 - **Mundane items are cheap in town.** Between adventures, mundane items can be swapped and
   restocked for nothing, as the rulebook says they're trivial to acquire. Significant items cost

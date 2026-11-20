@@ -41,8 +41,8 @@ const LINES = {
       : p('noGlibb') ? 'You left no professor at all, and the nephew inherited.' : 'You left thirty professors arguing about the slippers.',
   'going-bananas': (p) => p('saved') ? 'You saved a banana golem, and the greengrocers’ charter.'
     : p('dragged') ? 'You tied a banana golem to a lamp post.' : p('golemDead') ? 'You destroyed a banana golem. There was custard.' : 'You let a banana golem loose on a festival.',
-  detention: (p) => p('mumDone') ? 'You sent a baker to sort out five delinquent wizards, and she did.'
-    : p('surrendered') ? 'You got a stolen grimoire back from five delinquent wizards.'
+  detention: (p) => p('mumDone') ? 'You sent a baker to sort out a gang of delinquent wizards, and she did.'
+    : p('surrendered') ? 'You got a stolen grimoire back from a gang of delinquent wizards.'
       : p('grimoireSold') ? 'You sold a stolen grimoire, and a school closed.' : 'You failed to get a grimoire back.',
   'out-of-the-cot': (p) => p('sold') ? 'You sold a giant’s baby to a menagerie.'
     : p('trampled') ? 'You got a giant baby home, through most of a town.'
@@ -70,7 +70,7 @@ const LINES = {
 };
 
 // How it ended, from the finale's flags; or a plain retirement from the town.
-const ENDING = (p) => p('immortal') ? 'Wished never to die, and didn’t. Still pays tax.'
+const DEMAND_ENDING = (p) => p('immortal') ? 'Wished never to die, and didn’t. Still pays tax.'
   : p('auditedDeath') ? 'Set the taxman on Death, and walked out while they were busy.'
     : p('partied') ? 'Took Death and the taxman to a kobold party. Death won at musical chairs.'
       : p('deferred') ? 'Asked Death for more time, and got pencilled in for a Tuesday, fifty years on.'
@@ -79,17 +79,31 @@ const ENDING = (p) => p('immortal') ? 'Wished never to die, and didn’t. Still 
             : p('vaneTaken') ? 'Sent a dead moneylender to Death in their place. One’s one.'
               : p('beatDeath') ? 'Beat Death in a fair fight. Nobody believes it.'
                 : 'Ran from Death for forty years.';
+const SNOAD_ENDING = (p) => p('undoneRight') ? 'Helped a hedge-wizard get one spell right, once. Most things went back how they were.'
+  : p('botchBeaten') ? 'Fought every spell a hedge-wizard ever got wrong, all at once, and won.'
+    : p('botchFled') ? 'Ran from every spell a hedge-wizard ever got wrong. It went to sea.'
+      : p('racket') ? 'Went into business with a hedge-wizard: he makes the messes, you clear them up.'
+        : p('soldOut') ? 'Sold a hedge-wizard to his clients, for a thousand gold.'
+          : p('detained') ? 'Sent a hedge-wizard back to detention, twenty-six years late.'
+            : p('pardoned') ? 'Got a hedge-wizard a royal pardon for everything.'
+              : p('mobBeaten') ? 'Fought off a hedge-wizard’s clients, all of them at once.'
+              : p('ranOff') ? 'Ran off into the night with a hedge-wizard.'
+                : 'Found the hedge-wizard behind half your career, and left it at that.';
+const FINALES = {
+  'final-demand': { ending: DEMAND_ENDING, died: 'Went with Death at midnight, under Gallows Hill, where it all began.' },
+  'hedge-fund': { ending: SNOAD_ENDING, died: 'Died at midnight on Wartleby green, in a smell of bananas.' },
+};
 
 /** The write-up: a heading, how it ended, and a line for each job in the order they were done. */
-export function careerWriteUp(c, how) {
+export function careerWriteUp(c, how, finale = 'final-demand') {
   const past = c.past || {};
   const lines = (c.done || []).filter((id) => LINES[id]).map((id) => {
     const f = past[id] || {};
     return LINES[id]((k) => !!f[k], (k) => f[k] || 0);
   });
-  const fin = past['final-demand'] || {};
-  const ending = how === 'finale' ? ENDING((k) => !!fin[k])
-    : how === 'died' ? 'Went with Death at midnight, under Gallows Hill, where it all began.'
+  const fin = past[finale] || {};
+  const ending = how === 'finale' ? FINALES[finale].ending((k) => !!fin[k])
+    : how === 'died' ? FINALES[finale].died
       : 'Retired from scumbaggery before anything could stop them.';
   const titles = (c.done || []).length;
   return {

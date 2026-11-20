@@ -4,7 +4,7 @@ import { pastFlag, didAdventure } from '../engine/conditions.js';
 
 export const META = {
   tier: 11, id: 'final-demand', title: 'Final Demand', levels: '10', final: 'retirement', finale: true,
-  blurb: 'Two letters arrive at the Drowned Rat on the same morning. One has a black border. The other has a red seal. Both are addressed to you, both want to see you at the Counting House under Gallows Hill at midnight, and neither of them is the kind of thing you can put off. Nothing in this world is certain, as the saying goes, except two things. This is the last job on the board. Whatever happens, it’s the end of your career.',
+  blurb: 'Two letters arrive at the Drowned Rat on the same morning. One has a black border. The other has a red seal. Both are addressed to you, both want to see you at the Counting House under Gallows Hill at midnight, and neither of them is the kind of thing you can put off. Nothing in this world is certain, as the saying goes, except two things. Whatever happens, it’s the end of your career.',
 };
 
 const auditor = { name: 'The Auditor-General', lvl: 8, hp: 30, range: 'engaged', feats: ['dealD6', 'approval'], note: 'Seven feet of black wool and spectacles; deals +d6 damage; acts every other turn, but very hard' };

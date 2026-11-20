@@ -50,6 +50,7 @@ export function check(c, cond) {
   if (cond.gold) need(c.gold >= cond.gold, `${cond.gold}GP`);
   if (cond.past) need(pastFlag(c, cond.past[0], cond.past[1]), cond.pastText || 'something you did before');
   if (cond.notPast) need(!pastFlag(c, cond.notPast[0], cond.notPast[1]), cond.notPastText || 'something you didn’t do before');
+  if (cond.did) need(didAdventure(c, cond.did), cond.didText || 'somebody you met before');
   if (cond.atLeast) need((c.flags[cond.atLeast[0]] || 0) >= cond.atLeast[1], cond.atLeastText || 'more of something');
   if (cond.below) need((c.flags[cond.below[0]] || 0) < cond.below[1], cond.belowText || 'less of something');
   if (cond.level) need(c.level >= cond.level, `level ${cond.level}`);

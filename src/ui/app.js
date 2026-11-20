@@ -52,8 +52,8 @@ function dropScumbag(c) { setRoster(roster().filter((x) => x.id !== c.id)); }
 const RETIRED_KEY = 'scumbags-gamebook-retired';
 function retired() { try { return JSON.parse(localStorage.getItem(RETIRED_KEY) || '[]'); } catch { return []; } }
 /** End a career: write it up, take the scumbag off the roster, and show the write-up. */
-function retire(c, how) {
-  const w = careerWriteUp(c, how);
+function retire(c, how, finale) {
+  const w = careerWriteUp(c, how, finale);
   try { localStorage.setItem(RETIRED_KEY, JSON.stringify([w, ...retired()].slice(0, 24))); } catch { /* ignore */ }
   dropScumbag(c); clearSave();
   ui.writeup = w; ui.retireAsk = false;
@@ -447,7 +447,7 @@ function endingView() {
       adv.deathText.map((p) => h('p', { class: 'muted' }, p)),
       h('p', null, `${c.name}, level ${c.level} ${c.profession.toLowerCase()}, died with ${c.gold}GP and ${c.wasted ? `${c.wasted}GP already squandered` : 'nothing to show for it'}.`),
       adv.finale
-        ? h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => retire(c, 'died') }, 'Read your write-up'))
+        ? h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => retire(c, 'died', adv.id) }, 'Read your write-up'))
         : h('div', { class: 'row' }, h('button', { class: 'btn', onclick: newScumbag }, 'New scumbag'), h('button', { class: 'btn ghost', onclick: () => go('title') }, 'Title'))];
   }
   if (end === 'quit') {
@@ -458,7 +458,7 @@ function endingView() {
   // the last job: the career ends here, with a write-up instead of squandering
   if (adv.finale) {
     return [h('div', { class: 'num' }, g.number()), h('div', { class: 'story' }, g.text().map((p) => h('p', null, p))), messages(g),
-      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => { recordAdventure(c, adv.id); retire(c, 'finale'); } }, 'Read your write-up'))];
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => { recordAdventure(c, adv.id); retire(c, 'finale', adv.id); } }, 'Read your write-up'))];
   }
   // victory: squander your gold
   const e = (ui.ending ||= { wasted: [], done: false });
