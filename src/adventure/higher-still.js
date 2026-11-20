@@ -32,7 +32,7 @@ export const SECTIONS = {
     choices: [
       { text: 'Climb with your climbing gear', test: { stat: 'Str', dd: 6, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'climbing' } },
       { text: 'Haul yourself up on the builders’ hoist', test: { stat: 'Str', dd: 10, skill: ['athletics', 'bruteforce'], mods: [{ if: { item: 'rope' }, dd: 6 }] }, pass: 'clouds', fail: 'climb_fall' },
-      { text: 'Hammer in iron spikes as footholds where the ladders are missing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'spikes' } , effects: [{ lose: 'spikes' }] },
+      { text: 'Hammer in iron spikes as footholds where the ladders are missing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'spikes' }, effects: [{ lose: 'spikes' }] },
       { text: 'Just climb', test: { stat: 'Str', dd: 12, skill: ['athletics'], profs: ['Woodcutter'], why: 'you climb for a living' }, pass: 'clouds', fail: 'climb_fall' },
       { text: 'Cast Ascend, and float up through the cloud', cast: 'ascend', pass: 'clouds', fail: 'climb', critFail: 'climb_descend' },
       { text: 'Cast Perambulate, and walk up the side of the Spire', cast: 'perambulate', pass: 'clouds', fail: 'climb' },

@@ -128,15 +128,15 @@ export const SECTIONS = {
       { text: 'Cast Confession on Righteous Gall, in front of the whole village', cast: 'confession', pass: 'gall_confesses', fail: 'crowd_turns', critFail: 'gall_wiped' },
       { text: 'Cast Intervention, and ask your god to do something about Gall', cast: 'intervention', pass: 'intervention', fail: 'crowd_turns', critFail: 'petition_answer', show: { notFlag: 'gallDown' } },
       { text: 'Cast Telekinesis, and wedge a stone in the ducking stool’s pivot from across the pond', cast: 'telekinesis', pass: 'jammed', fail: 'jetty', show: { notFlag: 'nanFree' } },
-      { text: 'Jam the ducking stool’s pivot with an iron spike', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'spikes' }, show: { notFlag: 'nanFree' } , effects: [{ lose: 'spikes' }] },
-      { text: 'Glue the ducking stool’s pivot', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'glue' }, show: { notFlag: 'nanFree' } , effects: [{ lose: 'glue' }] },
+      { text: 'Jam the ducking stool’s pivot with an iron spike', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'spikes' }, show: { notFlag: 'nanFree' }, effects: [{ lose: 'spikes' }] },
+      { text: 'Glue the ducking stool’s pivot', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'glue' }, show: { notFlag: 'nanFree' }, effects: [{ lose: 'glue' }] },
       { text: 'Bless a bucket of millpond water and throw it over Nan, so the crowd sees she doesn’t burn', cast: 'bless', pass: 'holy_water', fail: 'crowd_turns', critFail: 'nan_oiled', if: { item: 'bucket' }, show: { notFlag: 'nanFree' } },
       { text: 'Challenge Gall', to: 'gall_fight' },
     ],
   },
   exposed: {
     on: [{ flag: 'exposed' }],
-    text: ['You hold up the rennet and read from the ledger: forty-one witches, forty-one dairies, ten gold a time. The crowd goes quiet. Then the dairymaid says, quite loudly, “He went round all the churns.” Righteous Gall looks at the crowd, and the crowd looks at Righteous Gall, and then it is Gall in the ducking stool, and he floats.'],
+    text: (c) => [`${c.flags.powder ? 'You hold up the rennet and read from the ledger: forty-one witches, forty-one dairies, ten gold a time.' : 'You tell the crowd about the grey dust on the milk, and ask them how a witchfinder knows which village to visit before anybody has said the word witch.'} The crowd goes quiet. Then the dairymaid says, quite loudly, “He went round all the churns.” Righteous Gall looks at the crowd, and the crowd looks at Righteous Gall, and then it is Gall in the ducking stool, and he floats.`],
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   miracle: {
@@ -155,7 +155,7 @@ export const SECTIONS = {
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   crowd_turns: {
-    text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men come at you down the jetty.'],
+    text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men shove you down the jetty towards him.'],
     choices: [{ text: 'Fight', to: 'gall_fight' }],
   },
   gall_fight: {

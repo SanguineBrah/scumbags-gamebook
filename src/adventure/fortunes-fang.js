@@ -249,8 +249,8 @@ export const SECTIONS = {
       : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
     choices: [
       { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
-      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } , effects: [{ lose: 'padlock' }] },
-      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } , effects: [{ lose: 'spikes' }] },
+      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' }, effects: [{ lose: 'padlock' }] },
+      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' }, effects: [{ lose: 'spikes' }] },
       { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Cast Step, and teleport past the coffin into the bank', cast: 'step', pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },

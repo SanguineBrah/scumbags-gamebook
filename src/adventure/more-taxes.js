@@ -86,8 +86,8 @@ export const SECTIONS = {
     choices: [
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'cabinet_fight', show: { none: [{ flag: 'fileFound' }, { flag: 'cabinetDone' }] } },
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'file_lost', show: { flag: 'cabinetDone', notFlag: 'fileFound' } },
-      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' } , effects: [{ lose: 'padlock' }] },
-      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' } , effects: [{ lose: 'glue' }] },
+      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' }, effects: [{ lose: 'padlock' }] },
+      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' }, effects: [{ lose: 'glue' }] },
       { text: 'Go to the Hall of Forms', to: 'forms' },
     ],
   },
@@ -170,8 +170,8 @@ export const SECTIONS = {
       c.flags.auditorOut ? '' : 'Behind the desk sits the Auditor-General: seven feet of black wool and spectacles. He looks up. “You,” he says, and turns a page in the ledger to your name without looking. “In arrears.”',
     ].filter(Boolean),
     choices: [
-      { text: 'Strike out your name with your quill', to: 'struck', if: { item: 'quill' }, show: { flag: 'auditorOut' } },
-      { text: 'Tear out your page', to: 'struck', show: { flag: 'auditorOut' } },
+      { text: 'Strike out your name with your quill', to: 'struck', if: { item: 'quill' }, show: { flag: 'auditorOut', notFlag: 'struckOut' } },
+      { text: 'Tear out your page', to: 'struck', show: { flag: 'auditorOut', notFlag: 'struckOut' } },
       { text: 'Take the Master Seal', to: 'seal', show: { flag: 'auditorOut', notFlag: 'seal' } },
       { text: 'Offer to pay him', to: 'pay', if: { gold: 200 }, show: { notFlag: 'auditorOut' } },
       { text: 'Argue that your income was not taxable', test: { stat: 'Int', dd: 12, skill: ['analysis', 'languages'], profs: ['Envoy'], why: 'you know your way round a regulation' }, pass: 'argued', fail: 'auditor_fight', show: { notFlag: 'auditorOut' } },
