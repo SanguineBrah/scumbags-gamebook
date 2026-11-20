@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="52b48d0ded52">
+<meta name="build" content="8b9f39df58cf">
 </head>
 <body>
 <div id="app"></div>
@@ -5651,7 +5651,7 @@ const META = {
 };
 
 const heavy = { name: 'Sid’s heavy', lvl: 2, hp: 6, range: 'engaged', note: 'Never bathes; knuckles like walnuts' };
-const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more (cursed)' };
+const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4', flag: 'cursed' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more, and catch his curse' };
 
 const SECTIONS = {
   start: {
@@ -5827,8 +5827,9 @@ const SECTIONS = {
       c.flags.nevilleWon
         ? 'That evening, Neville is carried round the town on the shoulders of everyone who backed him. He gives a speech from the horse end. Nobody can hear it, but everybody cheers.'
         : 'That evening, the Duchess is retired to a field full of buttercups, and Honest Sid buys a new suit, even louder than the last one.',
+      c.flags.cursed ? 'On the way home, your teeth feel funny, and you have a sudden craving for oats. It passes.' : '',
       `You leave Muckmarket with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
-    ],
+    ].filter(Boolean),
   },
   duchess_oats: {
     on: [{ flag: 'duchessCalm' }, { flag: 'duchessDone' }],
@@ -9617,6 +9618,7 @@ const SECTIONS = {
                     : c.flags.beatDeath ? 'You are the scumbag who beat Death in a fair fight. Nobody believes you, so you tell everybody, at length, for the rest of a very long life.'
                       : 'You run until you can’t, and then you sit down on a bench at the end of the world, and Death sits down next to you. “Good run,” he says.',
       c.flags.taxDone || c.flags.partied || c.flags.immortal ? '' : 'The Auditor-General is still waiting in the hall at Gallows Hill, as far as anyone knows. He can wait. He’s good at it.',
+      pastFlag(c, 'wrong-way-round', 'cursed') ? `A week after you retire, your teeth start to feel funny again, and then the rest of you does. Neville’s curse has been waiting all this time. You finish your retirement the wrong way round: horse on top, your own legs underneath.${c.flags.immortal ? ' Forever.' : ' Death, when he comes, has to check his clipboard twice.'}` : '',
       'Your career is over. You have, against all the odds, retired.',
     ].filter(Boolean),
   },
@@ -9767,6 +9769,7 @@ const SECTIONS = {
       { text: 'Offer him a partnership: he makes the messes, you get paid to clear them up', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'], mods: [{ if: { item: 'quill' }, dd: 6, text: 'You write it out properly, in two copies. He has never been offered a contract before.' }] }, pass: 'partners', fail: 'partner_no', show: { flag: 'confronted', notFlag: 'partnerTried' } },
       { text: 'Tie him up for his clients', test: { stat: 'Dex', dd: 6, skill: ['skulduggery', 'bruteforce'] }, pass: 'bagged', fail: 'bolted', if: { anyItem: ['rope', 'chain', 'manacles'] }, show: { notFlag: 'partners' } },
       { text: 'Grab him for his clients', test: { stat: 'Str', dd: 10, skill: ['bruteforce', 'athletics'] }, pass: 'bagged', fail: 'bolted', show: { notFlag: 'partners' } },
+      { text: 'Ask him about your teeth', to: 'teeth', show: { past: ['wrong-way-round', 'cursed'], notFlag: 'teethDone' } },
       { text: 'Walk him down to the green', to: 'green' },
     ],
   },
@@ -9777,6 +9780,11 @@ const SECTIONS = {
       pastFlag(c, 'standard-dragon', 'snoadClue') ? '“Ned’s cabbages?” he says. “He told me they were coming on lovely.”' : '“I only meant to help,” he says.',
       '“Every time,” he says. “Every single time. I said it too many times, or not enough, or to the wrong thing.” He puts his head on the book. “Mum always said.”',
     ],
+    choices: [{ text: 'Back to business', to: 'kitchen' }],
+  },
+  teeth: {
+    on: [{ flag: 'teethDone' }],
+    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “I do a cure. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
     choices: [{ text: 'Back to business', to: 'kitchen' }],
   },
   small_print: {
@@ -9982,6 +9990,7 @@ const SECTIONS = {
                       : c.flags.ranOff ? 'You and Snoad take the long road south, and keep going. Wherever you stop, something goes wrong. Wherever something goes wrong, you leave quickly. It is, all things considered, the same career you always had, only with somebody to talk to.'
                       : 'Snoad goes home to his mother’s. His clients go home to theirs. Nobody gets what they wanted, which in Wartleby is the usual arrangement.',
       c.flags.mumOnSide && !c.flags.undoneRight ? 'Mrs Snoad sends you a cake every Christmas. It is always slightly too big, and you never ask why.' : '',
+      pastFlag(c, 'wrong-way-round', 'cursed') ? (c.flags.teethDone ? 'A week later, Snoad’s guaranteed cure turns out to be exactly as good as it was for Neville. You finish your retirement the wrong way round: horse on top, your own legs underneath.' : 'A week later, your teeth start to feel funny, and then the rest of you does. Neville’s curse has been waiting all this time. You finish your retirement the wrong way round: horse on top, your own legs underneath.') : '',
       'Your career is over. Of all the ways it could have ended, this was the most avoidable.',
     ].filter(Boolean),
   },
@@ -9996,6 +10005,7 @@ return { SNOAD_CLUES_NEEDED, META, SECTIONS, DEATH_TEXT };
 __defs["src/adventure/career.js"] = function(){
 // A scumbag's career, written up when they retire: a line for every job, from what they did in it.
 const { ADVENTURES } = __req("src/adventure/index.js");
+const { pastFlag } = __req("src/engine/conditions.js");
 // One line per adventure, from the flags it ended with. p(flag) reads them; n(flag) reads counters.
 const LINES = {
   'death-and-taxes': (p) => p('vaneServes') ? 'You robbed a dead moneylender’s vault, and kept the moneylender.'
@@ -10100,11 +10110,13 @@ function careerWriteUp(c, how, finale = 'final-demand') {
   const ending = how === 'finale' ? FINALES[finale].ending((k) => !!fin[k])
     : how === 'died' ? FINALES[finale].died
       : 'Retired from scumbaggery before anything could stop them.';
+  // (gamebook) Neville's curse waits for retirement, so it never has to change a later adventure
+  const centaur = how !== 'died' && pastFlag(c, 'wrong-way-round', 'cursed');
   const titles = (c.done || []).length;
   return {
     name: c.name,
-    title: `Level ${c.level} ${c.quality ? `${c.quality.toLowerCase()} ` : ''}${c.profession.toLowerCase()}`,
-    ending,
+    title: `Level ${c.level} ${c.quality ? `${c.quality.toLowerCase()} ` : ''}${c.profession.toLowerCase()}${centaur ? ', reverse centaur' : ''}`,
+    ending: centaur ? `${ending} Then Neville’s curse finally took.` : ending,
     lines,
     tally: `${titles} job${titles === 1 ? '' : 's'} of ${ADVENTURES.length}. ${c.wasted ? `${c.wasted}GP squandered on pointless endeavours.` : 'Nothing squandered, somehow.'} ${how === 'died' ? 'Died' : 'Retired'} with ${c.gold}GP.`,
     died: how === 'died',
@@ -10834,6 +10846,7 @@ function monsterAttack(g, f, m) {
     const s = test(g, f, { stat: o.stat, dd: o.dd, skill: `save:${o.stat}`, label: `${o.stat} save: ${o.label}`, reroll: 'rerollSave' });
     if (!s.success) {
       note(f, o.text, 'bad');
+      if (o.flag) c.flags[o.flag] = true;   // e.g. a curse that shows itself later
       if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
       if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
       if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), null);

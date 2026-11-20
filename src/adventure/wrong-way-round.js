@@ -7,7 +7,7 @@ export const META = {
 };
 
 const heavy = { name: 'Sid’s heavy', lvl: 2, hp: 6, range: 'engaged', note: 'Never bathes; knuckles like walnuts' };
-const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more (cursed)' };
+const neville = { name: 'Neville', proper: true, lvl: 3, range: 'engaged', onHit: { stat: 'Cha', dd: 4, label: 'shake off the curse', text: 'He bites you, and you feel your luck curdle.', effect: 'damage', amount: 'd4', flag: 'cursed' }, note: 'Reverse centaur: horse on top, man underneath; on bite, d4 Cha save or take d4 more, and catch his curse' };
 
 export const SECTIONS = {
   start: {
@@ -183,8 +183,9 @@ export const SECTIONS = {
       c.flags.nevilleWon
         ? 'That evening, Neville is carried round the town on the shoulders of everyone who backed him. He gives a speech from the horse end. Nobody can hear it, but everybody cheers.'
         : 'That evening, the Duchess is retired to a field full of buttercups, and Honest Sid buys a new suit, even louder than the last one.',
+      c.flags.cursed ? 'On the way home, your teeth feel funny, and you have a sudden craving for oats. It passes.' : '',
       `You leave Muckmarket with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
-    ],
+    ].filter(Boolean),
   },
   duchess_oats: {
     on: [{ flag: 'duchessCalm' }, { flag: 'duchessDone' }],

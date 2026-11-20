@@ -352,6 +352,7 @@ export const SECTIONS = {
                     : c.flags.beatDeath ? 'You are the scumbag who beat Death in a fair fight. Nobody believes you, so you tell everybody, at length, for the rest of a very long life.'
                       : 'You run until you can’t, and then you sit down on a bench at the end of the world, and Death sits down next to you. “Good run,” he says.',
       c.flags.taxDone || c.flags.partied || c.flags.immortal ? '' : 'The Auditor-General is still waiting in the hall at Gallows Hill, as far as anyone knows. He can wait. He’s good at it.',
+      pastFlag(c, 'wrong-way-round', 'cursed') ? `A week after you retire, your teeth start to feel funny again, and then the rest of you does. Neville’s curse has been waiting all this time. You finish your retirement the wrong way round: horse on top, your own legs underneath.${c.flags.immortal ? ' Forever.' : ' Death, when he comes, has to check his clipboard twice.'}` : '',
       'Your career is over. You have, against all the odds, retired.',
     ].filter(Boolean),
   },

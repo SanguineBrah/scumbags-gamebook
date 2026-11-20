@@ -137,6 +137,7 @@ export const SECTIONS = {
       { text: 'Offer him a partnership: he makes the messes, you get paid to clear them up', test: { stat: 'Cha', dd: 8, skill: ['lying', 'social'], mods: [{ if: { item: 'quill' }, dd: 6, text: 'You write it out properly, in two copies. He has never been offered a contract before.' }] }, pass: 'partners', fail: 'partner_no', show: { flag: 'confronted', notFlag: 'partnerTried' } },
       { text: 'Tie him up for his clients', test: { stat: 'Dex', dd: 6, skill: ['skulduggery', 'bruteforce'] }, pass: 'bagged', fail: 'bolted', if: { anyItem: ['rope', 'chain', 'manacles'] }, show: { notFlag: 'partners' } },
       { text: 'Grab him for his clients', test: { stat: 'Str', dd: 10, skill: ['bruteforce', 'athletics'] }, pass: 'bagged', fail: 'bolted', show: { notFlag: 'partners' } },
+      { text: 'Ask him about your teeth', to: 'teeth', show: { past: ['wrong-way-round', 'cursed'], notFlag: 'teethDone' } },
       { text: 'Walk him down to the green', to: 'green' },
     ],
   },
@@ -147,6 +148,11 @@ export const SECTIONS = {
       pastFlag(c, 'standard-dragon', 'snoadClue') ? '“Ned’s cabbages?” he says. “He told me they were coming on lovely.”' : '“I only meant to help,” he says.',
       '“Every time,” he says. “Every single time. I said it too many times, or not enough, or to the wrong thing.” He puts his head on the book. “Mum always said.”',
     ],
+    choices: [{ text: 'Back to business', to: 'kitchen' }],
+  },
+  teeth: {
+    on: [{ flag: 'teethDone' }],
+    text: ['Snoad looks in your mouth with a candle, and goes pale. “Reverse centaur,” he says. “Bitten, were you? It’s a slow one. It waits.” He brightens. “I do a cure. Guaranteed.” Before you can stop him, he waves his wand over you and says something three times. You feel a faint tingle, and nothing else. “Sorry,” says Snoad, out of habit.'],
     choices: [{ text: 'Back to business', to: 'kitchen' }],
   },
   small_print: {
@@ -352,6 +358,7 @@ export const SECTIONS = {
                       : c.flags.ranOff ? 'You and Snoad take the long road south, and keep going. Wherever you stop, something goes wrong. Wherever something goes wrong, you leave quickly. It is, all things considered, the same career you always had, only with somebody to talk to.'
                       : 'Snoad goes home to his mother’s. His clients go home to theirs. Nobody gets what they wanted, which in Wartleby is the usual arrangement.',
       c.flags.mumOnSide && !c.flags.undoneRight ? 'Mrs Snoad sends you a cake every Christmas. It is always slightly too big, and you never ask why.' : '',
+      pastFlag(c, 'wrong-way-round', 'cursed') ? (c.flags.teethDone ? 'A week later, Snoad’s guaranteed cure turns out to be exactly as good as it was for Neville. You finish your retirement the wrong way round: horse on top, your own legs underneath.' : 'A week later, your teeth start to feel funny, and then the rest of you does. Neville’s curse has been waiting all this time. You finish your retirement the wrong way round: horse on top, your own legs underneath.') : '',
       'Your career is over. Of all the ways it could have ended, this was the most avoidable.',
     ].filter(Boolean),
   },

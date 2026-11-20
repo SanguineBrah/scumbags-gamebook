@@ -278,4 +278,7 @@ test('every adventure has a line in the career write-up, and the finale ends it'
   c.past['hedge-fund'] = { racket: true };
   assert.match(careerWriteUp(c, 'finale', 'hedge-fund').ending, /business/);
   assert.match(careerWriteUp(c, 'died', 'hedge-fund').ending, /Wartleby/);
+  c.past['wrong-way-round'] = { cursed: true };
+  assert.match(careerWriteUp(c, 'town').title, /reverse centaur/);
+  assert.doesNotMatch(careerWriteUp(c, 'died').title, /centaur/);
 });

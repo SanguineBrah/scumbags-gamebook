@@ -192,6 +192,7 @@ function monsterAttack(g, f, m) {
     const s = test(g, f, { stat: o.stat, dd: o.dd, skill: `save:${o.stat}`, label: `${o.stat} save: ${o.label}`, reroll: 'rerollSave' });
     if (!s.success) {
       note(f, o.text, 'bad');
+      if (o.flag) c.flags[o.flag] = true;   // e.g. a curse that shows itself later
       if (o.effect === 'prone' && !hasFeature(c, 'noProne')) c.prone = true;
       if (o.effect === 'gold') { const lost = Math.min(o.amount, c.gold); c.gold -= lost; note(f, `−${lost}GP.`, 'bad'); }
       if (o.effect === 'damage') hurtPlayer(g, f, rollExpr(rng, o.amount), null);
