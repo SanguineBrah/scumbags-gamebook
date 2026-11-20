@@ -26,7 +26,7 @@ jobs:
       - run: npm test
       - run: npm run check
       - run: npm run build
-      - run: mkdir site && cp dist/gamebook.html site/index.html
+      - run: mkdir site && cp dist/gamebook.html site/index.html && cp -r dist/assets dist/manifest.webmanifest site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

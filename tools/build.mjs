@@ -2,7 +2,7 @@
 // Supports the module style used in this repo: single-line named imports, and
 // `export function|class|const|let` declarations or `export { a, b };` lists.
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,9 +43,13 @@ let html = readFileSync(resolve(root, 'index.html'), 'utf8')
 if (!html.includes('__req(')) throw new Error('index.html script tag not found');
 // Inline local font files so the single HTML file works anywhere.
 html = html.replace(/url\('(assets\/[^']+\.ttf)'\)/g, (_, f) => `url('data:font/ttf;base64,${readFileSync(resolve(root, f)).toString('base64')}')`);
+// The icons and manifest stay real files beside the page (home-screen icons need real URLs): see below.
 // Stamp the build, so a page left open in a tab can tell when a newer one has been published.
 const stamp = createHash('sha1').update(html).digest('hex').slice(0, 12);
 html = html.replace('</head>', () => `<meta name="build" content="${stamp}">\n</head>`);
 mkdirSync(resolve(root, 'dist'), { recursive: true });
 writeFileSync(resolve(root, 'dist/gamebook.html'), html);
+mkdirSync(resolve(root, 'dist/assets/icons'), { recursive: true });
+for (const f of readdirSync(resolve(root, 'assets/icons'))) copyFileSync(resolve(root, 'assets/icons', f), resolve(root, 'dist/assets/icons', f));
+copyFileSync(resolve(root, 'manifest.webmanifest'), resolve(root, 'dist/manifest.webmanifest'));
 console.log(`dist/gamebook.html written: ${mods.size} modules, ${(html.length / 1024).toFixed(1)} KB`);

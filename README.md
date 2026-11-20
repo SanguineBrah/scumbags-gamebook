@@ -117,6 +117,8 @@ A few more tools help with writing and balance:
 | `src/adventure/` | One module per adventure, and `index.js`, which registers, unlocks and numbers them |
 | `src/ui/app.js` | The whole interface, in plain DOM |
 | `index.html` | Page shell and all the CSS |
+| `assets/` | The typewriter font, and the home-screen icons (`tools/icons.py` redraws them) |
+| `manifest.webmanifest` | Lets phones install the gamebook to the home screen |
 | `tools/` | Bundler, dev server, checker, bots and writing aids |
 | `docs/ADAPTATION.md` | Where and why the gamebook departs from the tabletop rules |
 | `docs/WRITING.md` | How to write sections and adventures |
