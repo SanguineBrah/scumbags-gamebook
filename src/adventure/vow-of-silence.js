@@ -19,7 +19,7 @@ export const SECTIONS = {
   },
   gate: {
     text: (c) => [
-      c.flags.inside ? 'The gatehouse of St Shush is quiet. The porter has gone back to his cell.' : 'The Abbey of St Shush sits in a hollow, wrapped in a silence so thick you can feel it on your ears. At the gate, an old monk sits on a stool. He looks at you, and raises one eyebrow. That is the whole conversation.',
+      c.flags.inside ? 'The gatehouse of St Shush is quiet. The porter has gone back to his cell.' : 'The Abbey of St Shush sits in a hollow, wrapped in a silence so thick you can feel it on your ears. At the gate, a wizened monk sits on a stool. He looks at you, and raises one eyebrow. That is the whole conversation.',
       'A notice on the gate reads: SILENCE. Underneath, in smaller letters: PLEASE.',
     ],
     choices: [
@@ -73,27 +73,27 @@ export const SECTIONS = {
     ],
   },
   refectory: {
-    text: ['In the refectory, sixty monks eat soup in perfect silence. Not a slurp. Not a clink. A place is laid for you at the end of the bench. Next to it sits a very old monk who keeps looking at you, and then at the cellar door, and then at you, and winking.'],
+    text: ['In the refectory, sixty monks eat soup in perfect silence. Not a slurp. Not a clink. A place is laid for you at the end of the bench. Next to it sits a monk so wrinkly he looks as if he was left in the font overnight. He keeps looking at you, and then at the cellar door, and then at you, and winking.'],
     choices: [
       { text: 'Eat your soup without a sound', test: { stat: 'Dex', dd: 8, save: true }, pass: 'soup_quiet', fail: 'soup_slurp' },
       { text: 'Cast Silence on yourself, then eat your soup', cast: 'silence', pass: 'soup_quiet', fail: 'soup_slurp', critFail: 'soup_tongues' },
-      { text: 'Pass the old monk a note with your quill', to: 'old_monk', if: { item: 'quill' } },
+      { text: 'Pass the wrinkly monk a note with your quill', to: 'old_monk', if: { item: 'quill' } },
       { text: 'Back to the cloister', to: 'cloister' },
     ],
   },
   soup_quiet: {
-    text: ['You eat the whole bowl without a sound. The old monk beside you looks impressed, and taps the back of his hand with four fingers, then points at the cellar door. Four fingers, flat. You file that away.'],
+    text: ['You eat the whole bowl without a sound. The wrinkly monk beside you looks impressed, and taps the back of his hand with four fingers, then points at the cellar door. Four fingers, flat. You file that away.'],
     on: [{ flag: 'refectoryDone' }, { flag: 'knowsSignal' }],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   soup_slurp: {
     on: [NOISE(), { flag: 'refectoryDone' }],
-    text: ['You slurp. Sixty spoons stop halfway to sixty mouths. Sixty heads turn. The old monk beside you puts his face in his hands.'],
+    text: ['You slurp. Sixty spoons stop halfway to sixty mouths. Sixty heads turn. Your wrinkly neighbour puts his face in his hands.'],
     choices: [{ text: 'Back to the cloister, quickly', to: 'cloister' }],
   },
   old_monk: {
     on: [{ flag: 'refectoryDone' }, { flag: 'knowsSignal' }, { flag: 'knowsSecret' }],
-    text: ['You write: WHAT IS IN THE LIQUEUR? The old monk reads it, and his shoulders shake with silent laughter. He writes back: TO OPEN THE CELLAR, FOUR FINGERS FLAT ON THE BACK OF THE HAND. THE RECIPE IS ON THE BIG CASK. YOU WILL BE DISAPPOINTED. Then he eats the note.'],
+    text: ['You write: WHAT IS IN THE LIQUEUR? He reads it, and his shoulders shake with silent laughter. He writes back: TO OPEN THE CELLAR, FOUR FINGERS FLAT ON THE BACK OF THE HAND. THE RECIPE IS ON THE BIG CASK. YOU WILL BE DISAPPOINTED. Then he eats the note.'],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   scriptorium: {
@@ -216,7 +216,7 @@ export const SECTIONS = {
   },
   soup_tongues: {
     on: [NOISE(), { flag: 'refectoryDone' }],
-    text: ['Your god scorns you. Instead of falling silent, you find you can speak every language in the world, and to your horror you begin to, loudly, in all of them at once. Sixty spoons stop halfway to sixty mouths. The old monk beside you puts his face in his hands.'],
+    text: ['Your god scorns you. Instead of falling silent, you find you can speak every language in the world, and to your horror you begin to, loudly, in all of them at once. Sixty spoons stop halfway to sixty mouths. Your wrinkly neighbour puts his face in his hands.'],
     choices: [{ text: 'Back to the cloister, quickly', to: 'cloister' }],
   },
   signs_read: {

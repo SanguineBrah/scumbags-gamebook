@@ -44,7 +44,7 @@ export const SECTIONS = {
     choices: [{ text: 'Walk up to the pyramid', to: 'pyramid' }, { text: 'Ask around the square', to: 'square' }],
   },
   square: {
-    text: ['The townsfolk of Middle Whelping are on the kobolds’ side, mostly because Lord Grimsby is their landlord too. A baker tells you the kobolds pay cash for bread. An old woman tells you the square has always been common land. “There was a deed,” she says, “in the town hall. Grimsby had it taken away. Said he was having it framed.”'],
+    text: ['The townsfolk of Middle Whelping are on the kobolds’ side, mostly because Lord Grimsby is their landlord too. A baker tells you the kobolds pay cash for bread. A toothless crone on a bench tells you the square has always been common land. “There was a deed,” she says, “in the town hall. Grimsby had it taken away. Said he was having it framed.”'],
     on: [{ flag: 'heardDeed' }],
     choices: [
       { text: 'Search Grimsby’s carriage for the deed', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'deed', fail: 'bailiffs', show: { notFlag: 'deed' } },
@@ -85,7 +85,7 @@ export const SECTIONS = {
   },
   baker: {
     on: [{ flag: 'pie' }, { gold: -5 }, { heal: '2d6' }],
-    text: ['The pie costs five gold and is worth it. The baker leans over the counter. “The old one, Grandmother Snik, she’s fair. Pays on time. Talk to her straight and she’ll listen. Lie to her and she’ll know.”'],
+    text: ['The pie costs five gold and is worth it. The baker leans over the counter. “The wrinkly one, Grandmother Snik, she’s fair. Pays on time. Talk to her straight and she’ll listen. Lie to her and she’ll know.”'],
     choices: [{ text: 'Back to the square', to: 'square' }],
   },
   deed: {
@@ -277,7 +277,7 @@ export const SECTIONS = {
   },
   salvage: {
     on: [{ flag: 'salvage' }, { item: 'potion' }, { item: 'fire' }, { gold: 30 }],
-    text: ['Among the broken teacups and lucky stones you find a healing potion, a jar of alchemist’s fire labelled DO NOT, and a purse of old coins the kobolds dug up in the warren.'],
+    text: ['Among the broken teacups and lucky stones you find a healing potion, a jar of alchemist’s fire labelled DO NOT, and a purse of tarnished coins the kobolds dug up in the warren.'],
     choices: [{ text: 'Back to the room', to: 'apex' }],
   },
   burn: {

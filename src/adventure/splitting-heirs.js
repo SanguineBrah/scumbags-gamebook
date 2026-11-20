@@ -139,7 +139,7 @@ export const SECTIONS = {
   },
   cured: {
     on: [{ flag: 'cured' }, { flag: 'found' }],
-    text: ['The Glibb by the fire drinks the antidote. He firms up, colours in, and is suddenly a small, bald, furious old man in spectacles, with a gold tooth. All round the hall, twenty-nine copies of him sigh, slump, and become puddles.'],
+    text: ['The Glibb by the fire drinks the antidote. He firms up, colours in, and is suddenly a small, bald, furious, wrinkly man in spectacles, with a gold tooth. All round the hall, twenty-nine copies of him sigh, slump, and become puddles.'],
     choices: [{ text: 'Take him to Mr Probate', to: 'reading' }],
   },
   real_fight: {
@@ -184,7 +184,7 @@ export const SECTIONS = {
   },
   truesight: {
     on: [{ flag: 'trueSeen' }, CLUE, CLUE, CLUE],
-    text: ['You see the Glibbs as they really are: twenty-nine shapes of grey jelly, wearing the memory of a man like a coat. And one, by the fireplace, who is a man: old, tired, frightened, and very much Professor Glibb, wearing jelly.'],
+    text: ['You see the Glibbs as they really are: twenty-nine shapes of grey jelly, wearing the memory of a man like a coat. And one, by the fireplace, who is a man: elderly, tired, frightened, and very much Professor Glibb, wearing jelly.'],
     choices: [{ text: 'Back to the hall', to: 'hall' }],
   },
   sensed_scorn: {

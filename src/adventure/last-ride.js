@@ -24,7 +24,7 @@ export const SECTIONS = {
     ],
   },
   set_out: {
-    text: ['Sir Gristle mounts his horse, Thunder, who is thirty years old and mostly asleep. It takes three of you to get him into the saddle. You set out for Muckle Fen at the pace of a funeral, which, depending on who is paying, may be appropriate.'],
+    text: ['Sir Gristle mounts his horse, Thunder, who is thirty and mostly asleep. It takes three of you to get him into the saddle. You set out for Muckle Fen at the pace of a funeral, which, depending on who is paying, may be appropriate.'],
     choices: [
       { text: 'Take the King’s Road (longer, but safer)', to: 'road' },
       { text: 'Take the short cut across the fen', to: 'fen_edge' },
@@ -259,7 +259,7 @@ export const SECTIONS = {
     choices: [{ text: 'Hear what Croaker has to say', to: 'croaker_story' }],
   },
   glory_charge: {
-    text: ['You slap Thunder’s rump. The old horse sets off at a canter, a dead knight swaying magnificently in the saddle, sword lashed to his hand. Croaker sees him coming and fires in panic. Toad, knight and horse meet in a tremendous green explosion. Thunder trots out of the smoke unhurt. Sir Gristle does not, being already dead, but the village saw everything.'],
+    text: ['You slap Thunder’s rump. The creaky horse sets off at a canter, a dead knight swaying magnificently in the saddle, sword lashed to his hand. Croaker sees him coming and fires in panic. Toad, knight and horse meet in a tremendous green explosion. Thunder trots out of the smoke unhurt. Sir Gristle does not, being already dead, but the village saw everything.'],
     on: [{ flag: 'gloriousDeath' }],
     choices: [{ text: 'Take him home', to: 'pension_office' }],
   },

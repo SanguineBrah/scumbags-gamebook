@@ -90,7 +90,7 @@ export const SECTIONS = {
   },
   lockup: {
     text: (c) => [
-      c.flags.nanFree ? 'The lock-up is empty. Somewhere, a deaf old woman is eating cough sweets in safety.' : 'Old Nan sits in the village lock-up on a stool, wrapped in a shawl, sucking a cough sweet. She is very small, and very deaf, and very calm. “Is it morning?” she shouts. Two of Gall’s men stand guard outside, leaning on cudgels.',
+      c.flags.nanFree ? 'The lock-up is empty. Somewhere, a deaf old dear is eating cough sweets in safety.' : 'Old Nan sits in the village lock-up on a stool, wrapped in a shawl, sucking a cough sweet. She is very small, and very deaf, and very calm. “Is it morning?” she shouts. Two of Gall’s men stand guard outside, leaning on cudgels.',
     ],
     choices: [
       { text: 'Pick the lock while the guards doze', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'nan_out', fail: 'guards_fight', if: { item: 'tools' }, show: { notFlag: 'nanFree' } },
@@ -113,7 +113,7 @@ export const SECTIONS = {
   },
   nan_out: {
     on: [{ flag: 'nanFree' }],
-    text: ['Old Nan comes out of the lock-up on your arm, very slowly, and you hide her under a heap of sacks in the inn stable with Tansy. “Is it morning?” she shouts. Not yet, you tell her. Not yet.'],
+    text: ['Nan comes out of the lock-up on your arm, very slowly, and you hide her under a heap of sacks in the inn stable with Tansy. “Is it morning?” she shouts. Not yet, you tell her. Not yet.'],
     choices: [{ text: 'Go down to the millpond', to: 'jetty' }],
   },
   jetty: {
@@ -146,12 +146,12 @@ export const SECTIONS = {
   },
   holy_water: {
     on: [{ flag: 'miracle' }],
-    text: ['You fill your bucket from the millpond, bless it in front of everybody, and throw it over Old Nan in her chair. Holy water, as everybody knows, burns a witch. Nan sits there, soaked, blinking, entirely unburnt. “Is it raining?” she shouts. The crowd looks at Righteous Gall. Righteous Gall has nothing to say.'],
+    text: ['You fill your bucket from the millpond, bless it in front of everybody, and throw it over Nan in her chair. Holy water, as everybody knows, burns a witch. Nan sits there, soaked, blinking, entirely unburnt. “Is it raining?” she shouts. The crowd looks at Righteous Gall. Righteous Gall has nothing to say.'],
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   jammed: {
     on: [{ flag: 'jammed' }],
-    text: ['They swing the arm out over the water and pull the rope to drop it. It doesn’t drop. They pull harder. Old Nan hangs over the millpond, perfectly dry, sucking a cough sweet. “Is it morning?” she shouts. The crowd starts to laugh. Then someone says it: “She won’t go in. The water won’t have her. It’s a sign.” A sign of innocence, by general agreement. They let her down.'],
+    text: ['They swing the arm out over the water and pull the rope to drop it. It doesn’t drop. They pull harder. Nan hangs over the millpond, perfectly dry, sucking a cough sweet. “Is it morning?” she shouts. The crowd starts to laugh. Then someone says it: “She won’t go in. The water won’t have her. It’s a sign.” A sign of innocence, by general agreement. They let her down.'],
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   crowd_turns: {
@@ -180,11 +180,11 @@ export const SECTIONS = {
       { if: { flag: 'exposed' }, gold: 200, uncapped: true, msg: 'The village pays you the 200GP it had set aside for Gall.' },
     ],
     text: (c) => [
-      c.flags.exposed ? 'Righteous Gall leaves Puddlecombe the same morning, wet and witchless, with the whole village throwing curdled milk after him. Old Nan never finds out any of it happened.'
-        : c.flags.miracle ? 'Old Nan is declared a saint, which she doesn’t hear either. Pilgrims come for her cough sweets. Righteous Gall moves on to the next village, and the next, until somebody stops him.'
+      c.flags.exposed ? 'Righteous Gall leaves Puddlecombe the same morning, wet and witchless, with the whole village throwing curdled milk after him. Nan never finds out any of it happened.'
+        : c.flags.miracle ? 'Nan is declared a saint, which she doesn’t hear either. Pilgrims come for her cough sweets. Righteous Gall moves on to the next village, and the next, until somebody stops him.'
           : c.flags.jammed ? 'Old Nan goes home on Tansy’s arm. Gall leaves Puddlecombe in a huff, looking for a village with better carpentry.'
             : c.flags.nanFree ? 'Old Nan is three villages away by sunrise, in the back of a hay cart, with Tansy and the cough sweets. Puddlecombe never sees her again, and its milk stops curdling the day Gall leaves.'
-              : c.flags.gallDown ? 'With the Witchfinder in the pond, nobody has the heart to duck anybody else. Old Nan goes home and makes cough sweets.'
+              : c.flags.gallDown ? 'With the Witchfinder in the pond, nobody has the heart to duck anybody else. Nan goes home and makes cough sweets.'
                 : 'They duck Old Nan at sunrise. She floats, because she is very small and very light, and they call her a witch. She is still a witch, as far as Puddlecombe is concerned, when she dies in her own bed nine years later. Gall has moved on by then.',
       `You leave Puddlecombe with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
@@ -198,11 +198,11 @@ export const SECTIONS = {
     choices: [{ text: 'Fight', to: 'guards_fight' }],
   },
   nan_shrouded: {
-    text: ['Your god scorns you. Instead of a holy light, darkness pours out over Old Nan and the ducking stool, thick as soot. The crowd falls back. “WITCHCRAFT,” cries Righteous Gall, delighted, and points at you.'],
+    text: ['Your god scorns you. Instead of a holy light, darkness pours out over Nan and the ducking stool, thick as soot. The crowd falls back. “WITCHCRAFT,” cries Righteous Gall, delighted, and points at you.'],
     choices: [{ text: 'Brace yourself', to: 'crowd_turns' }],
   },
   nan_oiled: {
-    text: ['Your god scorns you. Instead of holy water, your bucket is full of lamp oil, and you have already thrown it. Old Nan sits on the ducking stool, dripping, and asks if it’s raining. “An OILY witch,” says Gall, with deep satisfaction.'],
+    text: ['Your god scorns you. Instead of holy water, your bucket is full of lamp oil, and you have already thrown it. Nan sits on the ducking stool, dripping, and asks if it’s raining. “An OILY witch,” says Gall, with deep satisfaction.'],
     choices: [{ text: 'Brace yourself', to: 'crowd_turns' }],
   },
   gall_confesses: {

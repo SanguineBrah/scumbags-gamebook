@@ -23,7 +23,7 @@ export const SECTIONS = {
   hut: {
     text: (c) => [
       'Death’s beach hut is painted black, with a sign: OCCUPIED. ETERNALLY. The lock has been forced with something blunt. Inside: a towel, a bucket and spade, a novel about a lighthouse keeper, and an empty hook where a scythe would go.',
-      c.flags.hutClue ? 'You know what you’re looking for: a very old man with sand in his slippers.' : 'There are footprints in the sand on the floor.',
+      c.flags.hutClue ? 'You know what you’re looking for: a crumbly old gent with sand in his slippers.' : 'There are footprints in the sand on the floor.',
     ],
     choices: [
       { text: 'Study the footprints with your jeweller’s loupe', to: 'prints', if: { item: 'loupe' }, show: { notFlag: 'hutClue' } },
@@ -34,7 +34,7 @@ export const SECTIONS = {
   },
   prints: {
     on: [{ flag: 'hutClue' }],
-    text: ['The footprints are slippers, very old ones, worn through at the heel, dragging the left foot. Whoever it was is very old, and was in a hurry. Then there are tyre marks. A bath chair.'],
+    text: ['The footprints are slippers, ancient ones, worn through at the heel, dragging the left foot. Whoever it was is decrepit, and was in a hurry. Then there are tyre marks. A bath chair.'],
     choices: [{ text: 'Back to the beach', to: 'prom' }],
   },
   prints_lost: {
@@ -98,8 +98,8 @@ export const SECTIONS = {
   ghost_train: {
     dark: 'train',
     text: (c) => [
-      'Inside the ghost train, the little cars sit on their rails. Painted skeletons leer from the walls. At the far end, in the last car, wrapped in a tartan blanket, sits a tiny old man in slippers, holding a scythe that is far too big for him. Its blade shines black, and the dark around it is darker.',
-      '“Go away,” says Old Mortimer. “I’m not going. Not now. Not ever. I’ve got it, and while I’ve got it, nobody goes.”',
+      'Inside the ghost train, the little cars sit on their rails. Painted skeletons leer from the walls. At the far end, in the last car, wrapped in a tartan blanket, sits a tiny, wrinkly man in slippers, holding a scythe that is far too big for him. Its blade shines black, and the dark around it is darker.',
+      '“Go away,” says Mortimer. “I’m not going. Not now. Not ever. I’ve got it, and while I’ve got it, nobody goes.”',
     ].filter(Boolean),
     choices: [
       { text: 'Talk to him about what he’s afraid of', test: { stat: 'Cha', dd: 10, skill: ['social', 'medicine'], profs: ['Cleric', 'Missionary'], why: 'you’ve sat with the dying before' }, pass: 'mortimer_talks', fail: 'mortimer_fight' },
@@ -121,12 +121,12 @@ export const SECTIONS = {
   },
   mortimer_fight: {
     dark: 'train',
-    text: ['Old Mortimer stands up in the ghost train car, which takes him a while, and swings the scythe. It goes through the car in front of him like paper. It goes through the painted skeleton on the wall. He is a hundred and four, and he is holding Death.'],
+    text: ['Mortimer stands up in the ghost train car, which takes him a while, and swings the scythe. It goes through the car in front of him like paper. It goes through the painted skeleton on the wall. He is a hundred and four, and he is holding Death.'],
     fight: {
       monsters: [mortimer], win: 'scythe_got', flee: { to: 'pier', label: 'Run back out onto the pier' },
       special: [
-        { label: 'Prise the scythe out of his hands', test: { stat: 'Str', dd: 10, skill: 'bruteforce' }, flag: 'prised', text: 'You get both hands on the haft, and twist, and the scythe comes free. Mortimer sits down, suddenly very old again.', failText: 'His grip is a hundred and four years strong.', win: true },
-        { label: 'Hold up your hand mirror', if: { item: 'mirror' }, flag: 'mirrored', text: 'Mortimer sees himself in your mirror: a tiny, frightened old man holding a scythe. He stops, and stares.', stun: 1 },
+        { label: 'Prise the scythe out of his hands', test: { stat: 'Str', dd: 10, skill: 'bruteforce' }, flag: 'prised', text: 'You get both hands on the haft, and twist, and the scythe comes free. Mortimer sits down, suddenly a hundred and four again.', failText: 'His grip is a hundred and four years strong.', win: true },
+        { label: 'Hold up your hand mirror', if: { item: 'mirror' }, flag: 'mirrored', text: 'Mortimer sees himself in your mirror: a tiny, frightened old codger holding a scythe. He stops, and stares.', stun: 1 },
       ],
     },
   },
@@ -155,7 +155,7 @@ export const SECTIONS = {
     on: [{ lose: 'scythe' }, { flag: 'returned' }],
     text: (c) => [
       'You give Death his scythe. He weighs it in his hand, and sighs, a sound like wind in a churchyard. “Thank you,” he says. “It’s good to have it back. And it isn’t.”',
-      c.flags.gaveUp ? 'You tell him what Old Mortimer said. Death is quiet for a while. “Tell him I’ll come and say hello first,” he says. “I always do. People just don’t notice.”' : 'He looks along the pier towards the ghost train. “Mortimer,” he says. “I know. I’ll be gentle.”',
+      c.flags.gaveUp ? 'You tell him what Mortimer said. Death is quiet for a while. “Tell him I’ll come and say hello first,” he says. “I always do. People just don’t notice.”' : 'He looks along the pier towards the ghost train. “Mortimer,” he says. “I know. I’ll be gentle.”',
     ],
     choices: [{ text: 'Sit with him a while', to: 'season_ends' }],
   },
@@ -174,28 +174,28 @@ export const SECTIONS = {
   },
   scried: {
     on: [{ flag: 'hutClue' }],
-    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the last car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
+    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the last car of a ghost train at the end of a pier, in the bony hands of a doddery gent in slippers, who is holding on to it as if it were the last thing in the world.'],
     choices: [{ text: 'Back to the beach', to: 'prom' }],
   },
   mortimer_eased: {
     dark: 'train',
     on: [{ flag: 'gaveUp' }],
-    text: ['You lay a hand on Old Mortimer’s chest and pray. His breathing eases. Colour comes into his face. He looks at you, astonished. “I haven’t felt this well in twenty years,” he says. He looks at the scythe across his knees, and then, after a long time, he holds it out to you. “I suppose I’ve got a bit longer now,” he says. “I’d rather spend it outside.”'],
+    text: ['You lay a hand on Mortimer’s chest and pray. His breathing eases. Colour comes into his face. He looks at you, astonished. “I haven’t felt this well in twenty years,” he says. He looks at the scythe across his knees, and then, after a long time, he holds it out to you. “I suppose I’ve got a bit longer now,” he says. “I’d rather spend it outside.”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_afflicted: {
     dark: 'train',
-    text: ['Your god scorns you. Instead of easing his heart, your prayer squeezes it. Old Mortimer goes grey and clutches his chest, and would certainly have died, except that nobody can die while he holds the scythe. He just feels dreadful, and he knows exactly whose fault it is.'],
+    text: ['Your god scorns you. Instead of easing his heart, your prayer squeezes it. Mortimer goes grey and clutches his chest, and would certainly have died, except that nobody can die while he holds the scythe. He just feels dreadful, and he knows exactly whose fault it is.'],
     choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
   },
   mortimer_wiped: {
     dark: 'train',
-    text: ['Old Mortimer blinks, and forgets the last day: the fear, the hiding, the long wait in the dark with the painted skeletons. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
+    text: ['Mortimer blinks, and forgets the last day: the fear, the hiding, the long wait in the dark with the painted skeletons. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_confesses: {
     dark: 'train',
-    text: ['Your god scorns you. Instead of forgetting, Old Mortimer relives his most recent sins: the beach hut, the scythe, the long walk out along the pier, and the moment he realised that nobody in the world could die while he held it, and how glad he was. He stands up in the car with the scythe in both hands.'],
+    text: ['Your god scorns you. Instead of forgetting, the wrinkly little thief relives his most recent sins: the beach hut, the scythe, the long walk out along the pier, and the moment he realised that nobody in the world could die while he held it, and how glad he was. He stands up in the car with the scythe in both hands.'],
     choices: [{ text: 'Brace yourself', to: 'mortimer_fight' }],
   },
 };

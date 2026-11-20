@@ -16,8 +16,8 @@ const LINES = {
     : p('kobsStay') ? 'You took the kobolds’ side, and the landlord never paid you.'
       : p('burnt') ? 'You burnt down a kobold siege-pyramid, for a fee.'
         : p('kobsBeaten') ? 'You evicted a kobold siege-pyramid by force.' : 'You failed to evict a kobold siege-pyramid.',
-  'last-ride': (p) => p('gloriousDeath') || (p('dead') && p('propped')) ? 'You gave an old knight the glorious death his pension required.'
-    : p('dead') ? 'You let an old knight die in his bed, which the Pension Office would not pay for.' : 'You kept an old knight alive, out of spite, mostly his.',
+  'last-ride': (p) => p('gloriousDeath') || (p('dead') && p('propped')) ? 'You gave a doddery knight the glorious death his pension required.'
+    : p('dead') ? 'You let a wrinkly knight die in his bed, which the Pension Office would not pay for.' : 'You kept a decrepit knight alive, out of spite, mostly his.',
   'invisible-menagerie': (p) => p('egg') ? 'You stole an egg nobody could see, for a collector who couldn’t see it either.' : 'You went to the Invisible Menagerie, and saw nothing.',
   unsolved: (p) => p('solved') || p('midTurn') ? 'You solved a murderous puzzle box that had beaten every professor.'
     : p('cubeBroken') ? 'You broke a murderous puzzle box instead of solving it. It is a lectern now.' : 'You failed to solve a murderous puzzle box.',
@@ -50,9 +50,9 @@ const LINES = {
   'taking-the-waters': (p) => p('blobGone') ? 'You got the monster out of the Royal Spa.'
     : p('drained') || p('dropped') || p('salted') || p('polluted') ? 'You shrank a spa’s monster to the size of a sulky dog.' : 'You left a monster in the Royal Spa. The Duchess loved it.',
   'trial-by-ducking': (p) => p('exposed') ? 'You ran a witchfinder out of a village.'
-    : p('miracle') ? 'You got an old woman declared a saint.'
-      : p('nanFree') ? 'You smuggled an old woman away from a ducking.'
-        : p('jammed') ? 'You sabotaged a ducking stool.' : p('gallDown') ? 'You put a witchfinder in his own pond.' : 'You watched them duck an old woman.',
+    : p('miracle') ? 'You got a deaf old dear declared a saint.'
+      : p('nanFree') ? 'You smuggled a pensioner away from a ducking.'
+        : p('jammed') ? 'You sabotaged a ducking stool.' : p('gallDown') ? 'You put a witchfinder in his own pond.' : 'You watched them duck a ninety-year-old herbalist.',
   'more-taxes': (p) => p('struckOut') ? 'You broke into the Royal Exchequer and erased yourself from the Great Ledger.'
     : p('settled') ? 'You broke into the Royal Exchequer, and came out on a payment plan.' : 'You broke into the Royal Exchequer. Your name is still in the Great Ledger.',
   'clockwork-cathedral': (p) => p('zombieEzra') ? 'You raised a dead clockmaker to mend a mechanical bishop.'

@@ -87,7 +87,7 @@ export const SECTIONS = {
     on: [{ flag: 'speechOver' }],
     text: (c) => [
       'Morbidius rises. The ballroom goes silent. He speaks for some time about the old days: the burning of the Western Kingdoms, the Year Without Spring. It is surprisingly funny. Then the card is brought to him, and a quill.',
-      c.flags.oath ? 'He signs it without reading it, being nine hundred years old and having signed a great many cards. Halfway down, under BEST WISHES FROM ACCOUNTS, a line of small, neat script glows briefly green, and fades.' : 'He signs it, without reading it.',
+      c.flags.oath ? 'He signs it without reading it, being nine hundred and having signed a great many cards. Halfway down, under BEST WISHES FROM ACCOUNTS, a line of small, neat script glows briefly green, and fades.' : 'He signs it, without reading it.',
       'Then he raises his mug. “To the seaside,” he says, and puts it down on the table, for the first time in nine hundred years, to accept a round of applause with both hands.',
     ],
     choices: [

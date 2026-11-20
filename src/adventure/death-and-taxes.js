@@ -272,7 +272,7 @@ export const SECTIONS = {
   fishwife_fed: {
     dark: 'cistern',
     on: [{ flag: 'hintLedger' }, { item: 'potion', msg: 'She gives you a jar of pickled eels. They are, she insists, medicinal. (Healing potion.)' }], onceOnly: true,
-    text: ['She eats the food, the wrapping and very nearly your hand, and decides she likes you. “Old Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
+    text: ['She eats the food, the wrapping and very nearly your hand, and decides she likes you. “Vane’s still down there, you know. Counting. Can’t stop while his ledger’s whole.” She taps her nose, which falls off. She puts it back.'],
     choices: [{ text: 'Climb the steps out of the cistern', to: 'cellar' }],
   },
   pollute_win: {

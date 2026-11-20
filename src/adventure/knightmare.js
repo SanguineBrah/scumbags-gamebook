@@ -21,12 +21,12 @@ export const SECTIONS = {
   },
   tents: {
     text: (c) => [
-      'Among the tents, squires polish armour and old knights drink to forget. Everybody has a theory about the black horse. A farrier says its shoes are the old pattern, forty years out of date. An old herald squints at its caparison and says the faded crest is a broken lance on blue.',
+      'Among the tents, squires polish armour and grizzled knights drink to forget. Everybody has a theory about the black horse. A farrier says its shoes are the old pattern, forty years out of date. A doddery herald squints at its caparison and says the faded crest is a broken lance on blue.',
       c.flags.knowsDunstan ? '' : 'Nobody knows whose crest that is.',
     ].filter(Boolean),
     choices: [
       { text: 'Look up the crest in the herald’s roll', test: { stat: 'Int', dd: 6, skill: ['analysis', 'languages'], profs: ['Envoy'], why: 'you know your heraldry' }, pass: 'herald', fail: 'herald_lost', show: { notFlag: 'knowsDunstan' } },
-      { text: 'Buy the old knights a round and ask them (5GP)', to: 'herald', if: { gold: 5 }, effects: [{ gold: -5 }], show: { notFlag: 'knowsDunstan' } },
+      { text: 'Buy the grizzled knights a round and ask them (5GP)', to: 'herald', if: { gold: 5 }, effects: [{ gold: -5 }], show: { notFlag: 'knowsDunstan' } },
       { text: 'Go to the almshouse in the village', to: 'almshouse', show: { flag: 'knowsDunstan' } },
       { text: 'Go to the stables', to: 'stable' },
       { text: 'Go to the lists', to: 'lists' },
@@ -38,14 +38,14 @@ export const SECTIONS = {
   },
   herald: {
     on: [{ flag: 'knowsDunstan' }],
-    text: ['A broken lance on blue: Sir Dunstan Fairweather, champion of this very tourney forty years ago. “Fell off his horse in the last joust he ever rode,” says an old knight, “and never got back on. The horse ran off. Dunstan’s in the almshouse down the village now. Ninety. Can’t walk. Still asks after his horse.”'],
+    text: ['A broken lance on blue: Sir Dunstan Fairweather, champion of this very tourney forty years ago. “Fell off his horse in the last joust he ever rode,” says a knight with more scars than teeth, “and never got back on. The horse ran off. Dunstan’s in the almshouse down the village now. Ninety. Can’t walk. Still asks after his horse.”'],
     choices: [{ text: 'Go to the almshouse', to: 'almshouse' }, { text: 'Back to the tents', to: 'tents' }],
   },
   almshouse: {
     text: (c) => [
       c.flags.dunstanComing
-        ? 'Sir Dunstan is waiting at the almshouse door in his chair, in his old surcoat, ready.'
-        : 'In the almshouse, in a chair by the window, sits a very old man in a blue surcoat with a broken lance on it, moth-eaten. Sir Dunstan Fairweather. He is watching the tourney flags flying over the hill. “Is he still there?” he says, before you can say anything. “My Thunderclap? I hear things. I hear he’s still riding.”',
+        ? 'Sir Dunstan is waiting at the almshouse door in his chair, in his moth-eaten surcoat, ready.'
+        : 'In the almshouse, in a chair by the window, sits a wrinkly little man in a blue surcoat with a broken lance on it, moth-eaten. Sir Dunstan Fairweather. He is watching the tourney flags flying over the hill. “Is he still there?” he says, before you can say anything. “My Thunderclap? I hear things. I hear he’s still riding.”',
     ],
     choices: [
       { text: 'Offer to take him to the tourney', test: { stat: 'Str', dd: 6, skill: ['athletics', 'medicine'], profs: ['Bodyguard'], why: 'you know how to move people' }, pass: 'dunstan_comes', fail: 'dunstan_tired', show: { notFlag: 'dunstanComing' } },
@@ -60,12 +60,12 @@ export const SECTIONS = {
   },
   dunstan_comes: {
     on: [{ flag: 'dunstanComing' }],
-    text: ['You get Sir Dunstan up the hill to the tourney, in his chair, with a blanket over his knees and his old helm in his lap. He says nothing the whole way. When the tourney comes into sight he grips the arms of the chair very tightly.'],
+    text: ['You get Sir Dunstan up the hill to the tourney, in his chair, with a blanket over his knees and his dented helm in his lap. He says nothing the whole way. When the tourney comes into sight he grips the arms of the chair very tightly.'],
     choices: [{ text: 'Take him to the lists', to: 'reunion' }],
   },
   reunion: {
     on: [{ flag: 'retired' }],
-    text: ['The black horse is waiting at its end of the lists for the next challenger. It sees the old man in the chair. It drops its lance. It walks across the field, slowly, through the barrier, which it doesn’t notice, and puts its great armoured head down in Sir Dunstan’s lap. The crowd goes silent. Then somebody starts to clap, and everybody does, and Lord Clatterby blows his nose for a long time.'],
+    text: ['The black horse is waiting at its end of the lists for the next challenger. It sees Sir Dunstan in the chair. It drops its lance. It walks across the field, slowly, through the barrier, which it doesn’t notice, and puts its great armoured head down in Sir Dunstan’s lap. The crowd goes silent. Then somebody starts to clap, and everybody does, and Lord Clatterby blows his nose for a long time.'],
     choices: [{ text: 'Go and collect your fee', to: 'prize' }],
   },
   stable: {
@@ -75,8 +75,8 @@ export const SECTIONS = {
     ],
     choices: [
       { text: 'Give it your rations', to: 'oats', if: { item: 'rations' }, show: { notFlag: 'fed' } },
-      { text: 'Dress the old wound under its armour with your healer’s kit', to: 'dressed', if: { item: 'healerskit' }, show: { notFlag: 'fed' } },
-      { text: 'Cast Heal on the old wound under its armour', cast: 'heal', pass: 'healed', fail: 'stable', critFail: 'harmed', show: { notFlag: 'fed' } },
+      { text: 'Dress the sore under its armour with your healer’s kit', to: 'dressed', if: { item: 'healerskit' }, show: { notFlag: 'fed' } },
+      { text: 'Cast Heal on the sore under its armour', cast: 'heal', pass: 'healed', fail: 'stable', critFail: 'harmed', show: { notFlag: 'fed' } },
       { text: 'Unbuckle its armour while it trusts you', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
       { text: 'Show it its reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrored' } },
       { text: 'Glue its shoes to the stable floor', to: 'glued', if: { item: 'glue' }, show: { notFlag: 'glued' } },
@@ -91,12 +91,12 @@ export const SECTIONS = {
   },
   dressed: {
     on: [{ flag: 'fed' }],
-    text: ['Under the edge of its shoulder plate, the black horse has an old wound that has never healed properly, rubbed raw by forty years of armour. You clean it and dress it. The horse stands very still while you do it, and afterwards it lowers its head and lets you scratch its ears.'],
+    text: ['Under the edge of its shoulder plate, the black horse has a wound that has never healed properly, rubbed raw by forty years of armour. You clean it and dress it. The horse stands very still while you do it, and afterwards it lowers its head and lets you scratch its ears.'],
     choices: [{ text: 'Back to the stall', to: 'stable' }],
   },
   armour_off: {
     on: [{ flag: 'armourOff' }],
-    text: ['Strap by strap, plate by plate, the armour comes off. Underneath is an old horse, grey round the muzzle, with a scar across its shoulder. It looks at its armour on the floor, and at you, and seems, for a moment, very tired.'],
+    text: ['Strap by strap, plate by plate, the armour comes off. Underneath is a decrepit horse, grey round the muzzle, with a scar across its shoulder. It looks at its armour on the floor, and at you, and seems, for a moment, very tired.'],
     choices: [{ text: 'Back to the stall', to: 'stable' }],
   },
   stable_kick: {
@@ -147,7 +147,7 @@ export const SECTIONS = {
   },
   retreat: {
     on: [{ flag: 'retreated' }],
-    text: ['You blow the cavalry retreat as the black horse thunders down the tilt. It is an old, old horse, and it was trained in the old way. It wheels, and gallops back to its end, and stands there, confused, waiting for orders.'],
+    text: ['You blow the cavalry retreat as the black horse thunders down the tilt. It is an ancient horse, and it was trained back when cavalry still did as it was told. It wheels, and gallops back to its end, and stands there, confused, waiting for orders.'],
     choices: [{ text: 'Joust while it’s confused', to: 'joust' }],
   },
   caltrops: {
@@ -157,7 +157,7 @@ export const SECTIONS = {
   },
   roped: {
     on: [{ flag: 'roped' }],
-    text: ['Your rope goes over its head and you dig in your heels. The black horse goes down on its knees in a crash of plate. It doesn’t get up. It lies there, breathing hard, an old horse in heavy armour.'],
+    text: ['Your rope goes over its head and you dig in your heels. The black horse goes down on its knees in a crash of plate. It doesn’t get up. It lies there, breathing hard, a creaky horse in heavy armour.'],
     choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
   },
   trampled: {
@@ -181,7 +181,7 @@ export const SECTIONS = {
     end: 'victory',
     on: [{ if: { any: [{ flag: 'retired' }, { flag: 'beaten' }, { flag: 'horseDown' }, { flag: 'roped' }] }, gold: 250, uncapped: true, msg: 'Lord Clatterby pays you 250GP.' }],
     text: (c) => [
-      c.flags.retired ? 'Thunderclap goes home with Sir Dunstan to the almshouse, where they let him stand in the garden. Every morning the old knight is wheeled out to sit with him, and they watch the tourney flags together.'
+      c.flags.retired ? 'Thunderclap goes home with Sir Dunstan to the almshouse, where they let him stand in the garden. Every morning Sir Dunstan is wheeled out to sit with him, and they watch the tourney flags together.'
         : c.flags.beaten ? 'The black horse never enters the tourney again. It stands in a field at Clatterby, in its armour, and bows to everybody who passes.'
           : c.flags.horseDown || c.flags.roped ? 'The black horse is taken to the knacker’s, and then, because Lord Clatterby can’t bring himself to do it, to a field. It never jousts again.'
             : 'You leave the tourney with nothing. Behind you, the black horse wins again.',
@@ -190,17 +190,17 @@ export const SECTIONS = {
   },
   healed: {
     on: [{ flag: 'fed' }],
-    text: ['Under the edge of its shoulder plate, the black horse has an old wound that has never healed properly, rubbed raw by forty years of armour. You lay a hand on it and pray, and the wound closes over, clean. The horse stands very still, and afterwards it lowers its head and leans it against your chest for a moment.'],
+    text: ['Under the edge of its shoulder plate, the black horse has a wound that has never healed properly, rubbed raw by forty years of armour. You lay a hand on it and pray, and the wound closes over, clean. The horse stands very still, and afterwards it lowers its head and leans it against your chest for a moment.'],
     choices: [{ text: 'Back to the stall', to: 'stable' }],
   },
   harmed: {
     on: [{ damage: 'd8', from: 'A warhorse' }],
-    text: ['Your god scorns you. Instead of closing, the old wound under the shoulder plate tears open. The black horse kicks you across the stall, once, and then stands with its head down, trembling, in a way that is worse than the kick.'],
+    text: ['Your god scorns you. Instead of closing, the sore under the shoulder plate tears open. The black horse kicks you across the stall, once, and then stands with its head down, trembling, in a way that is worse than the kick.'],
     choices: [{ text: 'Get up', to: 'stable' }],
   },
   roped_trip: {
     on: [{ flag: 'roped' }],
-    text: ['The black horse’s forelegs fold mid-charge. It goes down on its knees in a crash of plate and slides the last ten yards of the lists on its breastplate, sparking. It doesn’t get up. It lies there, breathing hard, an old horse in heavy armour.'],
+    text: ['The black horse’s forelegs fold mid-charge. It goes down on its knees in a crash of plate and slides the last ten yards of the lists on its breastplate, sparking. It doesn’t get up. It lies there, breathing hard, a geriatric horse in far too much armour.'],
     choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
   },
   pacified: {

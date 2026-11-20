@@ -118,7 +118,7 @@ export const SECTIONS = {
   },
   lair: {
     text: (c, visits) => [
-      'The lair is enormous, and mostly empty. There’s a hoard, but it’s smaller than it should be, and there’s a trail of slime around it. On top of the hoard lies a dragon: old, red, the size of a barn, with one hind leg in a sling and a pair of reading glasses on its nose. It is filling in a form.',
+      'The lair is enormous, and mostly empty. There’s a hoard, but it’s smaller than it should be, and there’s a trail of slime around it. On top of the hoard lies a dragon: red, wrinkly, the size of a barn, with one hind leg in a sling and a pair of reading glasses on its nose. It is filling in a form.',
       c.flags.dragonAngry ? '“Back again,” it says, without looking up from its form. “I’ve put you down as a recurring nuisance. There’s a box for it.”'
         : visits > 1 ? '“Ah,” it says, peering at you over its glasses. “You again. Have you thought about my little problem?”'
           : '“Ah,” it says, peering at you over its glasses. “You’ll be the adventurer. I’m afraid I have to threaten you. It’s on the form.”',
@@ -178,7 +178,7 @@ export const SECTIONS = {
     fight: { key: 'dragon',
       monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for the cave mouth' },
       special: [
-        { label: 'Hold up your mirror and let it see the state of itself', if: { item: 'mirror' }, flag: 'dragonMirror', text: 'The dragon sees its reflection: old, grey round the snout, glasses askew. It stops, stricken, for a moment.', stun: 1 },
+        { label: 'Hold up your mirror and let it see the state of itself', if: { item: 'mirror' }, flag: 'dragonMirror', text: 'The dragon sees its reflection: saggy, grey round the snout, glasses askew. It stops, stricken, for a moment.', stun: 1 },
         { label: 'Hit its bad leg', if: { notFlag: 'legFixed' }, test: { stat: 'Dex', dd: 10, skill: 'attack:melee' }, flag: 'badLeg', text: 'You go for the bad leg. The dragon roars and goes down on its side.', failText: 'It sees you coming and tucks the leg away.', dmg: '3d8' },
       ],
     },
