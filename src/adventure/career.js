@@ -23,7 +23,7 @@ const LINES = {
     : p('cubeBroken') ? 'You broke a murderous puzzle box instead of solving it. It is a lectern now.' : 'You failed to solve a murderous puzzle box.',
   'torches-and-pitchforks': (p) => p('delivered') ? 'You walked a landlord across a moor full of the ghosts of his tenants.'
     : p('betrayed') ? 'You handed a landlord over to the ghosts of his tenants.' : 'You left a landlord to the mob.',
-  'standard-dragon': (p) => p('wished') ? 'You made a dragon disappear, officially.'
+  'standard-dragon': (p) => p('wished') ? 'You wished a dragon somewhere warm. It sends postcards.'
     : p('retired') ? 'You talked a dragon into retirement. It sends postcards.'
       : p('dragonDead') ? 'You slew a dragon. The statue looks nothing like you.' : 'You went up a mountain after a dragon.',
   'legging-it': (p, n) => n('boots') ? `You rounded up ${n('boots')} pair${n('boots') === 1 ? '' : 's'} of runaway legs.` : 'You chased runaway legs round a fair, and caught none.',

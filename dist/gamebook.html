@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="421cc6e4bfe5">
+<meta name="build" content="92e708efc3d6">
 </head>
 <body>
 <div id="app"></div>
@@ -414,7 +414,7 @@ function howToScreen() {
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level. An over-qualified scumbag loses half their profit from an adventure for each level they are above its band, and its loot fetches half at the fence.'),
     h('h3', null, 'Between adventures'),
     h('p', null, 'Survivors come back to Gallowsford, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
-    h('p', null, 'Every career ends. Finish any job at the highest level and one last job turns up, which ends it for you, one way or another. Or retire from town whenever you like. Either way, you get a write-up of everything you did, kept on the title screen.'),
+    h('p', null, 'Every career ends. Finish any job for a level 9–10 scumbag and one last job turns up, which ends it for you, one way or another. Or retire from town whenever you like. Either way, you get a write-up of everything you did, kept on the title screen.'),
     h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
     h('button', { class: 'btn', onclick: () => go('title') }, 'Back'),
@@ -5080,7 +5080,7 @@ const SECTIONS = {
       c.flags.retired
         ? 'Every winter, Agnes gets a postcard from somewhere warm, signed with a claw.'
         : 'They put up a statue of you in the square at Much Smallness. It looks nothing like you, which is probably for the best.',
-      `That’s ${COUNT((c.done || []).length + 1)} bad ideas, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
+      `That’s ${COUNT((c.done || []).length + 1)} bad idea${(c.done || []).length ? 's' : ''}, and you’re still here. Most scumbags end up in a ditch, a cage or a dragon. You’ve ended up in Much Smallness, with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing'} in your pockets and no idea what to do next. Something stupid, probably. It usually is.`,
     ],
   },
   gorge_descend: {
@@ -9610,7 +9610,7 @@ const LINES = {
     : p('cubeBroken') ? 'You broke a murderous puzzle box instead of solving it. It is a lectern now.' : 'You failed to solve a murderous puzzle box.',
   'torches-and-pitchforks': (p) => p('delivered') ? 'You walked a landlord across a moor full of the ghosts of his tenants.'
     : p('betrayed') ? 'You handed a landlord over to the ghosts of his tenants.' : 'You left a landlord to the mob.',
-  'standard-dragon': (p) => p('wished') ? 'You made a dragon disappear, officially.'
+  'standard-dragon': (p) => p('wished') ? 'You wished a dragon somewhere warm. It sends postcards.'
     : p('retired') ? 'You talked a dragon into retirement. It sends postcards.'
       : p('dragonDead') ? 'You slew a dragon. The statue looks nothing like you.' : 'You went up a mountain after a dragon.',
   'legging-it': (p, n) => n('boots') ? `You rounded up ${n('boots')} pair${n('boots') === 1 ? '' : 's'} of runaway legs.` : 'You chased runaway legs round a fair, and caught none.',
