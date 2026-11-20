@@ -109,7 +109,7 @@ export const SECTIONS = {
     choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
   dogs_fight: {
-    text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
+    text: ['Mrs Grudge says a word, and two of her grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running. The other two stay where they are, to watch.'],
     fight: { outdoors: true,
       monsters: [blinkdog, blinkdog],
       win: 'dogs_down', flee: { to: 'square', label: 'Run back to the square' },
@@ -143,12 +143,12 @@ export const SECTIONS = {
     on: [
       { if: { flag: 'biscuit', below: ['time', 4] }, gold: 200, uncapped: true, msg: 'The Duke pays 200GP, and a rosette, which he takes back.' },
       { if: { flag: 'grudgeDeal' }, gold: 100, uncapped: true, msg: 'Mrs Grudge’s first hundred.' },
-      { if: { flag: 'grudgeDeal', notFlag: 'biscuit' }, gold: 150, uncapped: true, msg: 'Mrs Grudge pays the rest: 150GP.' },
+      { if: { flag: 'grudgeDeal', any: [{ notFlag: 'biscuit' }, LATE] }, gold: 150, uncapped: true, msg: 'Mrs Grudge pays the rest: 150GP.' },
     ],
     text: (c) => [
       c.flags.biscuit && (c.flags.time || 0) < 4
         ? 'You put Sir Biscuit on his table at five to four. He sits, perfectly still, for the first time all day, and wins Best in Show without moving a muscle.' + (c.flags.grudgeDeal ? ' Mrs Grudge’s face, when she sees him, is worth more than the money she won’t be paying you.' : '')
-        : c.flags.biscuit ? 'You bring Sir Biscuit in after the judging. Mrs Grudge’s dogs have won. The Duke takes his dog without a word, and doesn’t pay you either.'
+        : c.flags.biscuit ? 'You bring Sir Biscuit in after the judging. Mrs Grudge’s dogs have won. The Duke takes his dog without a word, and doesn’t pay you either.' + (c.flags.grudgeDeal ? ' Mrs Grudge does, grinning.' : '')
           : c.flags.grudgeDeal ? 'Mrs Grudge’s grey dogs take Best in Show. She pays you the rest of her money, grinning. Out in the square, a small white dog blinks onto the church roof and stays there, offended, for a week.'
             : 'Mrs Grudge’s grey dogs take Best in Show. Sir Biscuit turns up at the Duke’s house two days later, sleeps for a week, and never forgives anybody.',
       `You leave Waggleton with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,

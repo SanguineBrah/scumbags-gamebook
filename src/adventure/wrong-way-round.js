@@ -141,9 +141,9 @@ export const SECTIONS = {
   },
   race_duchess: {
     text: (c) => [
-      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. The Duchess, calm as a cow, doesn’t even look round.' : 'The whistle goes. The field thunders off.',
+      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? `The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. ${c.flags.duchessCalm ? 'The Duchess, calm as a cow, doesn’t even look round.' : 'The Duchess hears the crunching behind her and bolts, which, for once, is in the right direction.'}` : c.flags.duchessNobbled ? 'The whistle goes. The field thunders off. The Duchess has had a very bad afternoon, and runs most of the race sideways.' : 'The whistle goes. The field thunders off.',
       c.flags.nevilleSick ? 'Neville sneezes at the start, sneezes at the first bend and sneezes all the way down the back straight, and finishes last, damp and miserable.' : c.flags.nevilleGreased ? 'Neville’s first stride lands on the grease. His legs go one way and his horse’s head goes the other, and he spends the race sliding gently down the course on his back, waving.' : c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
-      'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
+      c.flags.falseStart ? 'The Duchess wins it, by a distance, at evens. The stewards discuss the start for a long time, and decide the result stands. The crowd cheers,' : 'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
     ],
     choices: [{ text: 'Go round the back of the grandstand', to: 'collect' }],
   },
@@ -202,7 +202,7 @@ export const SECTIONS = {
   },
   neville_cured: {
     on: [{ flag: 'nevilleReady' }, { flag: 'nevilleDone' }],
-    text: ['Your god scorns you, and cures Neville of the sniffle he didn’t know he had. He takes a deep breath through both sets of nostrils, and his eyes light up. “I feel marvellous,” he says. “I feel like I could run all day.”'],
+    text: ['Your god scorns you, and cures Neville of the sniffle he didn’t know he had. He takes a deep breath through his enormous nostrils, and his eyes light up. “I feel marvellous,” he says. “I feel like I could run all day.”'],
     choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
   greased_start: {
