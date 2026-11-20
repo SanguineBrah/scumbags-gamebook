@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="b39416cf89c5">
+<meta name="build" content="e7482e4164e7">
 </head>
 <body>
 <div id="app"></div>
@@ -9250,7 +9250,7 @@ const AUDITOR = (c) => mt(c, 'struckOut') ? 'He is carrying a file with nothing 
 const DEATH = (c) => hol(c, 'returned') ? 'He still has the tan from Brinemouth, and the look of somebody who took a fortnight off and came back to everything. He nods to you like a colleague.'
   : hol(c, 'soldScythe') ? 'He has his scythe back. “The necromancer,” he says, when he sees you looking at it. “Last Tuesday. Took me a week to catch up on the paperwork.” He looks at you. “I said I’d see you later.”'
     : didAdventure(c, 'death-takes-a-holiday') ? 'He has his scythe back, no thanks to you. He doesn’t hold it against you. He doesn’t hold anything against anyone. It isn’t in his job description.'
-      : 'You have never met. He has your name on his list anyway, about two-thirds of the way down, after a man in Sludgeby who argued and before a shipwreck.';
+      : 'You have never met. He has your name on his list anyway, near the top, after a man in Sludgeby who argued and before a shipwreck.';
 
 const SECTIONS = {
   start: {
@@ -9380,7 +9380,7 @@ const SECTIONS = {
       'You are standing in the great hall of the Counting House when, down in the valley, the church clock strikes twelve.',
       `On the last stroke, the front door opens, and two visitors come in at once, and stop, and look at each other. One is seven feet of black wool and spectacles. ${AUDITOR(c)}`,
       `The other is a skeleton in a black robe, with a scythe in one hand and a clipboard in the other. ${DEATH(c)}`,
-      'They know each other, the way two people who work in the same building know each other. “After you,” says Death. “No,” says the Auditor-General. “After you.” They both look at you, and then at their watches.',
+      'They know each other, the way two people in the collecting business do. “After you,” says Death. “No,” says the Auditor-General. “After you.” They both look at you, and then at their watches.',
     ],
     choices: [{ text: 'Step forward', to: 'midnight' }],
   },
@@ -9525,7 +9525,7 @@ const SECTIONS = {
   },
   death_no: {
     on: [{ flag: 'refused' }],
-    text: ['Death hears you out, all of it, nodding. Then he shakes his head, kindly. “It’s not up to me,” he says. “It’s policy. But it was a good try. Most people just cry.”'],
+    text: ['Death hears you out, all of it, nodding. Then he shakes his head, kindly. “It’s not up to me,” he says. “Rules are rules. But it was a good try. Most people just cry.”'],
     choices: [{ text: 'Try something else', to: 'death_talk' }],
   },
   death_waits: {
@@ -9540,7 +9540,7 @@ const SECTIONS = {
   },
   cards_won: {
     on: [{ flag: 'cards' }],
-    text: ['Death shuffles. He plays every lunchtime with the lads from the office, and he never loses. You don’t either. He looks at your cards for a long time, then lays his own face down on the stairs, and smiles, which is the only thing his face does. “They’ll never believe this at work,” he says. “Keep your life. I’ll want a rematch.”'],
+    text: ['Death shuffles. He plays every lunchtime with the gravediggers, and he never loses. You don’t either. He looks at your cards for a long time, then lays his own face down on the stairs, and smiles, which is the only thing his face does. “The gravediggers will never believe this,” he says. “Keep your life. I’ll want a rematch.”'],
     choices: [{ text: 'Pocket your winnings', to: 'retirement' }],
   },
   vane_goes: {
@@ -9554,7 +9554,7 @@ const SECTIONS = {
   },
   death_beaten: {
     on: [{ flag: 'beatDeath' }],
-    text: ['Death goes down on the flagstones of the hall with a clatter, like a coat stand. He lies there, looking at the ceiling. Then he laughs. “Nobody has ever done that,” he says, and gets up, which you can’t stop him doing. He picks up his clipboard and starts filling in an incident report. “Later, then,” he says, without looking up. “Much later. I’ll have to put you back to the bottom.”'],
+    text: ['Death goes down on the flagstones of the hall with a clatter, like a coat stand. He lies there, looking at the ceiling. Then he laughs. “Nobody has ever done that,” he says, and gets up, which you can’t stop him doing. He picks up his clipboard and starts filling in an incident report. “Later, then,” he says, without looking up. “Much later. I’ll have to move you to the bottom.”'],
     choices: [{ text: 'Sit down before you fall down', to: 'retirement' }],
   },
   taken: {
@@ -9569,7 +9569,7 @@ const SECTIONS = {
           : c.flags.partied ? 'The kobolds have a party every year after that, at midnight, and Death comes to every one, and wins at musical chairs, and leaves early because he’s working. You go too, until one year, a long time later, he saves you a chair.'
             : c.flags.deferred ? 'You retire to Brinemouth-on-Sea, and buy a beach hut, and paint it black. Fifty years later, on a Tuesday afternoon, Death turns up on time to the minute, with a deckchair, as promised, and you watch the sea together for a while before you go.'
               : c.flags.bargained ? 'You keep your word, more or less. Twenty years to the day later, Death knocks, with the pink copy of your form, and you open the door in your slippers, and you are, to your surprise, ready.'
-                : c.flags.cards ? 'Death comes back for a rematch every few years, in his lunch hour. You let him win, eventually, when you’re ready. He knows. He doesn’t mind.'
+                : c.flags.cards ? 'Death comes back for a rematch every few years, in his lunch hour, and tells you how the gravediggers are. You let him win, eventually, when you’re ready. He knows. He doesn’t mind.'
                   : c.flags.vaneTaken ? 'You never see Usurer Vane again. You keep his candle, and you sit by it sometimes, counting, out of respect.'
                     : c.flags.beatDeath ? 'You are the scumbag who beat Death in a fair fight. Nobody believes you, so you tell everybody, at length, for the rest of a very long life.'
                       : 'You run until you can’t, and then you sit down on a bench at the end of the world, and Death sits down next to you. “Good run,” he says.',
