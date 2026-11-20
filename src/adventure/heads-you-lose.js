@@ -140,7 +140,7 @@ export const SECTIONS = {
       { if: { any: [{ flag: 'hydraDead' }, { flag: 'poet' }] }, gold: 500, uncapped: true, msg: 'The town council pays 500GP.' },
     ],
     text: (c) => [
-      c.flags.poet ? 'The hydra stays in the reservoir. But it’s quiet now, and it publishes a collection of poems called ELEVEN VOICES, which sells very well. The council decides it’s a tourist attraction, and pays you anyway. The water still tastes of hydra.'
+      c.flags.poet && !c.flags.hydraDead ? 'The hydra stays in the reservoir. But it’s quiet now, and it publishes a collection of poems called ELEVEN VOICES, which sells very well. The council decides it’s a tourist attraction, and pays you anyway. The water still tastes of hydra.'
         : c.flags.hydraDead ? `Floodmouth celebrates with a feast and a firework, carefully. ${c.flags.readerDeal ? 'Years later, sailors tell stories of a sea serpent with one head that reads aloud to them in storms.' : 'The reservoir is drained, cleaned and refilled, and the water stops tasting of hydra by the spring.'}`
           : 'The hydra is still in the reservoir. The council doesn’t pay you. On calm nights, you can hear eleven voices singing all the way down in Floodmouth.',
       `You leave Floodmouth with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,

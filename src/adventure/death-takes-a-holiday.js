@@ -174,7 +174,7 @@ export const SECTIONS = {
   },
   scried: {
     on: [{ flag: 'hutClue' }],
-    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the front car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
+    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the last car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
     choices: [{ text: 'Back to the beach', to: 'prom' }],
   },
   mortimer_eased: {
@@ -190,7 +190,7 @@ export const SECTIONS = {
   },
   mortimer_wiped: {
     dark: 'train',
-    text: ['Old Mortimer blinks, and forgets the last day: the fear, the beach hut, the long walk out along the pier in his slippers. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
+    text: ['Old Mortimer blinks, and forgets the last day: the fear, the hiding, the long wait in the dark with the painted skeletons. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_confesses: {
