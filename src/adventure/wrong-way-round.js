@@ -78,7 +78,7 @@ export const SECTIONS = {
     text: (c) => [
       c.flags.nevilleAngry
         ? 'Neville stops jogging when he sees you and lays his ears back. “You again,” he says. “Come to try your luck? I’ve got teeth at this end, you know.”'
-        : '“Hello,” says Neville. His voice comes out of the horse end, deep and anxious. “Are you a fan? I haven’t got any fans. Everybody laughs. They think I’ll fall over. I won’t fall over. I’ve got the best legs in the race. They’re just the wrong way round.” His race card gives his breeding as SIRE: A CENTAUR. DAM: A CENTAUR. Underneath, somebody has added in pencil: Charm for a strong foal. Sorry. S. Snoad.',
+        : '“Hello,” says Neville. His voice comes out of the horse end, deep and anxious. “Are you a fan? I haven’t got any fans. Everybody laughs. They think I’ll fall over. I won’t fall over. I’ve got the best legs in the race. They’re just the wrong way round.” His race card gives his breeding as NOT APPLICABLE (CURSED). Pinned to it is a receipt: ONE CURE FOR CURSES, GUARANTEED. Underneath, in pencil: Sorry. S. Snoad.',
     ],
     choices: [
       { text: 'Give him a pep talk', test: { stat: 'Cha', dd: 6, skill: ['social'], profs: ['Bodyguard', 'Pit fighter'], why: 'you’ve been in a corner before' }, pass: 'neville_ready', fail: 'neville_nervous', show: { notFlag: 'nevilleAngry' } },

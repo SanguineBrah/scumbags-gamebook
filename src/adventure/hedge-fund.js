@@ -6,7 +6,7 @@ import { pastFlag, didAdventure } from '../engine/conditions.js';
 /** Where Snoad has left a mark, and how you'd put it on your list. */
 const CLUES = [
   ['legging-it', 'Forty pairs of legs, walking out of a cobbler’s in Little Hobbling.'],
-  ['wrong-way-round', 'A pencilled apology on a reverse centaur’s race card.'],
+  ['wrong-way-round', 'A guaranteed cure for curses, pinned to a reverse centaur’s race card. Sorry. S.'],
   ['going-bananas', 'A banana golem at a harvest festival. “I only said it once this time.”'],
   ['detention', 'A boy called Snoad, still a byword at the Collegium Arcana.'],
   ['out-of-the-cot', 'A sleeping charm that kept a giant baby in its cot for nearly an hour.'],
@@ -46,7 +46,7 @@ const grimble = (c) => didAdventure(c, 'detention');
 const UNDONE = (c) => [
   didAdventure(c, 'legging-it') && 'In Little Hobbling, every pair of legs still out on the hills sits down in the heather and goes back to being legs.',
   didAdventure(c, 'going-bananas') && 'In Pippin-on-Wye, whatever is left of a nine-foot man made of bananas lies down, quite peacefully, and becomes a bunch.',
-  didAdventure(c, 'wrong-way-round') && 'At Muckmarket, Neville feels the spell coming, and says, very firmly, no thank you. He likes his legs where they are.',
+  didAdventure(c, 'wrong-way-round') && 'At Muckmarket, Neville feels a faint tingle, and nothing else. Snoad’s cure never did anything to him in the first place, so there is nothing to undo. He is still a reverse centaur, and he is getting used to it.',
   didAdventure(c, 'taking-the-waters') && 'In Sludgeby, whatever is left of the blob in the Great Bath goes back to being bathwater.',
   didAdventure(c, 'unsolved') && 'At Lesser Wisdom, if anything is still hovering in the Great Hall, it folds itself up and goes home.',
   didAdventure(c, 'standard-dragon') && 'Up the lane at Much Smallness, Ned finds a row of cabbages where there weren’t any.',
