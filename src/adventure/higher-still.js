@@ -130,11 +130,16 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   harp_screams: {
+    redirect: [{ if: { flag: 'giantDown' }, to: 'harp_ignored' }],
     text: (c) => [c.flags.giantBack
       ? 'The harp screams: a chord like every church bell in the world dropped down a well. A quarter of a mile away, at the door, Lord Nimbus turns round. He is back at the fireplace in four strides.'
       : 'The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
-    on: [{ if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
+    on: [{ unflag: 'giantBack' }, { if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
     choices: [{ text: 'Face him', to: 'giant_wakes' }],
+  },
+  harp_ignored: {
+    text: ['The harp screams: a chord like every church bell in the world dropped down a well. On the floor of the hall, Lord Nimbus puts his hands over his ears and doesn’t get up. He has had enough for one day.'],
+    choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   freed: {
     on: [{ flag: 'longshanksFree' }],

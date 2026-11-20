@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="e7482e4164e7">
+<meta name="build" content="e301a18dbc0f">
 </head>
 <body>
 <div id="app"></div>
@@ -929,7 +929,7 @@ const SECTIONS = {
   traveller_fight: {
     text: ['He backs away, fumbling at his belt, and produces a small black crossbow with no string. “I don’t want to use this,” he says, and then uses it. It goes BANG.'],
     fight: { outdoors: true,
-      monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture-capitalist; iPad; handgun (2d6+lvl damage)' }],
+      monsters: [{ name: 'Clueless time-traveller', lvl: 1, range: 'long', feats: ['handgun'], dmg: '2d6+lvl', note: 'Venture capitalist; glowing slate; handgun (2d6+lvl damage)' }],
       distance: 2, win: 'traveller_loot', flee: { to: 'hill', label: 'Run up the hill' },
     },
   },
@@ -1011,7 +1011,7 @@ const SECTIONS = {
   },
   front_fight: {
     text: ['The door bangs open, and the moustache turns out to be attached to a militant bureaucrat: cardigan, sleeve garters and a look of absolute procedural fury. He hurls rubber stamps with terrifying accuracy.'],
-    fight: { outdoors: true,
+    fight: { key: 'bureaucrat', outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
       distance: 1, win: 'front_win', flee: { to: 'hill', label: 'Retreat down the hill' },
     },
@@ -1115,12 +1115,12 @@ const SECTIONS = {
   fishwife_ambush: {
     dark: 'cistern',
     text: ['You creep up behind her, weapon raised.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], surprise: true, win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_fight: {
     dark: 'cistern',
     text: ['She turns, sees you, and opens her mouth far wider than a mouth should go.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_win: {
     dark: 'cistern',
@@ -1192,12 +1192,12 @@ const SECTIONS = {
   mimic_ambush: {
     dark: 'library',
     text: ['You drive your weapon into the spine. It shrieks, and its pages turn out to be teeth.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { key: 'mimic', monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], surprise: true, win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_fight: {
     dark: 'library',
     text: ['As you reach for the shelf, TOME RAIDER flaps open and launches itself at your face.'],
-    fight: { monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
+    fight: { key: 'mimic', monsters: [{ name: 'Book-mimic', lvl: 2, range: 'engaged', feats: ['flies'], note: 'Can fly; title is a pun' }], win: 'mimic_win', flee: { to: 'hall', label: 'Slam the library door' } },
   },
   mimic_win: {
     dark: 'library',
@@ -1238,13 +1238,13 @@ const SECTIONS = {
   },
   knight_paid: {
     on: [{ flag: 'knightGone' }],
-    text: ['You count twenty gold into his gauntlet. He looks at it for a long time. “Paid,” he says, and climbs down off the plinth with a noise like a dropped kitchen. “I am free. I shall go home.” He bows, takes the purse off the wall, hands it to you, and clanks away to find out what year it is.'],
-    choices: [{ text: 'Open the purse', to: 'gallery_purse' }],
+    text: (c) => [`You count twenty gold into his gauntlet. He looks at it for a long time. “Paid,” he says, and climbs down off the plinth with a noise like a dropped kitchen. “I am free. I shall go home.” He bows${c.flags.purse ? '' : ', takes the purse off the wall, hands it to you,'} and clanks away to find out what year it is.`],
+    choices: [{ text: 'Open the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   knight_freed: {
     on: [{ flag: 'knightGone' }],
     text: ['You explain, gently, that Vane has been dead for twenty years and that a contract with a dead man is a contract with nobody. Sir Reginald thinks about this for a full minute. Then he weeps, loudly, inside his helmet, thanks you, and clanks off into the dark to find his wife, who has remarried twice.'],
-    choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
+    choices: [{ text: 'Take the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   knight_fight: {
     on: [{ flag: 'knightAngry' }],
@@ -1257,7 +1257,7 @@ const SECTIONS = {
   knight_win: {
     on: [{ flag: 'knightGone' }],
     text: ['Sir Reginald topples off his plinth with a final clang. “Default,” he whispers, “at last.” His armour is too rusty to sell, which is the only reason you don’t.'],
-    choices: [{ text: 'Take the purse', to: 'gallery_purse' }],
+    choices: [{ text: 'Take the purse', to: 'gallery_purse', show: { notFlag: 'purse' } }, { text: 'Go back to the great hall', to: 'hall', show: { flag: 'purse' } }],
   },
   gallery_purse: {
     on: [{ flag: 'purse' }, { gold: 30 }, { item: 'salve', msg: 'There’s a pot of clotting salve in the purse too. Someone here was planning ahead.' }], onceOnly: true,
@@ -1394,7 +1394,7 @@ const SECTIONS = {
   vault_fight: {
     on: [{ flag: 'vaultAngry' }],
     text: ['The ghost looks up. His eyes are two copper pennies. “You,” he whispers, “are in ARREARS.” He rises, and his hands are cold enough to burn.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
       special: [{ flag: 'ledgerBurnt', label: 'Set fire to the ledger', if: { fire: true }, text: 'The ledger goes up like a bonfire of receipts. Vane screams. He has nothing left to count.' }],
@@ -1403,7 +1403,7 @@ const SECTIONS = {
   vault_ambush: {
     on: [{ flag: 'vaultAngry' }],
     text: ['You come at him from behind while he’s mid-column.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], regen: 1, regenStop: 'ledgerBurnt', note: 'Undead; heals 1 HP a round while his ledger is whole' }],
       surprise: true, win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
       special: [{ flag: 'ledgerBurnt', label: 'Set fire to the ledger', if: { fire: true }, text: 'The ledger goes up like a bonfire of receipts. Vane screams. He has nothing left to count.' }],
@@ -1412,14 +1412,14 @@ const SECTIONS = {
   vault_burnt: {
     on: [{ flag: 'ledgerBurnt' }],
     text: ['The ledger catches, curls and blazes. Vane leaps up, clutching at the burning pages. “My accounts! My beautiful accounts!” With nothing left to count, he begins to fade, but he is not going quietly.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], hp: 8, note: 'Undead; fading fast' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
     },
   },
   vault_fade: {
     text: ['Vane comes at you out of the ashes, fading fast but not going quietly.'],
-    fight: {
+    fight: { key: 'vane',
       monsters: [{ name: 'Ghost of Usurer Vane', lvl: 3, range: 'engaged', feats: ['undead'], hp: 6, note: 'Undead; fading fast' }],
       win: 'vault_won', flee: { to: 'hall', label: 'Run for the stairs' },
     },
@@ -1469,10 +1469,15 @@ const SECTIONS = {
   },
   exit_fight: {
     text: ['“Refusal noted,” he says, and reaches for his stamps.'],
-    fight: { outdoors: true,
+    fight: { key: 'bureaucrat', outdoors: true,
       monsters: [{ name: 'Militant bureaucrat', lvl: 2, range: 'medium', feats: ['dealD6', 'approval'], note: 'Deals +d6 damage; actions take 1 round to be approved' }],
-      distance: 1, win: 'town',
+      distance: 1, win: 'exit_win',
     },
+  },
+  exit_win: {
+    on: [{ flag: 'bureaucratDead' }],
+    text: ['The bureaucrat goes down in a flurry of carbon copies. With his last breath he stamps your hand EXEMPT, which is the nicest thing he has ever done for anyone.'],
+    choices: [{ text: 'Go home', to: 'town' }],
   },
   town: {
     end: 'victory',
@@ -1492,12 +1497,12 @@ const SECTIONS = {
   fishwife_locusts: {
     dark: 'cistern',
     text: ['Your god scorns you. Instead of food, a swarm of locusts pours out of your sleeves and all over the fishwife. She eats a good number of them, but it doesn’t improve her mood.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   fishwife_holy: {
     dark: 'cistern',
     text: ['Your god scorns you. Instead of oil, the cistern turns to holy water, faintly glowing. The fishwife comes up out of it pink, clean and absolutely furious.'],
-    fight: { monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
+    fight: { key: 'fishwife', monsters: [{ name: 'Fishwife', lvl: 2, range: 'short', feats: ['vomit'], note: 'Gills; on hit, d4 Dex save or fall prone (slippery vomit attack)' }], win: 'fishwife_win', flee: { to: 'hill', label: 'Run back out of the tunnel' } },
   },
   hall_oil: {
     on: [{ lose: 'rations' }, { item: 'oil', msg: 'Your rations are soaked through with lamp oil. You throw them away, and keep the oil.' }],
@@ -1812,7 +1817,7 @@ const SECTIONS = {
   },
   hounds_fight: {
     text: ['The hounds come at you all knees and teeth.'],
-    fight: { ceiling: 'high',
+    fight: { key: 'hounds', ceiling: 'high',
       monsters: [
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
         { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' },
@@ -1959,7 +1964,7 @@ const SECTIONS = {
   },
   hounds_locusts: {
     text: ['Your god scorns you. Instead of dinner, a swarm of locusts pours out across the landing. The hounds snap at them, eat a few, and then decide you are the larger snack.'],
-    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { key: 'hounds', ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   hounds_buckled: {
     on: [{ flag: 'houndsGone' }],
@@ -1968,7 +1973,7 @@ const SECTIONS = {
   },
   hounds_light: {
     text: ['Your god scorns you. Instead of getting heavier, the hounds can walk on water for ten minutes. There is no water on the landing, so it makes no difference at all, except that they’ve noticed you.'],
-    fight: { ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
+    fight: { key: 'hounds', ceiling: 'high', monsters: [{ name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }, { name: 'Stilt-hound', lvl: 1, hp: 3, range: 'engaged', note: 'Bred for length; all legs (3 HP); can’t lie down; hates stairs' }], win: 'hounds_win', flee: { to: 'gallery', label: 'Run down the stairs, which they hate' } },
   },
   ned_felled: {
     on: [{ flag: 'nedGone' }],
@@ -2035,7 +2040,7 @@ const SECTIONS = {
   rex_fight: {
     on: [{ flag: 'rexAngry' }],
     text: ['“Then you’ll—” says Rex, and waits for a brother who isn’t there, and then just hits you. He fights like half of a team: brilliantly at the front, with nobody at all watching his back.'],
-    fight: { monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
+    fight: { key: 'rex', monsters: [rex], win: 'rex_win', flee: { to: 'start', label: 'Run back up the steps' } },
   },
   rex_win: {
     on: [{ flag: 'rexDown' }, { gold: 20, msg: 'His tips jar: 20GP.' }], onceOnly: true,
@@ -2086,8 +2091,8 @@ const SECTIONS = {
   },
   caught: {
     on: [{ gold: -20 }],
-    text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. Rex looks up from the door.'],
-    fight: {
+    text: (c) => [`A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. ${c.flags.rexDown ? 'Over by the door, Rex is still asleep against the wall. The croupier keeps your stake and lets you go, with a look.' : c.flags.rexFriend ? 'Rex looks up from the door, sees who it is, and looks away again. The croupier keeps your stake and lets you go, with a look.' : 'Rex looks up from the door.'}`],
+    fight: { key: 'rex',
       unless: { any: [{ flag: 'rexDown' }, { flag: 'rexFriend' }] },
       monsters: [rex], win: 'rex_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
     },
@@ -2240,14 +2245,14 @@ const SECTIONS = {
       : ['Down the stair, in a private crypt lit by a hundred candles, a tall pale man in evening dress sits alone at a card table, shuffling. Count Fortunato looks up and smiles with too many teeth. “A guest,” he says. “How lucky. For me.”', 'Behind him, a great iron door is marked THE BANK. Behind that, a black coffin stands on a velvet dais.'],
     choices: [
       { text: 'Lock him in his coffin', to: 'coffin_locked', if: { item: 'coffin' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
-      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
-      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
+      { text: 'Padlock the coffin shut', to: 'coffin_sealed', if: { item: 'padlock' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' }, effects: [{ lose: 'padlock' }] },
+      { text: 'Nail the coffin shut with your iron spikes', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'], why: 'quiet hammering' }, pass: 'coffin_sealed', fail: 'count_wakes', if: { item: 'spikes' }, show: { atLeast: ['hour', 4], notFlag: 'countAwake' }, effects: [{ lose: 'spikes' }] },
       { text: 'Glue the coffin lid shut', to: 'coffin_sealed', if: { item: 'glue' }, effects: [{ lose: 'glue' }], show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Tiptoe past the coffin to the bank', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Cast Step, and teleport past the coffin into the bank', cast: 'step', pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
       { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
-      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
+      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', if: { gold: 1 }, show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
       { text: 'Cast Banish, so every undead thing flees the crypt', cast: 'banish', pass: 'count_flees', fail: 'count_fight', critFail: 'count_entreated', show: { below: ['hour', 4] } },
@@ -2264,14 +2269,14 @@ const SECTIONS = {
   count_wakes: {
     text: ['A floorboard creaks. The coffin lid creaks back. Count Fortunato sits up, squints at the grey light from the grating, and hisses. Dawn has made him weak and furious.'],
     on: [{ flag: 'countAwake' }],
-    fight: {
+    fight: { key: 'count',
       monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
       win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
     },
   },
   count_weak: {
     text: ['Count Fortunato throws off his cloak and comes at you, squinting, through the grey light.'],
-    fight: {
+    fight: { key: 'count',
       monsters: [{ ...count, lvl: 3, name: 'Count Fortunato (half asleep)', note: 'Luck vampire, weakened by dawn (level 3); each turn, 2/6 chance you fall prone; you critically fail defending on 17–20' }],
       win: 'count_dead', flee: { to: 'floor', label: 'Run upstairs' },
     },
@@ -2354,7 +2359,7 @@ const SECTIONS = {
   },
   exit_fight: {
     text: ['“Then you’ll—” says Rex, and there’s nobody to finish it.'],
-    fight: { monsters: [rex], win: 'dawn_out' },
+    fight: { key: 'rex', monsters: [rex], win: 'dawn_out' },
   },
   dawn_out: {
     end: 'victory',
@@ -2690,7 +2695,7 @@ const SECTIONS = {
   },
   mother_sits: {
     on: [{ flag: 'motherAsleep' }],
-    text: ['Mother looks under the table, behind the bread bin and inside the teapot. Then she sighs, sits down in her rocking chair by the fire, picks up her knitting and, within a minute, is snoring like a landslide.'],
+    text: (c) => [`Mother looks under the table, behind the bread bin and inside the teapot. Then she sighs, sits down in her rocking chair by the ${c.flags.fireOut ? 'cold hearth, pulls a shawl round her shoulders' : 'fire'}, picks up her knitting and, within a minute, is snoring like a landslide.`],
     choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },
   mother_finds: {
@@ -2887,8 +2892,8 @@ const SECTIONS = {
       { text: 'Knock on the door', to: 'door' },
       { text: 'Climb the outside to the top', test: { stat: 'Str', dd: 8, skill: ['athletics'], profs: ['Woodcutter', 'Cutpurse'], why: 'you climb for a living', mods: [{ if: { anyItem: ['climbing', 'rope', 'spikes'] }, dd: 4 }] }, pass: 'apex', fail: 'slingers' },
       { text: 'Cast Chosen on yourself, then climb the outside while the sling stones swerve', cast: 'chosen', pass: 'apex', fail: 'slingers', critFail: 'pariah_climb' },
-      { text: 'Cast Hellfire on it', cast: 'hellfire', pass: 'hellfire', fail: 'pyramid', critFail: 'pyramid_sanctuary' },
-      { text: 'Set fire to it', to: 'burn', if: { fire: true } },
+      { text: 'Cast Hellfire on it', cast: 'hellfire', pass: 'hellfire', fail: 'pyramid', critFail: 'pyramid_sanctuary', show: { none: [{ flag: 'kobsLeave' }, { flag: 'kobsStay' }] } },
+      { text: 'Set fire to it', to: 'burn', if: { fire: true }, show: { none: [{ flag: 'kobsLeave' }, { flag: 'kobsStay' }] } },
       { text: 'Shoot back at the slingers', to: 'slingers', if: { ranged: true }, show: { notFlag: 'slingersDown' } },
     ],
   },
@@ -3643,7 +3648,7 @@ const SECTIONS = {
     ],
   },
   leap: {
-    text: (c) => c.flags.heart
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies on the King’s Road, purple, breathing faintly. The young adventurers have gone.'] : c.flags.heart
       ? ['He runs, he leaps, he misses the horse completely and lies on the road, purple, with his eyes shut. The young adventurers back away slowly.']
       : ['He runs, he leaps, he lands in the saddle facing backwards. The young adventurers cheer. Sir Gristle waves, wheezing, and has to be helped to turn round.'],
     choices: [
@@ -3708,7 +3713,7 @@ const SECTIONS = {
     ],
   },
   hauled: {
-    text: ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies on the bank beside Thunder, breathing faintly.'] : ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
@@ -3778,7 +3783,7 @@ const SECTIONS = {
     choices: [
       { text: 'Ask him why he fires toads at the village', test: { stat: 'Cha', dd: 6, skill: ['social'] }, pass: 'croaker_story', fail: 'cannon_fight' },
       { text: 'Climb up and spike his cannon with an iron spike', test: { stat: 'Dex', dd: 8, skill: ['athletics', 'skulduggery'], mods: [{ if: { anyItem: ['rope', 'climbing'] }, dd: 4 }] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'spikes' } },
-      { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' } },
+      { text: 'Glue up the cannon’s touch-hole', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'spiked', fail: 'cannon_fight', if: { item: 'glue' }, effects: [{ lose: 'glue' }, { flag: 'gluedCannon' }] },
       { text: 'Dazzle him with your hand mirror', to: 'dazzled', if: { item: 'mirror' } },
       { text: 'Cast Chosen on yourself, and walk up to the cannon through the toads', cast: 'chosen', pass: 'chosen_walk', fail: 'cannon_fight', critFail: 'pariah_walk' },
       { text: 'Cast Humble on the cannon', cast: 'humble', pass: 'cannon_shrunk', fail: 'cannon_fight', critFail: 'cannon_grown' },
@@ -3800,7 +3805,8 @@ const SECTIONS = {
     ],
   },
   truth: {
-    text: ['Sir Gristle listens, frowning, to Croaker’s story. Then he laughs until he wheezes. “By God, I did hire him. Forgot all about it.” He sheathes his sword. “Well, Croaker. I shan’t kill you, then. I shall shake your hand.” He climbs down from Thunder to do it, which is, in its way, the bravest thing he does all day.'],
+    onceOnly: true,
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies where he fell, with Croaker’s hand still in his, breathing faintly.'] : ['Sir Gristle listens, frowning, to Croaker’s story. Then he laughs until he wheezes. “By God, I did hire him. Forgot all about it.” He sheathes his sword. “Well, Croaker. I shan’t kill you, then. I shall shake your hand.” He climbs down from Thunder to do it, which is, in its way, the bravest thing he does all day.'],
     on: [EXERT],
     choices: [
       { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
@@ -3826,8 +3832,8 @@ const SECTIONS = {
     choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
   },
   spiked: {
-    on: [{ flag: 'spiked' }, { lose: 'spikes' }],
-    text: ['You hammer home the spike and the cannon is useless. Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”'],
+    on: [{ flag: 'spiked' }, { if: { notFlag: 'gluedCannon' }, lose: 'spikes' }],
+    text: (c) => [`${c.flags.gluedCannon ? 'You fill the touch-hole with glue, and the cannon is useless.' : 'You hammer home the spike and the cannon is useless.'} Croaker looks at it, then at you, and sits down on the roof with his head in his hands. “The toads,” he says. “What am I going to do with the toads?”`],
     choices: [
       { text: 'Ask him what he means', to: 'croaker_story' },
       { text: 'Take Sir Gristle home', to: 'pension_office' },
@@ -3843,8 +3849,8 @@ const SECTIONS = {
     choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
   },
   duel: {
-    on: [EXERT],
-    text: (c) => c.flags.heart
+    on: [EXERT], onceOnly: true,
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies face-down in the yard, sword pointing at the enemy, breathing faintly.'] : c.flags.heart
       ? ['Sir Gristle advances on the farmhouse with his sword raised, roaring a war cry from the Stinking Ford. Croaker swings the cannon round. Before it can fire, Sir Gristle’s heart does, in a manner of speaking, and he falls face-first in the yard, sword pointing at the enemy. A toad lands on his back and croaks.', 'From the village, people have been watching. It looked very, very glorious.']
       : ['Sir Gristle advances, roaring. Croaker fires. The toad hits Sir Gristle’s shield and explodes, throwing him flat on his back in the yard, where he lies laughing. “Ha! Missed!” he cries, which isn’t true, but nobody has the heart to tell him. Croaker is so impressed that he comes down to shake his hand.'],
     choices: [
@@ -4100,14 +4106,15 @@ const SECTIONS = {
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   porcupine: {
-    text: ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
+    text: (c) => c.flags.porcupineSeen ? ['The porcupine is still sitting on the keys, white with flour or dripping wet, and glaring.'] : ['The pen looks empty: straw, a water trough, a sign. The straw near the trough is flattened in a shape about the size of a pig. The shape breathes.'],
     choices: [
-      { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' } },
-      { text: 'Cast True sight, and look at the pen as it really is', cast: 'truesight', pass: 'porcupine_seen', fail: 'porcupine' },
-      { text: 'Cast Dispel magic on the straw, and end its invisibility', cast: 'dispel', pass: 'porcupine_seen', fail: 'porcupine' },
-      { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }] },
-      { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' } },
-      { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight' },
+      { text: 'Deal with the porcupine', to: 'porcupine_seen', show: { flag: 'porcupineSeen' } },
+      { text: 'Throw flour over it first', to: 'porcupine_seen', if: { flag: 'flour', flagText: 'flour' }, show: { notFlag: 'porcupineSeen' } },
+      { text: 'Cast True sight, and look at the pen as it really is', cast: 'truesight', pass: 'porcupine_seen', fail: 'porcupine', show: { notFlag: 'porcupineSeen' } },
+      { text: 'Cast Dispel magic on the straw, and end its invisibility', cast: 'dispel', pass: 'porcupine_seen', fail: 'porcupine', show: { notFlag: 'porcupineSeen' } },
+      { text: 'Throw pocket sand over it', to: 'porcupine_seen', if: { item: 'pocketsand' }, effects: [{ lose: 'pocketsand' }], show: { notFlag: 'porcupineSeen' } },
+      { text: 'Splash it with a bucket of trough water', to: 'porcupine_seen', if: { item: 'bucket' }, show: { notFlag: 'porcupineSeen' } },
+      { text: 'Walk across carefully', test: { stat: 'Dex', dd: 8, save: true }, pass: 'porcupine_past', fail: 'porcupine_fight', show: { notFlag: 'porcupineSeen' } },
       { text: 'Back to the ring', to: 'big_top' },
     ],
   },
@@ -4145,7 +4152,7 @@ const SECTIONS = {
     ],
   },
   aviary_noise: {
-    text: ['Your pick snaps with a ping. On its platform, the invisible ostrich stands up, which you can tell because the platform sighs with relief.'],
+    text: ['The lock stays shut, and something gives a loud metallic ping. On its platform, the invisible ostrich stands up, which you can tell because the platform sighs with relief.'],
     choices: [{ text: 'Back to the ring before anyone comes', to: 'big_top' }],
   },
   aviary_in: {
@@ -4237,7 +4244,7 @@ const SECTIONS = {
     },
   },
   safe_jam: {
-    text: ['Your pick snaps off in the lock. The safe stays shut. The professor’s empty cape watches you from the floor.'],
+    text: ['The safe stays shut. It was built by someone who expected people like you. The professor’s empty cape watches you from the floor.'],
     choices: [{ text: 'Back to the ring', to: 'big_top' }],
   },
   professor_down: {
@@ -4379,16 +4386,16 @@ const SECTIONS = {
   lab_bang: {
     on: [{ damage: '2d6', from: 'The furnace' }],
     text: ['The furnace catches with a WHUMP that takes your eyebrows and puts the homunculi on the ceiling. They come down angry.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'furnace', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'furnace', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   homunculi: {
     on: [{ flag: 'pagesTorn' }],
     text: ['The pages tear. The homunculi gasp in horror. That was the professor’s notebook. They pick up test tubes.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   homunculi_again: {
     text: ['A volley of test tubes comes down off the cupboard.'],
-    fight: { monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
+    fight: { key: 'homunculi', monsters: [{ name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }, { name: 'Lab homunculus', lvl: 2, range: 'short', feats: ['magicImmune'], note: 'Tiny goggles; immune to magic; throws test tubes' }], win: 'lab_after', flee: { to: 'quad', label: 'Back to the quad' } },
   },
   lab_after: {
     text: ['The homunculi retreat into a cupboard and slam the door. The notebook is in pieces on the floor, but one piece is legible.'],
@@ -4417,11 +4424,11 @@ const SECTIONS = {
     ],
   },
   whistle: {
-    text: ['You blow the whistle through the keyhole. The invigilator straightens, looks at a clock that stopped six weeks ago, says “PENS DOWN,” opens the door from the inside, and walks out of the library and across the quad and away, very fast. She has been waiting for that sound for a long time.'],
+    text: (c) => [`You blow the whistle${c.flags.invigAngry ? '' : ' through the keyhole'}. The invigilator straightens, looks at a clock that stopped six weeks ago, says “PENS DOWN,” ${c.flags.invigAngry ? 'and walks out' : 'opens the door from the inside, and walks out'} of the library and across the quad and away, very fast. She has been waiting for that sound for a long time.`],
     choices: [{ text: 'Into the library', to: 'reading_room' }],
   },
   library_open: {
-    text: ['The library door hangs open where you left it. The invigilator is back in the middle of the reading room, perfectly still, facing the door. Facing you.'],
+    text: ['The library door stands open. The invigilator is back in the middle of the reading room, perfectly still, facing the door. Facing you.'],
     choices: [
       { text: 'Blow your watchman’s whistle: it sounds exactly like the end of an exam', to: 'whistle', if: { item: 'whistle' } },
       { text: 'Go in anyway', to: 'invigilator' },
@@ -4494,7 +4501,7 @@ const SECTIONS = {
       { text: 'Cast True sight, and see it as it really is', cast: 'truesight', pass: 'cube_seen', fail: 'hall', show: { notFlag: 'cubeSeen' } },
       { text: 'Cast Freeze time, and walk round it while it stands still', cast: 'freeze', pass: 'cube_frozen', fail: 'hall', show: { notFlag: 'cubeFrozen' } },
       { text: 'Cast Petition, and ask your god how it turns', cast: 'petition', pass: 'cube_petition', fail: 'hall', critFail: 'cube_intervention', show: { notFlag: 'cubePetition' } },
-      { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight' },
+      { text: 'Turn it', test: { stat: 'Int', dd: 20, skill: ['analysis', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'you’ve read about shapes like this', mods: [{ if: { atLeast: ['clues', 1] }, dd: 12 }, { if: { atLeast: ['clues', 2] }, dd: 8 }, { if: { atLeast: ['clues', 3] }, dd: 4 }] }, pass: 'solved', fail: 'cube_fight', effects: [{ unflag: 'smite' }] },
       { text: 'Back out of the hall', to: 'quad' },
     ],
   },
@@ -4510,7 +4517,7 @@ const SECTIONS = {
   },
   cube_fight: {
     on: [{ flag: 'cubeAngry' }],
-    text: ['You get it wrong. The cube stops turning. Space around you creases like paper, and a corner that isn’t there comes at you very fast.'],
+    text: (c) => [`${c.flags.smite ? 'Scorched and furious, the cube' : 'You get it wrong. The cube'} stops turning. Space around you creases like paper, and a corner that isn’t there comes at you very fast.`],
     fight: {
       monsters: [cube], distance: 1, win: 'cube_broken', flee: { to: 'quad', label: 'Run out of the hall' },
       special: [{ label: 'Try to turn it again, mid-fight', test: { stat: 'Int', dd: 8, skill: 'analysis' }, flag: 'midTurn', text: 'Your hand finds the edge that isn’t there, and turns. The cube folds up into a point and vanishes.', failText: 'It slips through your fingers, laughing in your teeth.', win: true }],
@@ -4568,7 +4575,7 @@ const SECTIONS = {
     choices: [{ text: 'Back', to: 'hall' }],
   },
   cube_intervention: {
-    on: [{ flag: 'cubePetition' }],
+    on: [{ flag: 'cubePetition' }, { flag: 'smite' }],
     text: ['Your god scorns you. Instead of an answer, you get action. A bolt of holy fire comes down through the roof of the Great Hall and hits the cube, which does not like it, and decides it was you.'],
     choices: [{ text: 'Brace yourself', to: 'cube_fight' }],
   },
@@ -4717,7 +4724,7 @@ const SECTIONS = {
   },
   mob_flees: {
     on: [{ flag: 'turned' }],
-    text: ['You raise your holy symbol, and the mob falls back, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
+    text: ['The mob falls back before you, torches guttering, until the road is clear. They’ll be back tomorrow night. Grimsby will be safe inside by then.'],
     choices: [{ text: 'On to the hall', to: 'gates' }],
   },
   mob_obeys: {
@@ -4736,7 +4743,7 @@ const SECTIONS = {
       'The mob surges. Pitchforks you can see through still go into you.',
       c.flags.blessedWeapon ? 'Your blessed weapon hums.' : 'Your weapon will pass right through them. You need magic, holy water, or something better.',
     ],
-    fight: { outdoors: true,
+    fight: { key: 'mob', outdoors: true,
       monsters: [mob], distance: 1, win: 'mob_gone', flee: { to: 'moor', label: 'Drag Grimsby back into the fog' },
       special: [
         { label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A whole bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' },
@@ -4769,7 +4776,7 @@ const SECTIONS = {
     ],
   },
   late: {
-    redirect: [{ if: { flag: 'shortcut' }, to: 'late_spare' }, { if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'mobGone' }] }, to: 'late_safe' }],
+    redirect: [{ if: { flag: 'shortcut' }, to: 'late_spare' }, { if: { any: [{ flag: 'peace' }, { flag: 'betrayed' }, { flag: 'mobGone' }, { flag: 'turned' }] }, to: 'late_safe' }],
     on: [{ flag: 'late' }],
     text: ['Midnight strikes while you’re still struggling with the gate. Behind you, the torches come over the rise.'],
     choices: [{ text: 'Get through the gate however you can', to: 'last_stand' }],
@@ -4780,12 +4787,12 @@ const SECTIONS = {
   },
   late_safe: {
     on: [{ flag: 'late' }],
-    text: (c) => [c.flags.betrayed ? 'Midnight strikes while you’re still at the gate. It doesn’t matter now. Eventually, the gate groans open.' : 'Midnight strikes while you’re still at the gate, and Grimsby whimpers, but nothing comes out of the fog. There’s nobody left out there to come. Eventually, the gate groans open.'],
+    text: (c) => [c.flags.betrayed ? 'Midnight strikes while you’re still at the gate. It doesn’t matter now. Eventually, the gate groans open.' : `Midnight strikes while you’re still at the gate, and Grimsby whimpers, but nothing comes out of the fog. ${c.flags.turned ? 'The tenants are busy elsewhere tonight.' : 'There’s nobody left out there to come.'} Eventually, the gate groans open.`],
     choices: [{ text: 'Inside', to: 'inside' }],
   },
   last_stand: {
     text: ['The mob catches you at the gate. There’s no talking now.'],
-    fight: { outdoors: true,
+    fight: { key: 'mob', outdoors: true,
       monsters: [{ ...mob, hp: 24 }], distance: 1, win: 'inside', flee: { to: 'grimsby_hall', label: 'Leave Grimsby to them and run' },
       special: [{ label: 'Throw the bucket of holy water over them', if: { flag: 'holyBucket' }, flag: 'bucketThrown', text: 'A bucket of holy water goes through the front rank of the mob like a scream.', dmg: '4d8' }],
     },
@@ -4807,7 +4814,7 @@ const SECTIONS = {
     ],
   },
   strongroom_caught: {
-    text: ['Your pick snaps in the lock with a ping. Grimsby looks up from the floor. “That,” he says, “is a deduction.” He takes the price of the lock out of your fee, then the price of the pick, then a charge for the inconvenience.'],
+    text: ['The lock holds, with a loud and expensive-sounding ping. Grimsby looks up from the floor. “That,” he says, “is a deduction.” He takes the price of the lock out of your fee, then the price of the pick, then a charge for the inconvenience.'],
     on: [{ flag: 'deducted' }],
     choices: [{ text: 'Take what’s left of your fee', to: 'grimsby_hall' }],
   },
@@ -4827,7 +4834,8 @@ const SECTIONS = {
         ? (c.flags.peace ? 'Grimsby Hall is quiet that night, and every night after. The tenants don’t come back. Grimsby frames the apology and hangs it in the hall, where it unsettles visitors.'
           : c.flags.mobGone ? 'Grimsby Hall is quiet that night, and every night after. The tenants are gone for good, and so is the last claim on their deposits. Grimsby is delighted. He never thanks you.'
             : c.flags.ghostArmy ? 'The ghosts stand guard round Grimsby Hall all night on your orders, torches high. Grimsby sits up with a candle, finding this no comfort at all.'
-              : c.flags.late ? 'The hall isn’t legally his, and the tenants know it. Grimsby locks every door and sits up all night with a candle while the torches circle the hall till dawn. He’ll be fine. Probably.'
+              : c.flags.late && !c.flags.turned ? 'The hall isn’t legally his, and the tenants know it. Grimsby locks every door and sits up all night with a candle while the torches circle the hall till dawn. He’ll be fine. Probably.'
+                : c.flags.late ? 'The hall isn’t legally his, but the tenants are too busy elsewhere to notice tonight. Grimsby sits up with a candle anyway, waiting for them to find out.'
                 : 'The hall is legally his now, and the tenants know it. They circle it once with their torches, out of habit, and go back to the moor to wait for the next Grimsby.')
         : c.flags.betrayed ? 'Out on the moor, the torches have gone out. Somewhere in the fog, a lord is still explaining about wear and tear.'
           : 'You leave Grimsby to the mob. He has three hundred years of explaining to do.',
@@ -4958,13 +4966,13 @@ const SECTIONS = {
     dark: 'caves',
     on: [{ flag: 'slugDead' }],
     text: ['The slug slides straight into your pit and can’t get out, because slugs don’t climb so much as smear, and the sides are sand. It lies at the bottom, looking up at you. Under it, glinting, is a heap of chewed gold.'],
-    choices: [{ text: 'Fish out the gold with your shovel', to: 'slug_gold' }],
+    choices: [{ text: 'Fish out the gold', to: 'slug_gold' }],
   },
   slug_burn: {
     dark: 'caves', litIf: true,   // the slime is on fire
     on: [{ lose: 'oil' }],
     text: ['The oil catches with a WHOOMPH and races up the slime trail, which turns out to be very flammable. Somewhere ahead, the slug screams, which you didn’t know slugs could do. It comes round the corner on fire.'],
-    fight: {
+    fight: { key: 'slug',
       monsters: [{ ...slug, hp: 26 }], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
       special: [{ label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' }],
     },
@@ -4972,7 +4980,7 @@ const SECTIONS = {
   slug_fight: {
     dark: 'caves',
     text: ['Thirty feet of slug comes round the corner at a surprising speed, which is to say a walking pace.'],
-    fight: {
+    fight: { key: 'slug',
       monsters: [slug], win: 'slug_down', flee: { to: 'path', label: 'Run back out into the gorge' },
       special: [
         { label: 'Throw salt at it', if: { flag: 'salt' }, flag: 'saltThrown', text: 'A double handful of salt. The slug hisses and shrinks.', dmg: '4d6' },
@@ -5027,7 +5035,7 @@ const SECTIONS = {
   forgery: {
     on: [{ flag: 'dragonAngry' }],
     text: ['The dragon reads your form, and then reads it again, and then takes off its glasses. “This,” it says, “is a forgery. That’s a very serious matter. There’s a form for it.” It sets the form on fire, and then you.'],
-    fight: { monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
+    fight: { key: 'dragon', monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for it' } },
   },
   leg: {
     on: [{ flag: 'legFixed' }],
@@ -5046,7 +5054,7 @@ const SECTIONS = {
   retired: {
     on: [{ flag: 'retired' }, { item: 'scale', msg: 'The dragon gives you one of its scales: proof of removal, for the mayor.' }, { gold: 300, uncapped: true, msg: 'And a share of the hoard: 300GP.' }],
     onceOnly: true,
-    text: ['The dragon signs its retirement with a claw and a great deal of satisfaction. It gives you a scale for the mayor, and a share of the hoard for yourself. Then it limps or strides, depending on its leg, out of the cave mouth, spreads its wings, and is gone south, getting smaller, towards somewhere warm.'],
+    text: (c) => [`The dragon signs its retirement with a claw and a great deal of satisfaction. It gives you a scale for the mayor, and a share of the hoard for yourself. ${c.flags.legFixed ? 'Then it strides out of the cave mouth, spreads its wings, and is gone south, getting smaller, towards somewhere warm.' : 'Then it packs its hoard into a sack and limps out of the cave mouth and away down the mountain, heading south, towards somewhere warm. At that speed it should be there by spring.'}`],
     choices: [{ text: 'Back down to the village', to: 'village' }],
   },
   dragon_fight: {
@@ -5055,7 +5063,7 @@ const SECTIONS = {
       'The dragon sighs, takes off its glasses, and folds them. “Very well,” it says. “It is, after all, on the form.”',
       c.flags.legFixed ? 'It rears up, both legs working, which you are now regretting.' : 'It can’t fly. It doesn’t need to.',
     ],
-    fight: {
+    fight: { key: 'dragon',
       monsters: [dragon], distance: 1, win: 'dragon_down', flee: { to: 'path', label: 'Run for the cave mouth' },
       special: [
         { label: 'Hold up your mirror and let it see the state of itself', if: { item: 'mirror' }, flag: 'dragonMirror', text: 'The dragon sees its reflection: old, grey round the snout, glasses askew. It stops, stricken, for a moment.', stun: 1 },
@@ -5097,7 +5105,7 @@ const SECTIONS = {
   slug_stone: {
     dark: 'caves',
     text: ['Your god scorns you. Instead of salt, the slug’s skin turns to stone. It is now a thirty-foot slug made of granite, and it is very pleased about it.'],
-    fight: { monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
+    fight: { key: 'slug', monsters: [{ ...slug, hp: slug.hp * 2, note: `${slug.note}; skin of stone (double HP)` }], win: 'slug_down', flee: { to: 'path', label: 'Run back up the tunnel' } },
   },
   slug_converts: {
     dark: 'caves',
@@ -5471,7 +5479,7 @@ const SECTIONS = {
   },
   sponge_fight: {
     text: ['The sponge heaves itself up over the rim of the bath, wet and enormous, and comes at you with a noise like a mop going into a bucket.'],
-    fight: {
+    fight: { key: 'sponge',
       monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }],
       win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' },
       special: [{ label: 'Wring it out', test: { stat: 'Str', dd: 6, skill: 'bruteforce' }, flag: 'wrung', text: 'You get both arms round it and twist. Thirty years of bathwater comes out in a flood, and the sponge goes limp.', failText: 'It’s too wet to get a grip on.', win: true }],
@@ -5524,7 +5532,7 @@ const SECTIONS = {
   lord_fight: {
     on: [{ flag: 'lordAngry' }],
     text: ['Lord Mudlark comes out of the sty at you with his stick. The pig watches, with interest, from a safe distance.'],
-    fight: { outdoors: true,
+    fight: { key: 'mudlark', outdoors: true,
       monsters: [mudlark],
       win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' },
       special: [{ label: 'Throw a bucket of water over him', if: { item: 'bucket' }, flag: 'splashed', text: 'He gets a bucket of water full in the face and stops dead, gasping, as if you’d thrown acid. It’s the first water that’s touched him in thirty years.', stun: 1 }],
@@ -5595,7 +5603,7 @@ const SECTIONS = {
   },
   sponge_fed: {
     text: ['Your god scorns you. Instead of locusts, a day’s rations fall into the bath. The sponge drinks them, grows a foot, and comes over the rim at you, wanting more.'],
-    fight: { monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }], win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' } },
+    fight: { key: 'sponge', monsters: [{ name: 'The sponge', lvl: 2, hp: 6, range: 'engaged', onHit: { stat: 'Str', dd: 4, label: 'pull free', text: 'It wraps round you and squeezes.', effect: 'damage', amount: 'd4' }, note: 'Thirty years old; on hit, d4 Str save or take d4 more' }], win: 'sponge_beaten', flee: { to: 'hall', label: 'Run downstairs' } },
   },
   tripped: {
     text: ['Lord Mudlark’s feet go out from under him, and he goes face down in the mud with a noise like a cow sitting in custard. He comes up blowing bubbles, and by then you are sitting on him. He comes along, dripping, but he comes.'],
@@ -5608,7 +5616,7 @@ const SECTIONS = {
   lord_waterwalks: {
     on: [{ flag: 'lordAngry' }],
     text: ['Your god scorns you. Instead of growing heavy, Lord Mudlark grows light, and steps up onto the surface of the sty as if it were a parquet floor. He walks across the top of the mud to you, delighted, and hits you with his stick.'],
-    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
+    fight: { key: 'mudlark', outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
   },
   crumpets: {
     text: ['A trough of hot buttered crumpets appears in the bathroom, and the smell comes down the stairs and out into the sty. Lord Mudlark’s nose twitches. “Crumpets,” he says, and climbs out of the mud, and follows his nose indoors, past you, without a word.'],
@@ -5617,7 +5625,7 @@ const SECTIONS = {
   sty_locusts: {
     on: [{ flag: 'lordAngry' }],
     text: ['Your god scorns you. Instead of crumpets, a swarm of locusts comes down on the sty. The pig eats a few. Lord Mudlark, covered in insects, decides that this is your fault, which it is.'],
-    fight: { outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
+    fight: { key: 'mudlark', outdoors: true, monsters: [mudlark], win: 'lord_beaten', flee: { to: 'hall', label: 'Retreat indoors' } },
   },
 };
 
@@ -5772,9 +5780,9 @@ const SECTIONS = {
   },
   race_duchess: {
     text: (c) => [
-      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? 'The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. The Duchess, calm as a cow, doesn’t even look round.' : 'The whistle goes. The field thunders off.',
+      c.flags.falseStart ? 'Your whistle shrieks a second early. The Duchess, nervous as a kitten, bolts at the sound and is three lengths clear before the starter has blown his. Nobody catches her after that.' : c.flags.caltropsStart ? `The field goes off over your caltrops. The horses behind the Duchess bunch and stumble. ${c.flags.duchessCalm ? 'The Duchess, calm as a cow, doesn’t even look round.' : 'The Duchess hears the crunching behind her and bolts, which, for once, is in the right direction.'}` : c.flags.duchessNobbled ? 'The whistle goes. The field thunders off. The Duchess has had a very bad afternoon, and runs most of the race sideways.' : 'The whistle goes. The field thunders off.',
       c.flags.nevilleSick ? 'Neville sneezes at the start, sneezes at the first bend and sneezes all the way down the back straight, and finishes last, damp and miserable.' : c.flags.nevilleGreased ? 'Neville’s first stride lands on the grease. His legs go one way and his horse’s head goes the other, and he spends the race sliding gently down the course on his back, waving.' : c.flags.nevilleNobbled ? 'Neville takes one stride and falls flat on his face, to a roar of laughter from the stands. He gets up, and finishes, last, to a smaller roar.' : 'Neville runs well, for a reverse centaur, and comes in a respectable third, waving.',
-      'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
+      c.flags.falseStart ? 'The Duchess wins it, by a distance, at evens. The stewards discuss the start for a long time, and decide the result stands. The crowd cheers,' : 'The Duchess wins it, by a nose, at evens. The crowd cheers, and goes to collect very small winnings.',
     ],
     choices: [{ text: 'Go round the back of the grandstand', to: 'collect' }],
   },
@@ -5833,7 +5841,7 @@ const SECTIONS = {
   },
   neville_cured: {
     on: [{ flag: 'nevilleReady' }, { flag: 'nevilleDone' }],
-    text: ['Your god scorns you, and cures Neville of the sniffle he didn’t know he had. He takes a deep breath through both sets of nostrils, and his eyes light up. “I feel marvellous,” he says. “I feel like I could run all day.”'],
+    text: ['Your god scorns you, and cures Neville of the sniffle he didn’t know he had. He takes a deep breath through his enormous nostrils, and his eyes light up. “I feel marvellous,” he says. “I feel like I could run all day.”'],
     choices: [{ text: 'Back to the paddock', to: 'paddock' }],
   },
   greased_start: {
@@ -5967,7 +5975,7 @@ const SECTIONS = {
     choices: [{ text: 'Go into the square and blow it', to: 'square' }],
   },
   dogs_fight: {
-    text: ['Mrs Grudge says a word, and four grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running.'],
+    text: ['Mrs Grudge says a word, and two of her grey blink dogs come out from under the caravan, appearing at your ankles before they’ve finished running. The other two stay where they are, to watch.'],
     fight: { outdoors: true,
       monsters: [blinkdog, blinkdog],
       win: 'dogs_down', flee: { to: 'square', label: 'Run back to the square' },
@@ -6001,12 +6009,12 @@ const SECTIONS = {
     on: [
       { if: { flag: 'biscuit', below: ['time', 4] }, gold: 200, uncapped: true, msg: 'The Duke pays 200GP, and a rosette, which he takes back.' },
       { if: { flag: 'grudgeDeal' }, gold: 100, uncapped: true, msg: 'Mrs Grudge’s first hundred.' },
-      { if: { flag: 'grudgeDeal', notFlag: 'biscuit' }, gold: 150, uncapped: true, msg: 'Mrs Grudge pays the rest: 150GP.' },
+      { if: { flag: 'grudgeDeal', any: [{ notFlag: 'biscuit' }, LATE] }, gold: 150, uncapped: true, msg: 'Mrs Grudge pays the rest: 150GP.' },
     ],
     text: (c) => [
       c.flags.biscuit && (c.flags.time || 0) < 4
         ? 'You put Sir Biscuit on his table at five to four. He sits, perfectly still, for the first time all day, and wins Best in Show without moving a muscle.' + (c.flags.grudgeDeal ? ' Mrs Grudge’s face, when she sees him, is worth more than the money she won’t be paying you.' : '')
-        : c.flags.biscuit ? 'You bring Sir Biscuit in after the judging. Mrs Grudge’s dogs have won. The Duke takes his dog without a word, and doesn’t pay you either.'
+        : c.flags.biscuit ? 'You bring Sir Biscuit in after the judging. Mrs Grudge’s dogs have won. The Duke takes his dog without a word, and doesn’t pay you either.' + (c.flags.grudgeDeal ? ' Mrs Grudge does, grinning.' : '')
           : c.flags.grudgeDeal ? 'Mrs Grudge’s grey dogs take Best in Show. She pays you the rest of her money, grinning. Out in the square, a small white dog blinks onto the church roof and stays there, offended, for a week.'
             : 'Mrs Grudge’s grey dogs take Best in Show. Sir Biscuit turns up at the Duke’s house two days later, sleeps for a week, and never forgives anybody.',
       `You leave Waggleton with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
@@ -6184,14 +6192,19 @@ const SECTIONS = {
       { text: 'Four fingers, flat, on the back of the hand', to: 'cellar', show: { flag: 'knowsSignal' } },
       { text: 'Guess a sign', test: { stat: 'Int', dd: 12, skill: ['languages'], profs: ['Envoy'], why: 'you know a lot of gestures' }, pass: 'cellar', fail: 'wrong_sign', show: { notFlag: 'knowsSignal' } },
       { text: 'Cast Tongues on yourself, and read the monks’ sign language like a book', cast: 'tongues', pass: 'signs_read', fail: 'wrong_sign', critFail: 'signs_silent', show: { notFlag: 'knowsSignal' } },
-      { text: 'Throw your voice into the refectory, where nobody has spoken for forty years', cast: 'voice', pass: 'voice_lure', fail: 'wrong_sign' },
-      { text: 'Wait till he dozes, oil the hinges with your flask of oil, and slip in without a creak', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'cellar', fail: 'wrong_sign', if: { item: 'oil' }, effects: [{ lose: 'oil' }], show: { notFlag: 'knowsSignal' } },
+      { text: 'Throw your voice into the refectory, where nobody has spoken for forty years', cast: 'voice', pass: 'voice_lure', fail: 'door_noticed' },
+      { text: 'Wait till he dozes, oil the hinges with your flask of oil, and slip in without a creak', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'cellar', fail: 'door_noticed', if: { item: 'oil' }, effects: [{ lose: 'oil' }], show: { notFlag: 'knowsSignal' } },
       { text: 'Back to the cloister', to: 'cloister' },
     ],
   },
   wrong_sign: {
     on: [NOISE()],
     text: ['The monk looks at your hand, and his eyebrows go up very slowly. Whatever you just said in sign, it was not polite. He turns, very deliberately, and goes to fetch somebody.'],
+    choices: [{ text: 'Back to the cloister', to: 'cloister' }],
+  },
+  door_noticed: {
+    on: [NOISE()],
+    text: ['The monk at the door turns round and looks at you, and his eyebrows go up very slowly. He doesn’t need to say anything. He couldn’t if he wanted to. He goes, very deliberately, to fetch somebody.'],
     choices: [{ text: 'Back to the cloister', to: 'cloister' }],
   },
   octavius_comes: {
@@ -6372,7 +6385,7 @@ const SECTIONS = {
       { text: 'Give it your rations', to: 'oats', if: { item: 'rations' }, show: { notFlag: 'fed' } },
       { text: 'Dress the old wound under its armour with your healer’s kit', to: 'dressed', if: { item: 'healerskit' }, show: { notFlag: 'fed' } },
       { text: 'Cast Heal on the old wound under its armour', cast: 'heal', pass: 'healed', fail: 'stable', critFail: 'harmed', show: { notFlag: 'fed' } },
-      { text: 'Unbuckle its armour while it eats', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
+      { text: 'Unbuckle its armour while it trusts you', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'], mods: [{ if: { anyItem: ['tools', 'prybar'] }, dd: 4 }] }, pass: 'armour_off', fail: 'stable_kick', show: { flag: 'fed', notFlag: 'armourOff' } },
       { text: 'Show it its reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { notFlag: 'mirrored' } },
       { text: 'Glue its shoes to the stable floor', to: 'glued', if: { item: 'glue' }, show: { notFlag: 'glued' } },
       { text: 'Back to the tents', to: 'tents' },
@@ -6457,7 +6470,7 @@ const SECTIONS = {
   },
   trampled: {
     on: [{ damage: '2d6', from: 'A warhorse' }],
-    text: ['The rope tightens, and the black horse drags you the length of the lists, through the barrier and into the pie stall.'],
+    text: ['The black horse comes down the lists like an avalanche and takes you with it, through the barrier and into the pie stall.'],
     choices: [{ text: 'Get up', to: 'lists' }],
   },
   fight: {
@@ -6504,7 +6517,7 @@ const SECTIONS = {
     choices: [{ text: 'Get it out of the tourney', to: 'prize' }],
   },
   galvanised_horse: {
-    text: ['Your god scorns you. Instead of peace, the black horse is filled with unholy vigour. Steam comes out of its visor. It finishes its charge, turns at the end of the lists, and comes back for you on foot.'],
+    text: ['Your god scorns you. Instead of peace, the black horse is filled with unholy vigour. Steam comes out of its visor. It finishes its charge, turns at the end of the lists, and comes back for you. You are on foot.'],
     fight: { outdoors: true, monsters: [{ ...knightmare, name: 'The Knightmare (galvanised)', feats: [...(knightmare.feats || []), 'dealD6'], note: `${knightmare.note}; galvanised: +d6 damage` }], win: 'horse_down', flee: { to: 'stable', label: 'Vault the barrier and run' } },
   },
   joust_galv: {
@@ -6570,8 +6583,8 @@ const SECTIONS = {
       { text: 'Ask them all a question only the real one could answer', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Envoy'], why: 'you know how to question people' }, pass: 'question', fail: 'chorus', show: { notFlag: 'asked' } },
       { text: 'Look them over with your jeweller’s loupe', to: 'loupe', if: { item: 'loupe' }, show: { notFlag: 'looked' } },
       { text: 'Cast True sight, and look at them as they really are', cast: 'truesight', pass: 'truesight', fail: 'hall', show: { notFlag: 'trueSeen' } },
-      { text: 'Cast Detect chaos, and sense which of them are unnatural', cast: 'detectchaos', pass: 'sensed', fail: 'hall', critFail: 'sensed_law', show: { notFlag: 'sensed' } },
-      { text: 'Cast Detect law, and find the one who isn’t a jelly', cast: 'detectlaw', pass: 'sensed_law', fail: 'hall', critFail: 'sensed', show: { notFlag: 'sensed' } },
+      { text: 'Cast Detect chaos, and sense which of them are unnatural', cast: 'detectchaos', pass: 'sensed', fail: 'hall', critFail: 'sensed_law_scorn', show: { notFlag: 'sensed' } },
+      { text: 'Cast Detect law, and find the one who isn’t a jelly', cast: 'detectlaw', pass: 'sensed_law', fail: 'hall', critFail: 'sensed_scorn', show: { notFlag: 'sensed' } },
       { text: 'Search the Professor’s study', to: 'study', show: { any: [{ notFlag: 'diary' }, { notFlag: 'strongbox' }] } },
       { text: 'Go down to the laboratory', to: 'lab', show: { notFlag: 'labDone' } },
       { text: 'Herd the Glibbs into the cellar and padlock it', to: 'cellar', if: { item: 'padlock' }, show: { notFlag: 'lidded' } },
@@ -6672,7 +6685,7 @@ const SECTIONS = {
   },
   real_fight: {
     on: [{ flag: 'betrayed' }],
-    text: ['“Cedric sent you,” says the real Professor Glibb, getting up from the fire. “Of course he did.” He comes at you, and the other twenty-nine come too, out of family feeling.'],
+    text: (c) => [`“Cedric sent you,” says the real Professor Glibb, getting up from the fire. “Of course he did.” He comes at you, and ${c.flags.lidded ? 'down in the cellar, twenty-nine copies start hammering on the door out of family feeling. One of them has already got out.' : 'the nearest copy comes too, out of family feeling.'}`],
     fight: {
       monsters: [{ ...glibb, name: 'Professor Glibb', lvl: 4, hp: 12, note: 'The real one; manmoeba; miserly; splits when struck' }, glibb],
       win: 'all_gone', flee: { to: 'reading', label: 'Run for the door' },
@@ -6714,6 +6727,14 @@ const SECTIONS = {
     on: [{ flag: 'trueSeen' }, CLUE, CLUE, CLUE],
     text: ['You see the Glibbs as they really are: twenty-nine shapes of grey jelly, wearing the memory of a man like a coat. And one, by the fireplace, who is a man: old, tired, frightened, and very much Professor Glibb, wearing jelly.'],
     choices: [{ text: 'Back to the hall', to: 'hall' }],
+  },
+  sensed_scorn: {
+    text: ['Your god scorns you. Instead of law, you sense chaos: a great deal of it.'],
+    choices: [{ text: 'Look closer', to: 'sensed' }],
+  },
+  sensed_law_scorn: {
+    text: ['Your god scorns you. Instead of chaos, you sense law, which in this house is in short supply.'],
+    choices: [{ text: 'Look closer', to: 'sensed_law' }],
   },
   sensed: {
     on: [{ flag: 'sensed' }, CLUE],
@@ -6806,7 +6827,7 @@ const SECTIONS = {
       { text: 'Cast Tongues on the golem, so it can say what it wants', cast: 'tongues', pass: 'golem_speaks', fail: 'golem_panics', critFail: 'golem_silent', show: { notFlag: 'golemTrusts' } },
       { text: 'Cast Command on it: “Come with me”', cast: 'command', pass: 'golem_commanded', fail: 'golem_panics' },
       { text: 'Lead it to the Duke’s hothouse, over the hill', to: 'road', show: { flag: 'golemTrusts' } },
-      { text: 'Cast Famine on it, so it smells rotten and nobody wants to eat it', cast: 'famine', pass: 'famine', fail: 'golem_panics', critFail: 'custard', show: { notFlag: 'villagersGone' } },
+      { text: 'Cast Famine, and let the locusts make it look thoroughly unappetising', cast: 'famine', pass: 'famine', fail: 'golem_panics', critFail: 'custard', show: { notFlag: 'villagersGone' } },
       { text: 'Attack it', to: 'golem_fight' },
       { text: 'Rope it and drag it back to the Guild', test: { stat: 'Str', dd: 10, skill: ['athletics'] }, pass: 'dragged', fail: 'golem_fight', if: { anyItem: ['rope', 'chain'] } },
     ],
@@ -6825,7 +6846,7 @@ const SECTIONS = {
   },
   famine: {
     on: [{ flag: 'villagersGone' }, { flag: 'golemTrusts' }, { flag: 'rotten' }],
-    text: ['A wave of brown spreads over the golem, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
+    text: ['A swarm of locusts pours out of your sleeves, settles on the golem, takes one bite each, and leaves in disgust. Where they bit, a wave of brown spreads over it, and a smell like the back of a greengrocer’s in August. The villagers lower their spoons, and then back away, and then go home. The golem looks at itself, appalled, and then at the empty orchard, and understands. Nobody will try to eat it now. It looks at you with something like gratitude.'],
     choices: [{ text: 'Back to the golem', to: 'clearing' }],
   },
   golem_talk: {
@@ -6835,14 +6856,14 @@ const SECTIONS = {
   },
   golem_panics: {
     text: ['You say something that sounds to the golem, unfortunately, like “peel”. It panics and lashes out.'],
-    fight: { outdoors: true,
+    fight: { key: 'golem', outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [{ label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' }],
     },
   },
   golem_fight: {
     text: ['The golem draws itself up to its full nine feet, and comes at you swinging bunches.'],
-    fight: { outdoors: true,
+    fight: { key: 'golem', outdoors: true,
       monsters: [golem], win: 'golem_down', flee: { to: 'orchard', label: 'Run for it' },
       special: [
         { label: 'Set fire to it', if: { fire: true }, flag: 'caramel', text: 'It caramelises with a hiss and a heavenly smell, and staggers.', dmg: '3d6' },
@@ -6983,7 +7004,7 @@ const SECTIONS = {
   },
   shopkeepers: {
     on: [{ flag: 'askedShops' }, { flag: 'knowsMum' }],
-    text: ['The ironmonger tells you there are five of them, and that they don’t like to get close: wizards never do. The greengrocer tells you they’re just kids, really, and bored. The baker’s boy, very quietly, tells you that Spike Wimbledon’s mother works at the bakery on the corner, and doesn’t know what her son is up to. “She thinks he’s at school,” he says. “Doing well.”'],
+    text: ['The ironmonger tells you there are six of them, and that they don’t like to get close: wizards never do. The greengrocer tells you they’re just kids, really, and bored. The baker’s boy, very quietly, tells you that Spike Wimbledon’s mother works at the bakery on the corner, and doesn’t know what her son is up to. “She thinks he’s at school,” he says. “Doing well.”'],
     choices: [{ text: 'Back to the high street', to: 'muttering' }],
   },
   shopkeepers_scared: {
@@ -7082,7 +7103,7 @@ const SECTIONS = {
       monsters: [delinquent, delinquent],
       distance: 1, win: 'spike_fight', flee: { to: 'muttering', label: 'Run for it' },
       special: [
-        { label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorBolt', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and comes straight back at the wizard who cast it.', failText: 'You get the angle wrong, and the bolt takes the mirror out of your hand.', dmg: '6' },
+        { label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorBolt', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and comes straight back at the wizard who cast it.', failText: 'You get the angle wrong, and the bolt takes the skin off your knuckles instead.', dmg: '6' },
         { label: 'Throw a bucket of water on the Grease', if: { item: 'bucket' }, flag: 'degreased', text: 'The Grease turns to soapy foam. Two wizards slip in it themselves.', stun: 1 },
       ],
     },
@@ -7091,7 +7112,7 @@ const SECTIONS = {
     text: (c) => [c.flags.offered ? 'Spike rolls up his sleeves. “No hard feelings,” he says, and greases the floor under you.' : 'Spike steps over his gang, both wands raised. “Right,” he says. “My turn.”'],
     fight: {
       monsters: [spike], distance: 1, win: 'spike_down', flee: { to: 'muttering', label: 'Run for it' },
-      special: [{ label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorSpike', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and goes straight back into Spike’s moustache.', failText: 'You get the angle wrong, and the bolt takes the mirror out of your hand.', dmg: '8' }],
+      special: [{ label: 'Hold up your hand mirror and bounce a bolt back', if: { item: 'mirror' }, flag: 'mirrorSpike', test: { stat: 'Dex', dd: 6, skill: 'defend:ranged' }, text: 'The bolt hits your mirror and goes straight back into Spike’s moustache.', failText: 'You get the angle wrong, and the bolt takes the skin off your knuckles instead.', dmg: '8' }],
     },
   },
   spike_down: {
@@ -7114,9 +7135,9 @@ const SECTIONS = {
       { if: { flag: 'grimoireSold' }, gold: 450, uncapped: true, msg: 'The man in the next town pays 450GP for the grimoire.' },
     ],
     text: (c) => [
-      c.flags.mumDone ? 'The inspectors arrive on Friday to find the Collegium spotless, the grimoire on the Headmistress’s desk, and five delinquent wizards writing lines under the eye of a small floury woman with a rolling pin. The Headmistress gives Mrs Wimbledon a job.'
-        : c.flags.surrendered ? 'The inspectors arrive on Friday to find the grimoire on the Headmistress’s desk and five delinquent wizards in detention. They are very impressed. The Headmistress takes all the credit.'
-          : c.flags.grimoireSold ? 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Its pupils are sent home. In Muttering, a gang of five young wizards starts a new business sitting other people’s exams.'
+      c.flags.mumDone ? `The inspectors arrive on Friday to find the Collegium spotless, the grimoire on the Headmistress’s desk, and ${c.flags.gangThinned ? 'three' : 'five'} delinquent wizards writing lines under the eye of a small floury woman with a rolling pin. The Headmistress gives Mrs Wimbledon a job.`
+        : c.flags.surrendered ? `The inspectors arrive on Friday to find the grimoire on the Headmistress’s desk and ${c.flags.gangThinned ? 'three' : 'five'} delinquent wizards in detention. They are very impressed. The Headmistress takes all the credit.`
+          : c.flags.grimoireSold ? 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Its pupils are sent home. In Muttering, a gang of young wizards starts a new business sitting other people’s exams.'
             : 'The inspectors arrive on Friday, find no grimoire, and close the Collegium. Headmistress Grimble does not pay you, and puts you on a list.',
       `You leave Muttering with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
     ],
@@ -7137,7 +7158,7 @@ const SECTIONS = {
     choices: [{ text: 'March them back to the Collegium, in a line', to: 'headmistress' }],
   },
   humbled_self: {
-    text: ['Your god scorns you. Instead of doubling, you shrink to a quarter of your size. Five teenage wizards look down at you. There is a short silence, and then a great deal of laughter, and then the wands come up.'],
+    text: ['Your god scorns you. Instead of doubling, you shrink to a quarter of your size. A ring of teenage wizards look down at you. There is a short silence, and then a great deal of laughter, and then the wands come up.'],
     choices: [{ text: 'Fight', to: 'gang_fight' }],
   },
   spike_humbled: {
@@ -7146,7 +7167,6 @@ const SECTIONS = {
     choices: [{ text: 'March them all back to the Collegium, in a line', to: 'headmistress' }],
   },
   spike_emboldened: {
-    on: [{ flag: 'offered' }],
     text: ['Your god scorns you. Instead of shrinking, Spike grows to twice his size, and bumps his head on the foundry roof. His gang cheer. Spike looks down at you and grins.'],
     choices: [{ text: 'Fight him', to: 'spike_fight' }],
   },
@@ -7306,8 +7326,8 @@ const SECTIONS = {
     choices: [
       { text: 'Agree to lead the baby into his net', to: 'square', effects: [{ flag: 'snareDeal' }], show: { notFlag: 'snareDeal' } },
       { text: 'Pour acid on the net while his back is turned', to: 'sabotaged', if: { item: 'acid' }, effects: [{ lose: 'acid' }] },
-      { text: 'Spike the harpoon gun', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'spikes' } },
-      { text: 'Glue the harpoon into the barrel', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'glue' } },
+      { text: 'Spike the harpoon gun', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'spikes' }, effects: [{ lose: 'spikes' }] },
+      { text: 'Glue the harpoon into the barrel', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'sabotaged', fail: 'snare_fight', if: { item: 'glue' }, effects: [{ lose: 'glue' }] },
       { text: 'Cast Invisibility on yourself, and wreck his gear while he’s looking right at it', cast: 'invisibility', pass: 'sabotaged', fail: 'snare_fight', show: { notFlag: 'snareFixed' } },
       { text: 'Tell him the council has cancelled the job', test: { stat: 'Cha', dd: 10, skill: ['lying'] }, pass: 'snare_leaves', fail: 'snare_fight' },
       { text: 'Back to the square', to: 'square' },
@@ -7741,15 +7761,15 @@ const SECTIONS = {
       { text: 'Cast Confession on Righteous Gall, in front of the whole village', cast: 'confession', pass: 'gall_confesses', fail: 'crowd_turns', critFail: 'gall_wiped' },
       { text: 'Cast Intervention, and ask your god to do something about Gall', cast: 'intervention', pass: 'intervention', fail: 'crowd_turns', critFail: 'petition_answer', show: { notFlag: 'gallDown' } },
       { text: 'Cast Telekinesis, and wedge a stone in the ducking stool’s pivot from across the pond', cast: 'telekinesis', pass: 'jammed', fail: 'jetty', show: { notFlag: 'nanFree' } },
-      { text: 'Jam the ducking stool’s pivot with an iron spike', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'spikes' }, show: { notFlag: 'nanFree' } },
-      { text: 'Glue the ducking stool’s pivot', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'glue' }, show: { notFlag: 'nanFree' } },
+      { text: 'Jam the ducking stool’s pivot with an iron spike', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'spikes' }, show: { notFlag: 'nanFree' }, effects: [{ lose: 'spikes' }] },
+      { text: 'Glue the ducking stool’s pivot', test: { stat: 'Dex', dd: 6, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gall_fight', if: { item: 'glue' }, show: { notFlag: 'nanFree' }, effects: [{ lose: 'glue' }] },
       { text: 'Bless a bucket of millpond water and throw it over Nan, so the crowd sees she doesn’t burn', cast: 'bless', pass: 'holy_water', fail: 'crowd_turns', critFail: 'nan_oiled', if: { item: 'bucket' }, show: { notFlag: 'nanFree' } },
       { text: 'Challenge Gall', to: 'gall_fight' },
     ],
   },
   exposed: {
     on: [{ flag: 'exposed' }],
-    text: ['You hold up the rennet and read from the ledger: forty-one witches, forty-one dairies, ten gold a time. The crowd goes quiet. Then the dairymaid says, quite loudly, “He went round all the churns.” Righteous Gall looks at the crowd, and the crowd looks at Righteous Gall, and then it is Gall in the ducking stool, and he floats.'],
+    text: (c) => [`${c.flags.powder ? 'You hold up the rennet and read from the ledger: forty-one witches, forty-one dairies, ten gold a time.' : 'You tell the crowd about the grey dust on the milk, and ask them how a witchfinder knows which village to visit before anybody has said the word witch.'} The crowd goes quiet. Then the dairymaid says, quite loudly, “He went round all the churns.” Righteous Gall looks at the crowd, and the crowd looks at Righteous Gall, and then it is Gall in the ducking stool, and he floats.`],
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   miracle: {
@@ -7768,7 +7788,7 @@ const SECTIONS = {
     choices: [{ text: 'Watch the sun come up', to: 'dawn' }],
   },
   crowd_turns: {
-    text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men come at you down the jetty.'],
+    text: ['“Witch-lover!” shouts Gall, pointing at you, and the crowd turns, the way crowds do. His men shove you down the jetty towards him.'],
     choices: [{ text: 'Fight', to: 'gall_fight' }],
   },
   gall_fight: {
@@ -7898,7 +7918,7 @@ const SECTIONS = {
   },
   caught: {
     text: ['The clerk peers at you over his spectacles. “Irregular,” he says, and rings a little bell. A door opens, and a bureaucrat in a cardigan comes out with an armful of rubber stamps.'],
-    fight: { monsters: [bureaucrat], distance: 1, win: 'forms', flee: { to: 'start', label: 'Back out into the queue' } },
+    fight: { key: 'bureaucrat', monsters: [bureaucrat], distance: 1, win: 'forms', flee: { to: 'start', label: 'Back out into the queue' } },
   },
   delivery: {
     text: ['At the delivery entrance, porters unload cartloads of paper. A foreman checks every cart against a list.'],
@@ -7933,8 +7953,8 @@ const SECTIONS = {
     choices: [
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'cabinet_fight', show: { none: [{ flag: 'fileFound' }, { flag: 'cabinetDone' }] } },
       { text: 'Look up your own file', test: { stat: 'Int', dd: 8, skill: ['analysis'] }, pass: 'your_file', fail: 'file_lost', show: { flag: 'cabinetDone', notFlag: 'fileFound' } },
-      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' } },
-      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' } },
+      { text: 'Padlock the breathing cabinet’s drawers shut', to: 'cabinet_locked', if: { item: 'padlock' }, show: { notFlag: 'cabinetDone' }, effects: [{ lose: 'padlock' }] },
+      { text: 'Glue its drawers shut', to: 'cabinet_locked', if: { item: 'glue' }, show: { notFlag: 'cabinetDone' }, effects: [{ lose: 'glue' }] },
       { text: 'Go to the Hall of Forms', to: 'forms' },
     ],
   },
@@ -7987,7 +8007,7 @@ const SECTIONS = {
   vault_alarm: {
     on: [{ damage: 'd6', from: 'A trap' }],
     text: ['The second lock fires a dart into your thumb, and a bell rings somewhere. The clerk wakes up, sees you, and goes for help.'],
-    fight: { monsters: [bureaucrat], distance: 1, win: 'vault_in', flee: { to: 'forms', label: 'Run' } },
+    fight: { key: 'bureaucrat', monsters: [bureaucrat], distance: 1, win: 'vault_in', flee: { to: 'forms', label: 'Run' } },
   },
   vault_in: {
     on: [{ flag: 'vaultDone' }, { gold: 250, msg: 'The Exchequer’s petty cash. You take what you can carry.' }], onceOnly: true,
@@ -8017,8 +8037,8 @@ const SECTIONS = {
       c.flags.auditorOut ? '' : 'Behind the desk sits the Auditor-General: seven feet of black wool and spectacles. He looks up. “You,” he says, and turns a page in the ledger to your name without looking. “In arrears.”',
     ].filter(Boolean),
     choices: [
-      { text: 'Strike out your name with your quill', to: 'struck', if: { item: 'quill' }, show: { flag: 'auditorOut' } },
-      { text: 'Tear out your page', to: 'struck', show: { flag: 'auditorOut' } },
+      { text: 'Strike out your name with your quill', to: 'struck', if: { item: 'quill' }, show: { flag: 'auditorOut', notFlag: 'struckOut' } },
+      { text: 'Tear out your page', to: 'struck', show: { flag: 'auditorOut', notFlag: 'struckOut' } },
       { text: 'Take the Master Seal', to: 'seal', show: { flag: 'auditorOut', notFlag: 'seal' } },
       { text: 'Offer to pay him', to: 'pay', if: { gold: 200 }, show: { notFlag: 'auditorOut' } },
       { text: 'Argue that your income was not taxable', test: { stat: 'Int', dd: 12, skill: ['analysis', 'languages'], profs: ['Envoy'], why: 'you know your way round a regulation' }, pass: 'argued', fail: 'auditor_fight', show: { notFlag: 'auditorOut' } },
@@ -8146,8 +8166,8 @@ const SECTIONS = {
       { text: 'Creep past the gargoyles to the tower stair', test: { stat: 'Dex', dd: 10, skill: ['skulduggery'] }, pass: 'stair', fail: 'gargoyle_fight', show: { notFlag: 'gargoylesGone' } },
       { text: 'Cast Freeze time, and walk past them while they hang in mid-step', cast: 'freeze', pass: 'stair', fail: 'gargoyle_fight', show: { notFlag: 'gargoylesGone' } },
       { text: 'Cast Ascend, and float up the tower over their heads', cast: 'ascend', pass: 'clock_room', fail: 'gargoyle_fight', critFail: 'nave_descend', show: { notFlag: 'gargoylesGone' } },
-      { text: 'Jam their joints with iron spikes as they pass', test: { stat: 'Dex', dd: 8, skill: ['skulduggery', 'athletics'] }, pass: 'jammed', fail: 'gargoyle_fight', if: { item: 'spikes' }, show: { notFlag: 'gargoylesGone' } },
-      { text: 'Pour glue in their joints', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gargoyle_fight', if: { item: 'glue' }, show: { notFlag: 'gargoylesGone' } },
+      { text: 'Jam their joints with iron spikes as they pass', test: { stat: 'Dex', dd: 8, skill: ['skulduggery', 'athletics'] }, pass: 'jammed', fail: 'gargoyle_fight', if: { item: 'spikes' }, show: { notFlag: 'gargoylesGone' }, effects: [{ lose: 'spikes' }] },
+      { text: 'Pour glue in their joints', test: { stat: 'Dex', dd: 8, skill: ['skulduggery'] }, pass: 'jammed', fail: 'gargoyle_fight', if: { item: 'glue' }, show: { notFlag: 'gargoylesGone' }, effects: [{ lose: 'glue' }] },
       { text: 'Fight them', to: 'gargoyle_fight', show: { notFlag: 'gargoylesGone' } },
       { text: 'Climb the tower stair', to: 'stair', show: { flag: 'gargoylesGone' } },
       { text: 'Go down to the crypt', to: 'crypt' },
@@ -8208,8 +8228,8 @@ const SECTIONS = {
     on: [{ flag: 'tombOpen' }, { item: 'windingkey', msg: 'Ezra Tock’s winding key: brass, as long as your arm.' }],
     text: ['Inside the tomb lies Ezra Tock, small and neat, holding a brass winding key as long as your arm, the way other people are buried holding a sword. He doesn’t object when you take it.'],
     choices: [
-      { text: 'Cast Resurrect on Ezra Tock, and let him mend his own clock', cast: 'resurrect', pass: 'ezra_lives', fail: 'nave', critFail: 'ezra_zombie' },
-      { text: 'Cast Zombify on Ezra Tock, and send him up to mend his clock', cast: 'zombify', pass: 'ezra_zombie', fail: 'nave', critFail: 'ezra_lives' },
+      { text: 'Cast Resurrect on Ezra Tock, and let him mend his own clock', cast: 'resurrect', pass: 'ezra_lives', fail: 'crypt', critFail: 'ezra_zombie_scorn' },
+      { text: 'Cast Zombify on Ezra Tock, and send him up to mend his clock', cast: 'zombify', pass: 'ezra_zombie', fail: 'crypt', critFail: 'ezra_lives_scorn' },
       { text: 'Go up to the nave', to: 'nave' },
     ],
   },
@@ -8314,9 +8334,19 @@ const SECTIONS = {
     choices: [{ text: 'Get up, if you can', to: 'gargoyle_fight' }],
   },
   ezra_lives: {
-    on: [{ flag: 'ezra' }, { flag: 'fixed' }],
+    on: [{ flag: 'ezra' }, { flag: 'fixed' }, { lose: 'windingkey' }],
     text: ['Ezra Tock opens his eyes, sits up in his tomb, and listens. Above him, through two floors of stone, the bells are all wrong. “The fourth wheel,” he says, in a voice like a key turning. “I told them about the fourth wheel.” He climbs out, takes his key off you without asking, and goes up the tower stair two at a time. Twenty minutes later, the bells stop.'],
     choices: [{ text: 'Go and tell the Dean', to: 'easter' }],
+  },
+  ezra_zombie_scorn: {
+    dark: 'crypt',
+    text: ['Your god scorns you. Instead of life, Ezra Tock gets the other thing.'],
+    choices: [{ text: 'Watch', to: 'ezra_zombie' }],
+  },
+  ezra_lives_scorn: {
+    dark: 'crypt',
+    text: ['Your god scorns you. Instead of a shambling servant, you get Ezra Tock: all of him, alive, and in a bad mood.'],
+    choices: [{ text: 'Watch', to: 'ezra_lives' }],
   },
   ezra_zombie: {
     on: [{ flag: 'zombieEzra' }, { flag: 'fixed' }],
@@ -8508,7 +8538,7 @@ const SECTIONS = {
     },
   },
   vex_fight_weak: {
-    fight: { monsters: [{ ...vexilla, hp: 12 }], distance: 1, win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the kitchens and out' } },
+    fight: { key: 'vex', monsters: [{ ...vexilla, hp: 12 }], distance: 1, win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the kitchens and out' } },
     text: ['Vexilla gets up out of the wreckage of the stage, singed and furious, for one more go.'],
   },
   vex_down: {
@@ -8560,7 +8590,7 @@ const SECTIONS = {
   },
   vex_stone: {
     text: ['Your god scorns you. Instead of salt, Vexilla’s skin turns to stone. She looks at her grey hands, and smiles, and is twice as hard to kill.'],
-    fight: { monsters: [{ ...vexilla, hp: vexilla.hp * 2, note: `${vexilla.note}; skin of stone (double HP)` }], win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the door' } },
+    fight: { key: 'vex', monsters: [{ ...vexilla, hp: vexilla.hp * 2, note: `${vexilla.note}; skin of stone (double HP)` }], win: 'vex_down', flee: { to: 'goodbye', label: 'Run for the door' } },
   },
   vex_swerve: {
     text: ['Vexilla’s bolt leaves her wand, comes at you, and swerves at the last moment, as if embarrassed, into the banshee, who hits a note that breaks every glass in the tower. Vexilla throws another. It swerves into the cake. She stares at her wand.'],
@@ -8695,7 +8725,7 @@ const SECTIONS = {
   },
   hydra_fight: {
     text: (c) => [c.flags.cauterised ? 'The hydra, scorched and smoking, comes up out of the water at you with every head it has left.' : 'The hydra comes up out of the water at you, eleven heads at once.'],
-    fight: { outdoors: true,
+    fight: { key: 'hydra', outdoors: true,
       monsters: [hydra], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' },
       special: [
         { label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to the stump of a head. It hisses, blackens, and doesn’t grow back.' },
@@ -8705,7 +8735,7 @@ const SECTIONS = {
   },
   hydra_weak: {
     text: (c) => [c.flags.drained ? 'You go down into the mud after it. The hydra, stranded, slow and furious, turns every head it has on you.' : 'You go down to the water’s edge. The hydra is so tangled up in itself that it can only spare three heads to fight you.'],
-    fight: { outdoors: true,
+    fight: { key: 'hydra', outdoors: true,
       monsters: [{ ...hydra, hp: 20, regen: 2, note: 'Weakened hydra (20 HP); grows back 2 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Back off' },
       special: [{ label: 'Burn the stumps as you cut', if: { fire: true }, flag: 'cauterised', text: 'You press fire to a stump. It hisses, and doesn’t grow back.' }],
     },
@@ -8723,7 +8753,7 @@ const SECTIONS = {
       { if: { any: [{ flag: 'hydraDead' }, { flag: 'poet' }] }, gold: 500, uncapped: true, msg: 'The town council pays 500GP.' },
     ],
     text: (c) => [
-      c.flags.poet ? 'The hydra stays in the reservoir. But it’s quiet now, and it publishes a collection of poems called ELEVEN VOICES, which sells very well. The council decides it’s a tourist attraction, and pays you anyway. The water still tastes of hydra.'
+      c.flags.poet && !c.flags.hydraDead ? 'The hydra stays in the reservoir. But it’s quiet now, and it publishes a collection of poems called ELEVEN VOICES, which sells very well. The council decides it’s a tourist attraction, and pays you anyway. The water still tastes of hydra.'
         : c.flags.hydraDead ? `Floodmouth celebrates with a feast and a firework, carefully. ${c.flags.readerDeal ? 'Years later, sailors tell stories of a sea serpent with one head that reads aloud to them in storms.' : 'The reservoir is drained, cleaned and refilled, and the water stops tasting of hydra by the spring.'}`
           : 'The hydra is still in the reservoir. The council doesn’t pay you. On calm nights, you can hear eleven voices singing all the way down in Floodmouth.',
       `You leave Floodmouth with ${c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but the clothes you stand up in'}.`,
@@ -8749,7 +8779,7 @@ const SECTIONS = {
   },
   hydra_small: {
     text: ['The hydra shrinks to a quarter of its size, which is still the size of a cart horse, with eleven heads the size of a dog’s. They look at each other in alarm. You go down to the water’s edge to meet them.'],
-    fight: { monsters: [{ ...hydra, hp: 10, regen: 1, note: 'A shrunken hydra (10 HP); grows back 1 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' }, outdoors: true },
+    fight: { key: 'hydra', monsters: [{ ...hydra, hp: 10, regen: 1, note: 'A shrunken hydra (10 HP); grows back 1 HP a round unless the stumps are burnt' }], win: 'hydra_dead', flee: { to: 'dam', label: 'Run back up the dam' }, outdoors: true },
   },
   hydra_big: {
     text: ['Your god scorns you. Instead of shrinking, the hydra grows to twice its size. The reservoir is suddenly much too small for it. It climbs out.'],
@@ -8941,7 +8971,7 @@ const SECTIONS = {
   },
   scried: {
     on: [{ flag: 'hutClue' }],
-    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the front car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
+    text: ['You see the scythe, far off and small, as if through the wrong end of a telescope: propped in the last car of a ghost train at the end of a pier, in the bony hands of a very old man in slippers, who is holding on to it as if it were the last thing in the world.'],
     choices: [{ text: 'Back to the beach', to: 'prom' }],
   },
   mortimer_eased: {
@@ -8957,7 +8987,7 @@ const SECTIONS = {
   },
   mortimer_wiped: {
     dark: 'train',
-    text: ['Old Mortimer blinks, and forgets the last day: the fear, the beach hut, the long walk out along the pier in his slippers. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
+    text: ['Old Mortimer blinks, and forgets the last day: the fear, the hiding, the long wait in the dark with the painted skeletons. He looks down at the scythe in his lap with mild surprise. “I don’t know what I’m doing with this,” he says, and hands it to you. “Is it yours?”'],
     choices: [{ text: 'Take the scythe', to: 'scythe_got' }],
   },
   mortimer_confesses: {
@@ -9008,7 +9038,7 @@ const SECTIONS = {
     choices: [
       { text: 'Climb with your climbing gear', test: { stat: 'Str', dd: 6, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'climbing' } },
       { text: 'Haul yourself up on the builders’ hoist', test: { stat: 'Str', dd: 10, skill: ['athletics', 'bruteforce'], mods: [{ if: { item: 'rope' }, dd: 6 }] }, pass: 'clouds', fail: 'climb_fall' },
-      { text: 'Hammer in iron spikes as footholds where the ladders are missing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'spikes' } },
+      { text: 'Hammer in iron spikes as footholds where the ladders are missing', test: { stat: 'Str', dd: 8, skill: ['athletics'] }, pass: 'clouds', fail: 'climb_fall', if: { item: 'spikes' }, effects: [{ lose: 'spikes' }] },
       { text: 'Just climb', test: { stat: 'Str', dd: 12, skill: ['athletics'], profs: ['Woodcutter'], why: 'you climb for a living' }, pass: 'clouds', fail: 'climb_fall' },
       { text: 'Cast Ascend, and float up through the cloud', cast: 'ascend', pass: 'clouds', fail: 'climb', critFail: 'climb_descend' },
       { text: 'Cast Perambulate, and walk up the side of the Spire', cast: 'perambulate', pass: 'clouds', fail: 'climb' },
@@ -9106,11 +9136,16 @@ const SECTIONS = {
     choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   harp_screams: {
+    redirect: [{ if: { flag: 'giantDown' }, to: 'harp_ignored' }],
     text: (c) => [c.flags.giantBack
       ? 'The harp screams: a chord like every church bell in the world dropped down a well. A quarter of a mile away, at the door, Lord Nimbus turns round. He is back at the fireplace in four strides.'
       : 'The harp screams: a chord like every church bell in the world dropped down a well. In the armchair, Lord Nimbus sits up, and the newspaper slides off his face.'],
-    on: [{ if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
+    on: [{ unflag: 'giantBack' }, { if: { flag: 'giantOut' }, flag: 'giantBack' }, { unflag: 'giantOut' }],
     choices: [{ text: 'Face him', to: 'giant_wakes' }],
+  },
+  harp_ignored: {
+    text: ['The harp screams: a chord like every church bell in the world dropped down a well. On the floor of the hall, Lord Nimbus puts his hands over his ears and doesn’t get up. He has had enough for one day.'],
+    choices: [{ text: 'Back to the birdcage', to: 'mantel' }],
   },
   freed: {
     on: [{ flag: 'longshanksFree' }],
@@ -9372,7 +9407,7 @@ const SECTIONS = {
   },
   kitchen: {
     on: [{ add: ['quarters', 1] }, { flag: 'soupDone' }, { heal: '3d6' }],
-    text: ['The homunculus is still there, on his stool, stirring. His tiny chef’s hat has gone grey. “Soup?” he asks. It is the best soup you have ever had, and you have had it before. You tell him so. He is, unfortunately, still adorable.'],
+    text: ['The homunculus is still there, on his stool, stirring. His tiny chef’s hat has gone grey. “Soup?” he asks. “Not the master’s,” he adds, quickly. It is the best soup you have ever had. He is, unfortunately, still adorable.'],
     choices: [{ text: 'Back to the hall', to: 'house' }],
   },
   clock: {
