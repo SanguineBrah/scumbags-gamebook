@@ -42,6 +42,10 @@ export function bandFor(c) {
 }
 /** A secret adventure only goes up on the board once its `unlock(c)` says so. */
 const unlocked = (c, a) => !a.unlock || a.unlock(c);
+/** How many adventures a scumbag knows exist: a locked secret doesn't count, so it stays secret. */
+export function totalFor(c) {
+  return ADVENTURES.filter((a) => unlocked(c, a) || (c.done || []).includes(a.id)).length;
+}
 /** Adventures a scumbag can take on now: every one not done yet, in any band they have opened. */
 export function availableFor(c) {
   const done = c.done || []; const band = bandFor(c);

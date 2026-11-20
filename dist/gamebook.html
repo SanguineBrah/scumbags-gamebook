@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="8b9f39df58cf">
+<meta name="build" content="f82e61976e61">
 </head>
 <body>
 <div id="app"></div>
@@ -175,7 +175,7 @@ return {  };
 };
 __defs["src/ui/app.js"] = function(){
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-const { buildAdventure, ADVENTURES, availableFor, revealedFor } = __req("src/adventure/index.js");
+const { buildAdventure, ADVENTURES, availableFor, revealedFor, totalFor } = __req("src/adventure/index.js");
 const { careerWriteUp } = __req("src/adventure/career.js");
 const { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield } = __req("src/engine/town.js");
 const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
@@ -307,7 +307,7 @@ function titleScreen() {
         h('span', null, h('b', null, w.name), h('span', { class: 'note' }, `${w.title}. ${w.ending}`)))))),
     list.length > 0 && h('main', { class: 'page' }, h('h2', null, 'Survivors'),
       h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => { ui.char = c; ui.townMsg = ''; go('town'); } },
-        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${ADVENTURES.length} adventures done`)))))));
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${totalFor(c)} adventures done`)))))));
 }
 
 function charBar(c) {
@@ -356,7 +356,7 @@ function townScreen() {
       avail.length ? h('p', { class: 'small' }, 'Jobs for people with no scruples:') : h('p', { class: 'small' }, 'There’s nothing on the board for you. You’ve done it all. Retire, or find something worse to do.'),
       avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag${overBy(c, a) ? `. You’re over-qualified: you’ll keep ${overBy(c, a) === 1 ? 'half' : `1/${2 ** overBy(c, a)}`} of the profit` : ''}`), h('p', null, a.blurb),
         h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
-      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
+      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${totalFor(c)} adventures discovered. Finish jobs to hear about more.`)),
     h('div', { class: 'card' }, h('h3', null, 'Retire'),
       ui.retireAsk
         ? [h('p', { class: 'small' }, `This ends ${c.name}’s career for good. You’ll get a write-up of everything they did, and they won’t be coming back.`),
@@ -759,6 +759,10 @@ function bandFor(c) {
 }
 /** A secret adventure only goes up on the board once its `unlock(c)` says so. */
 const unlocked = (c, a) => !a.unlock || a.unlock(c);
+/** How many adventures a scumbag knows exist: a locked secret doesn't count, so it stays secret. */
+function totalFor(c) {
+  return ADVENTURES.filter((a) => unlocked(c, a) || (c.done || []).includes(a.id)).length;
+}
 /** Adventures a scumbag can take on now: every one not done yet, in any band they have opened. */
 function availableFor(c) {
   const done = c.done || []; const band = bandFor(c);
@@ -784,7 +788,7 @@ function buildAdventure(id = ADVENTURES[0].id) {
   return (cache[id] = { ...meta, deathText, start: 'start', sections, numbers, count: order.length });
 }
 
-return { ADVENTURES, bandFor, availableFor, revealedFor, buildAdventure };
+return { ADVENTURES, bandFor, totalFor, availableFor, revealedFor, buildAdventure };
 };
 __defs["src/rules/dice.js"] = function(){
 // Dice and random numbers. All randomness goes through an Rng so games can be seeded and replayed.
@@ -10004,7 +10008,7 @@ return { SNOAD_CLUES_NEEDED, META, SECTIONS, DEATH_TEXT };
 };
 __defs["src/adventure/career.js"] = function(){
 // A scumbag's career, written up when they retire: a line for every job, from what they did in it.
-const { ADVENTURES } = __req("src/adventure/index.js");
+const { totalFor } = __req("src/adventure/index.js");
 const { pastFlag } = __req("src/engine/conditions.js");
 // One line per adventure, from the flags it ended with. p(flag) reads them; n(flag) reads counters.
 const LINES = {
@@ -10118,7 +10122,7 @@ function careerWriteUp(c, how, finale = 'final-demand') {
     title: `Level ${c.level} ${c.quality ? `${c.quality.toLowerCase()} ` : ''}${c.profession.toLowerCase()}${centaur ? ', reverse centaur' : ''}`,
     ending: centaur ? `${ending} Then Neville’s curse finally took.` : ending,
     lines,
-    tally: `${titles} job${titles === 1 ? '' : 's'} of ${ADVENTURES.length}. ${c.wasted ? `${c.wasted}GP squandered on pointless endeavours.` : 'Nothing squandered, somehow.'} ${how === 'died' ? 'Died' : 'Retired'} with ${c.gold}GP.`,
+    tally: `${titles} job${titles === 1 ? '' : 's'} of ${totalFor(c)}. ${c.wasted ? `${c.wasted}GP squandered on pointless endeavours.` : 'Nothing squandered, somehow.'} ${how === 'died' ? 'Died' : 'Retired'} with ${c.gold}GP.`,
     died: how === 'died',
     date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
   };

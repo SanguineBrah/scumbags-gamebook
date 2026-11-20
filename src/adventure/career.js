@@ -1,5 +1,5 @@
 // A scumbag's career, written up when they retire: a line for every job, from what they did in it.
-import { ADVENTURES } from './index.js';
+import { totalFor } from './index.js';
 import { pastFlag } from '../engine/conditions.js';
 
 // One line per adventure, from the flags it ended with. p(flag) reads them; n(flag) reads counters.
@@ -114,7 +114,7 @@ export function careerWriteUp(c, how, finale = 'final-demand') {
     title: `Level ${c.level} ${c.quality ? `${c.quality.toLowerCase()} ` : ''}${c.profession.toLowerCase()}${centaur ? ', reverse centaur' : ''}`,
     ending: centaur ? `${ending} Then Neville’s curse finally took.` : ending,
     lines,
-    tally: `${titles} job${titles === 1 ? '' : 's'} of ${ADVENTURES.length}. ${c.wasted ? `${c.wasted}GP squandered on pointless endeavours.` : 'Nothing squandered, somehow.'} ${how === 'died' ? 'Died' : 'Retired'} with ${c.gold}GP.`,
+    tally: `${titles} job${titles === 1 ? '' : 's'} of ${totalFor(c)}. ${c.wasted ? `${c.wasted}GP squandered on pointless endeavours.` : 'Nothing squandered, somehow.'} ${how === 'died' ? 'Died' : 'Retired'} with ${c.gold}GP.`,
     died: how === 'died',
     date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
   };

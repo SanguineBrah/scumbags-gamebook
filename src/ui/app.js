@@ -1,5 +1,5 @@
 // The gamebook's user interface: plain DOM, re-rendered from game state after every action.
-import { buildAdventure, ADVENTURES, availableFor, revealedFor } from '../adventure/index.js';
+import { buildAdventure, ADVENTURES, availableFor, revealedFor, totalFor } from '../adventure/index.js';
 import { careerWriteUp } from '../adventure/career.js';
 import { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield } from '../engine/town.js';
 const town = { INN_PRICE, SHOP, weaponPrice, armourPrice, shieldPrice, restAtInn, sleepRough, restock, addMundane, dropMundane, buy, sellPrice, sell, weaponsFor, buyWeapon, buyArmour, buyShield };
@@ -132,7 +132,7 @@ function titleScreen() {
         h('span', null, h('b', null, w.name), h('span', { class: 'note' }, `${w.title}. ${w.ending}`)))))),
     list.length > 0 && h('main', { class: 'page' }, h('h2', null, 'Survivors'),
       h('div', { class: 'opts' }, list.map((c) => h('button', { class: 'opt', onclick: () => { ui.char = c; ui.townMsg = ''; go('town'); } },
-        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${ADVENTURES.length} adventures done`)))))));
+        h('span', null, h('b', null, c.name), h('span', { class: 'note' }, `Level ${c.level} ${c.profession.toLowerCase()} · ${c.gold}GP · ${(c.done || []).length} of ${totalFor(c)} adventures done`)))))));
 }
 
 function charBar(c) {
@@ -181,7 +181,7 @@ function townScreen() {
       avail.length ? h('p', { class: 'small' }, 'Jobs for people with no scruples:') : h('p', { class: 'small' }, 'There’s nothing on the board for you. You’ve done it all. Retire, or find something worse to do.'),
       avail.map((a) => h('div', { class: 'card adv' }, h('h2', null, a.title), h('div', { class: 'muted small' }, `For a level ${a.levels} scumbag${overBy(c, a) ? `. You’re over-qualified: you’ll keep ${overBy(c, a) === 1 ? 'half' : `1/${2 ** overBy(c, a)}`} of the profit` : ''}`), h('p', null, a.blurb),
         h('button', { class: 'btn', onclick: () => startAdventure(a.id) }, 'Take the job'))),
-      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${ADVENTURES.length} adventures discovered. Finish jobs to hear about more.`)),
+      h('p', { class: 'muted small' }, `${revealedFor(c).length} of ${totalFor(c)} adventures discovered. Finish jobs to hear about more.`)),
     h('div', { class: 'card' }, h('h3', null, 'Retire'),
       ui.retireAsk
         ? [h('p', { class: 'small' }, `This ends ${c.name}’s career for good. You’ll get a write-up of everything they did, and they won’t be coming back.`),

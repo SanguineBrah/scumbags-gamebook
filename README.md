@@ -27,7 +27,8 @@ things get dicey. Fights, light, spells, loot and levelling all follow the Scumb
   defend with Str or Dex against the monster's die. Armour soaks damage before your HP.
 - Dark places use up torches and oil. Every 50 gold takes up a significant item slot.
 - Magicians get a spell slot at every level and the rulebook's whole spell list, from Divine light
-  to Wish. When a divine spell goes critically wrong, your god casts the opposite one instead.
+  to Wish, in and out of fights. When a divine spell goes critically wrong, your god casts the
+  opposite one instead.
 - You level up by squandering 200 gold on a pointless endeavour when you get home.
 
 Nearly everything in your pack is useful somewhere. A rope, a rat or a pot of glue will often
@@ -35,16 +36,27 @@ get you past things a sword won't.
 
 ![Playing an adventure](docs/play.png)
 
+In a fight, every action is a button. Spells live in a spellbook you open when you need it, with
+each one marked with what it will hit, or why it's a bad idea.
+
+![A fight, with the spellbook open](docs/fight.png)
+
 ## Adventures
 
 Each adventure is a short, self-contained job. Survivors return to Gallowsford, where they can
 heal, restock, buy and sell, and squander their takings. Finishing any job in a level band
 reveals every job in the next band on the notice board, so after the first job there's always a
 choice. Nobody gets to do the same job twice, and later adventures remember what you did in
-earlier ones. Scumbags who are over-qualified for a job get paid less for it, so going back for
-the easy ones won't make you rich. Finish a job at the top level and one last job turns up, where
-the career ends; retire in town before then if you'd rather. Retired scumbags get a write-up of
-everything they did.
+earlier ones: the people you robbed, rescued or annoyed turn up again. Scumbags who are
+over-qualified for a job get paid less for it, so going back for the easy ones won't make you rich.
+
+![The notice board in Gallowsford](docs/board.png)
+
+Finish a job at the top level and the last job turns up, where the career ends, one way or
+another. Scumbags who pay attention may find it isn't the only one. Retire in town before then if
+you'd rather. Either way, you get a write-up of everything you did, kept on the title page.
+
+![A retired scumbag's write-up](docs/writeup.png)
 
 | Band | Adventure | Level | The job |
 |---|---|---|---|
@@ -76,6 +88,7 @@ everything they did.
 | 10 | A Perfectly Standard Dragon | 9–10 | Deal with a dragon that is following procedure |
 | 10 | Death Takes a Holiday | 9–10 | Find Death's stolen scythe at the seaside |
 | 10 | Higher Still | 9–10 | Rescue Lord Longshanks from the cloud giants above his spire |
+| 11 | Final Demand | 10 | Death and the taxman come to collect, back where it all began |
 
 Sections are shuffled the traditional way: the start is 1 and the way home is last. Progress
 and surviving scumbags are saved in your browser.
@@ -91,10 +104,11 @@ Needs Node 20 or later. There are no dependencies to install.
     npm run simulate   # thousands of bot playthroughs: survival rates and deadly sections
     npm run duels      # every fight in the book, from full health, by random bots
 
-Two more tools help when writing:
+A few more tools help with writing and balance:
 
     node tools/affordances.mjs   # which items, spells and professions each adventure gives a use to
     node tools/states.mjs <id>   # the flags that may or may not be set on arrival at each section
+    node tools/campaign.mjs      # whole careers played by bots: levels, gold and deaths by band
 
 | Path | What's in it |
 |---|---|
@@ -106,6 +120,7 @@ Two more tools help when writing:
 | `tools/` | Bundler, dev server, checker, bots and writing aids |
 | `docs/ADAPTATION.md` | Where and why the gamebook departs from the tabletop rules |
 | `docs/WRITING.md` | How to write sections and adventures |
+| `rulebook/` | The tabletop rulebook, as a PDF |
 
 Pushing to `main` runs the tests and publishes the built gamebook to GitHub Pages.
 
