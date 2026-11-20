@@ -37,7 +37,7 @@ get you past things a sword won't.
 
 ## Adventures
 
-Each adventure is a short, self-contained job. Survivors return to Scumbag Town, where they can
+Each adventure is a short, self-contained job. Survivors return to Gallowsford, where they can
 heal, restock, buy and sell, and squander their takings. Finishing any job in a level band
 reveals every job in the next band on the notice board, so after the first job there's always a
 choice. Nobody gets to do the same job twice, and later adventures remember what you did in

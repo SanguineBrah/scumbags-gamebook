@@ -56,7 +56,7 @@ alternatives.
   a scumbag carried over from earlier adventures will usually be a level or two ahead.
 - **Over-qualified scumbags are paid less.** For each level a scumbag is above the top of an
   adventure's band, they lose half of what's left of their profit from it (on drinks, so that
-  Scumbag Town will take them seriously again), and loot picked up there fetches half at the fence.
+  Gallowsford will take them seriously again), and loot picked up there fetches half at the fence.
   Without this, clearing every job in each band before moving on (three per band) roughly doubles
   a scumbag's level by the last band and makes it trivial (`node tools/campaign.mjs`). With it, a
   scumbag who does everything arrives at the last band a level or two ahead, not ten.

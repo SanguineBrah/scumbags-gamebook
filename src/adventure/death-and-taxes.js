@@ -19,7 +19,7 @@ export const SECTIONS = {
   start: {
     on: [{ gold: 50 }], onceOnly: true,
     text: [
-      'The Drowned Rat is the worst tavern in Scumbag Town, which is saying something, because Scumbag Town has a tavern that is literally on fire. You are here for one reason: Old Nobby is selling a map. In your pocket is fifty gold, the proceeds of selling a goat. Your neighbour’s goat.',
+      'The Drowned Rat is the worst tavern in Gallowsford, which is saying something, because Gallowsford has a tavern that is literally on fire. You are here for one reason: Old Nobby is selling a map. In your pocket is fifty gold, the proceeds of selling a goat. Your neighbour’s goat.',
       '“The Counting House of Usurer Vane,” he wheezes, tapping the parchment with a finger like a burnt sausage. “Vault’s still full. Fifty gold, and I’ll throw in the directions.” The directions are on the map.',
     ],
     choices: [
@@ -646,7 +646,7 @@ export const SECTIONS = {
   town: {
     end: 'victory',
     text: (c) => [
-      'Scumbag Town has never looked so lovely, mostly because it’s dark. You come back with ' + (c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
+      'Gallowsford has never looked so lovely, mostly because it’s dark. You come back with ' + (c.flags.homeGold ? `${c.flags.homeGold} gold` : 'nothing but your life, which is worth less') + ' and a story nobody will believe.',
       'But gold in your pocket is no use to a scumbag. To become a better, more experienced scumbag, you must squander it. Every 200GP you waste on a pointless endeavour gains you a level.',
     ],
   },

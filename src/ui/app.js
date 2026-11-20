@@ -136,19 +136,19 @@ function titleScreen() {
 }
 
 function charBar(c) {
-  return h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), 'Scumbag Town'),
+  return h('header', { class: 'topbar' }, h('span', { class: 'brand' }, h('span', { class: 'mark' }, 'Scumbags!'), 'Gallowsford'),
     h('span', { class: `chip hp${c.hp <= c.maxHp / 3 ? ' low' : ''}` }, 'HP ', h('b', null, `${c.hp}/${c.maxHp}`)),
     h('span', { class: 'chip' }, 'GP ', h('b', null, c.gold)));
 }
 
-// ---------- Scumbag Town: the inn, the market, the fence, and the notice board
+// ---------- Gallowsford: the inn, the market, the fence, and the notice board
 function townScreen() {
   const c = ui.char;
   const act = (msg) => { if (msg) { ui.townMsg = msg; keepScumbag(c); } render(); };
   const left = MUNDANE_LIMIT - c.mundane.length;
   const avail = availableFor(c).slice().sort((a, b) => b.tier - a.tier);   // newest band first
   return h('div', null, charBar(c), h('main', { class: 'page' },
-    h('h2', null, `${c.name} in Scumbag Town`),
+    h('h2', null, `${c.name} in Gallowsford`),
     h('p', { class: 'muted' }, `Level ${c.level} ${c.profession.toLowerCase()}. ${c.hp}/${c.maxHp} HP, ${c.gold}GP, ${(c.done || []).length} adventure${(c.done || []).length === 1 ? '' : 's'} behind you.`),
     ui.townMsg && h('div', { class: 'msg good' }, ui.townMsg),
     h('div', { class: 'card' }, h('h3', null, 'The Drowned Rat'),
@@ -238,7 +238,7 @@ function howToScreen() {
     h('h3', null, 'Treasure'),
     h('p', null, 'Every 50GP takes up one of your 12 significant item slots. When you get home, every 200GP you squander on a pointless endeavour gains you a level. An over-qualified scumbag loses half their profit from an adventure for each level they are above its band, and its loot fetches half at the fence.'),
     h('h3', null, 'Between adventures'),
-    h('p', null, 'Survivors come back to Scumbag Town, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
+    h('p', null, 'Survivors come back to Gallowsford, still carrying their wounds. Pay for a bed at the Drowned Rat or sleep in a ditch, swap and restock mundane items at the market, buy potions at the apothecary, change your weapon or armour, and sell your loot to the fence. Then check the notice board. Jobs come in levels: finish any job at one level and every job at the next level turns up on the board. You can’t do the same job twice, but the old ones stay up if you want them. Live long enough, and you might get through all of them.'),
     h('p', null, 'Every career ends. Finish any job at the highest level and one last job turns up, which ends it for you, one way or another. Or retire from town whenever you like. Either way, you get a write-up of everything you did, kept on the title screen.'),
     h('p', null, 'Look at what you’re carrying before every choice. Nearly everything in your pack is useful somewhere, and a rope, a rat or a pot of glue can get you past things a sword can’t.'),
     h('p', { class: 'muted small' }, `The gamebook uses the Scumbags! rules as written, except that a lone hero starts with ${HERO_HP_BONUS} extra HP and one significant item of their choice.`),
@@ -317,7 +317,7 @@ function begin() {
   const g = new Game(adv, rng.int(1, 2 ** 31));
   const c = createCharacter(g.rng, k.origins, { name: (k.name || '').trim() || randomName(rng), weapon: k.weapon, protection: k.protection, alignment: k.alignment, mundane: [...k.mundane], extra: k.extra });
   c.id = `${Date.now().toString(36)}${rng.int(0, 1e6).toString(36)}`;
-  keepScumbag(c); ui.char = c; ui.townMsg = 'You arrive in Scumbag Town with nothing but your kit and your lack of scruples. Check the notice board.';
+  keepScumbag(c); ui.char = c; ui.townMsg = 'You arrive in Gallowsford with nothing but your kit and your lack of scruples. Check the notice board.';
   go('town');
 }
 

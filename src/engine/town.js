@@ -1,4 +1,4 @@
-// Scumbag Town, between adventures: the inn, the market and the fence (rulebook prices).
+// Gallowsford, between adventures: the inn, the market and the fence (rulebook prices).
 import { itemRef } from './conditions.js';
 import { MUNDANE, SIGNIFICANT, WEAPONS, ARMOURS, SHIELDS, MUNDANE_LIMIT, SIGNIFICANT_LIMIT, WEAPON_DIE } from '../rules/data.js';
 import { makeItem, maxAp, resetDay, prof, itemSlots, hasFeature } from '../rules/character.js';
