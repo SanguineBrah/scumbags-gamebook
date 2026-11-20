@@ -42,8 +42,8 @@ export const SECTIONS = {
       { text: 'Ask them all a question only the real one could answer', test: { stat: 'Int', dd: 8, skill: ['analysis'], profs: ['Envoy'], why: 'you know how to question people' }, pass: 'question', fail: 'chorus', show: { notFlag: 'asked' } },
       { text: 'Look them over with your jeweller’s loupe', to: 'loupe', if: { item: 'loupe' }, show: { notFlag: 'looked' } },
       { text: 'Cast True sight, and look at them as they really are', cast: 'truesight', pass: 'truesight', fail: 'hall', show: { notFlag: 'trueSeen' } },
-      { text: 'Cast Detect chaos, and sense which of them are unnatural', cast: 'detectchaos', pass: 'sensed', fail: 'hall', critFail: 'sensed_law', show: { notFlag: 'sensed' } },
-      { text: 'Cast Detect law, and find the one who isn’t a jelly', cast: 'detectlaw', pass: 'sensed_law', fail: 'hall', critFail: 'sensed', show: { notFlag: 'sensed' } },
+      { text: 'Cast Detect chaos, and sense which of them are unnatural', cast: 'detectchaos', pass: 'sensed', fail: 'hall', critFail: 'sensed_law_scorn', show: { notFlag: 'sensed' } },
+      { text: 'Cast Detect law, and find the one who isn’t a jelly', cast: 'detectlaw', pass: 'sensed_law', fail: 'hall', critFail: 'sensed_scorn', show: { notFlag: 'sensed' } },
       { text: 'Search the Professor’s study', to: 'study', show: { any: [{ notFlag: 'diary' }, { notFlag: 'strongbox' }] } },
       { text: 'Go down to the laboratory', to: 'lab', show: { notFlag: 'labDone' } },
       { text: 'Herd the Glibbs into the cellar and padlock it', to: 'cellar', if: { item: 'padlock' }, show: { notFlag: 'lidded' } },
@@ -186,6 +186,14 @@ export const SECTIONS = {
     on: [{ flag: 'trueSeen' }, CLUE, CLUE, CLUE],
     text: ['You see the Glibbs as they really are: twenty-nine shapes of grey jelly, wearing the memory of a man like a coat. And one, by the fireplace, who is a man: old, tired, frightened, and very much Professor Glibb, wearing jelly.'],
     choices: [{ text: 'Back to the hall', to: 'hall' }],
+  },
+  sensed_scorn: {
+    text: ['Your god scorns you. Instead of law, you sense chaos: a great deal of it.'],
+    choices: [{ text: 'Look closer', to: 'sensed' }],
+  },
+  sensed_law_scorn: {
+    text: ['Your god scorns you. Instead of chaos, you sense law, which in this house is in short supply.'],
+    choices: [{ text: 'Look closer', to: 'sensed_law' }],
   },
   sensed: {
     on: [{ flag: 'sensed' }, CLUE],

@@ -91,8 +91,8 @@ export const SECTIONS = {
     on: [{ flag: 'tombOpen' }, { item: 'windingkey', msg: 'Ezra Tock’s winding key: brass, as long as your arm.' }],
     text: ['Inside the tomb lies Ezra Tock, small and neat, holding a brass winding key as long as your arm, the way other people are buried holding a sword. He doesn’t object when you take it.'],
     choices: [
-      { text: 'Cast Resurrect on Ezra Tock, and let him mend his own clock', cast: 'resurrect', pass: 'ezra_lives', fail: 'nave', critFail: 'ezra_zombie' },
-      { text: 'Cast Zombify on Ezra Tock, and send him up to mend his clock', cast: 'zombify', pass: 'ezra_zombie', fail: 'nave', critFail: 'ezra_lives' },
+      { text: 'Cast Resurrect on Ezra Tock, and let him mend his own clock', cast: 'resurrect', pass: 'ezra_lives', fail: 'crypt', critFail: 'ezra_zombie_scorn' },
+      { text: 'Cast Zombify on Ezra Tock, and send him up to mend his clock', cast: 'zombify', pass: 'ezra_zombie', fail: 'crypt', critFail: 'ezra_lives_scorn' },
       { text: 'Go up to the nave', to: 'nave' },
     ],
   },
@@ -197,9 +197,19 @@ export const SECTIONS = {
     choices: [{ text: 'Get up, if you can', to: 'gargoyle_fight' }],
   },
   ezra_lives: {
-    on: [{ flag: 'ezra' }, { flag: 'fixed' }],
+    on: [{ flag: 'ezra' }, { flag: 'fixed' }, { lose: 'windingkey' }],
     text: ['Ezra Tock opens his eyes, sits up in his tomb, and listens. Above him, through two floors of stone, the bells are all wrong. “The fourth wheel,” he says, in a voice like a key turning. “I told them about the fourth wheel.” He climbs out, takes his key off you without asking, and goes up the tower stair two at a time. Twenty minutes later, the bells stop.'],
     choices: [{ text: 'Go and tell the Dean', to: 'easter' }],
+  },
+  ezra_zombie_scorn: {
+    dark: 'crypt',
+    text: ['Your god scorns you. Instead of life, Ezra Tock gets the other thing.'],
+    choices: [{ text: 'Watch', to: 'ezra_zombie' }],
+  },
+  ezra_lives_scorn: {
+    dark: 'crypt',
+    text: ['Your god scorns you. Instead of a shambling servant, you get Ezra Tock: all of him, alive, and in a bad mood.'],
+    choices: [{ text: 'Watch', to: 'ezra_lives' }],
   },
   ezra_zombie: {
     on: [{ flag: 'zombieEzra' }, { flag: 'fixed' }],
