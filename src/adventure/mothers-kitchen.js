@@ -289,7 +289,7 @@ export const SECTIONS = {
   },
   mother_sits: {
     on: [{ flag: 'motherAsleep' }],
-    text: ['Mother looks under the table, behind the bread bin and inside the teapot. Then she sighs, sits down in her rocking chair by the fire, picks up her knitting and, within a minute, is snoring like a landslide.'],
+    text: (c) => [`Mother looks under the table, behind the bread bin and inside the teapot. Then she sighs, sits down in her rocking chair by the ${c.flags.fireOut ? 'cold hearth, pulls a shawl round her shoulders' : 'fire'}, picks up her knitting and, within a minute, is snoring like a landslide.`],
     choices: [{ text: 'Come out of hiding', to: 'kitchen' }],
   },
   mother_finds: {

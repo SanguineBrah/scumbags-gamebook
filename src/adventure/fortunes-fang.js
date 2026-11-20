@@ -95,7 +95,7 @@ export const SECTIONS = {
   },
   caught: {
     on: [{ gold: -20 }],
-    text: ['A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. Rex looks up from the door.'],
+    text: (c) => [`A bony hand closes on your wrist. “Cheat,” says the croupier, in a voice like a dropped bag of cutlery. ${c.flags.rexDown ? 'Over by the door, Rex is still asleep against the wall. The croupier keeps your stake and lets you go, with a look.' : c.flags.rexFriend ? 'Rex looks up from the door, sees who it is, and looks away again. The croupier keeps your stake and lets you go, with a look.' : 'Rex looks up from the door.'}`],
     fight: { key: 'rex',
       unless: { any: [{ flag: 'rexDown' }, { flag: 'rexFriend' }] },
       monsters: [rex], win: 'rex_win_floor', flee: { to: 'floor', label: 'Lose yourself in the crowd' },
@@ -256,7 +256,7 @@ export const SECTIONS = {
       { text: 'Cast Step, and teleport past the coffin into the bank', cast: 'step', pass: 'bank', fail: 'count_wakes', show: { atLeast: ['hour', 4], notFlag: 'countAwake' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { flag: 'countAwake' } },
       { text: 'Fight him while he’s weak', to: 'count_weak', show: { flag: 'countAwake' } },
-      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', show: { below: ['hour', 4], notFlag: 'countAngry' } },
+      { text: 'Play him for the bank: double or nothing', test: { stat: 'Cha', dd: 12, save: true }, pass: 'count_lost', fail: 'count_won', if: { gold: 1 }, show: { below: ['hour', 4], notFlag: 'countAngry' } },
       { text: 'Show him his reflection in your hand mirror', to: 'mirror', if: { item: 'mirror' }, show: { below: ['hour', 4] } },
       { text: 'Turn him', turn: { dd: 10 }, pass: 'count_flees', chaos: 'count_obeys', fail: 'count_fight', if: { magic: 'divine' }, show: { below: ['hour', 4] } },
       { text: 'Cast Banish, so every undead thing flees the crypt', cast: 'banish', pass: 'count_flees', fail: 'count_fight', critFail: 'count_entreated', show: { below: ['hour', 4] } },

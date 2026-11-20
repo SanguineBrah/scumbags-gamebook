@@ -39,7 +39,7 @@ export const SECTIONS = {
     ],
   },
   leap: {
-    text: (c) => c.flags.heart
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies on the King’s Road, purple, breathing faintly. The young adventurers have gone.'] : c.flags.heart
       ? ['He runs, he leaps, he misses the horse completely and lies on the road, purple, with his eyes shut. The young adventurers back away slowly.']
       : ['He runs, he leaps, he lands in the saddle facing backwards. The young adventurers cheer. Sir Gristle waves, wheezing, and has to be helped to turn round.'],
     choices: [
@@ -104,7 +104,7 @@ export const SECTIONS = {
     ],
   },
   hauled: {
-    text: ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies on the bank beside Thunder, breathing faintly.'] : ['You get hold of Thunder’s bridle and heave, and horse and knight come out of the mud with a noise like a cow being born.'],
     choices: [
       { text: 'Revive Sir Gristle with smelling salts', to: 'fen_revived', if: { item: 'salts' }, show: { flag: 'heart', notFlag: 'propped' } },
       { text: 'Try to revive Sir Gristle', test: { stat: 'Wis', dd: 8, skill: ['medicine'] }, pass: 'fen_revived', fail: 'fen_dead', show: { flag: 'heart', notFlag: 'propped' } },
@@ -196,7 +196,8 @@ export const SECTIONS = {
     ],
   },
   truth: {
-    text: ['Sir Gristle listens, frowning, to Croaker’s story. Then he laughs until he wheezes. “By God, I did hire him. Forgot all about it.” He sheathes his sword. “Well, Croaker. I shan’t kill you, then. I shall shake your hand.” He climbs down from Thunder to do it, which is, in its way, the bravest thing he does all day.'],
+    onceOnly: true,
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies where he fell, with Croaker’s hand still in his, breathing faintly.'] : ['Sir Gristle listens, frowning, to Croaker’s story. Then he laughs until he wheezes. “By God, I did hire him. Forgot all about it.” He sheathes his sword. “Well, Croaker. I shan’t kill you, then. I shall shake your hand.” He climbs down from Thunder to do it, which is, in its way, the bravest thing he does all day.'],
     on: [EXERT],
     choices: [
       { text: 'Revive him with smelling salts', to: 'peace_revived', if: { item: 'salts' }, show: { flag: 'heart' } },
@@ -239,8 +240,8 @@ export const SECTIONS = {
     choices: [{ text: 'Take Sir Gristle home', to: 'pension_office' }],
   },
   duel: {
-    on: [EXERT],
-    text: (c) => c.flags.heart
+    on: [EXERT], onceOnly: true,
+    text: (c, visits) => visits > 1 && c.flags.heart ? ['Your prayer goes unanswered. Sir Gristle lies face-down in the yard, sword pointing at the enemy, breathing faintly.'] : c.flags.heart
       ? ['Sir Gristle advances on the farmhouse with his sword raised, roaring a war cry from the Stinking Ford. Croaker swings the cannon round. Before it can fire, Sir Gristle’s heart does, in a manner of speaking, and he falls face-first in the yard, sword pointing at the enemy. A toad lands on his back and croaks.', 'From the village, people have been watching. It looked very, very glorious.']
       : ['Sir Gristle advances, roaring. Croaker fires. The toad hits Sir Gristle’s shield and explodes, throwing him flat on his back in the yard, where he lies laughing. “Ha! Missed!” he cries, which isn’t true, but nobody has the heart to tell him. Croaker is so impressed that he comes down to shake his hand.'],
     choices: [
