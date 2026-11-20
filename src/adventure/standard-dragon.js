@@ -29,8 +29,8 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the village', to: 'start' }],
   },
   salt: {
-    on: [{ flag: 'salt' }, { gold: -5 }],
-    text: ['The shopkeeper sells you a sack of salt, and asks what it’s for. You say “slugs,” to see what happens. He nods slowly, and gives you a second sack for free.'],
+    on: [{ flag: 'snoadClue' }, { flag: 'salt' }, { gold: -5 }],
+    text: ['The shopkeeper sells you a sack of salt, and asks what it’s for. You say “slugs,” to see what happens. He nods slowly, and gives you a second sack for free. “Fellow with warts came through in the spring,” he says. “Sold Ned up the lane something for his cabbages. Ned hasn’t got cabbages any more.”'],
     choices: [{ text: 'Back to the village', to: 'start' }],
   },
   path: {

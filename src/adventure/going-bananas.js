@@ -1,5 +1,6 @@
 // GOING BANANAS — deal with a runaway golem made of bananas before the Harvest Festival. For a level 4–5 scumbag.
 // The golem is delicious, and everyone in Pippin-on-Wye knows it.
+import { didAdventure } from '../engine/conditions.js';
 
 export const META = {
   tier: 5, id: 'going-bananas', title: 'Going Bananas', levels: '4–5', final: 'festival',
@@ -23,9 +24,9 @@ export const SECTIONS = {
   },
   wizard: {
     text: (c) => [c.flags.wizardTalked
-      ? 'The hedge-wizard is still behind the cider tent, still eating a banana, still nervous.'
-      : 'The hedge-wizard who animated the golem is hiding behind the cider tent, eating a banana, which may be evidence. “It’s scared,” he says, with his mouth full. “That’s all. It’s a banana. It knows what happens to bananas. Everybody keeps trying to peel it.” He swallows. “It wants to go somewhere warm, where nobody eats it. Like the Duke’s hothouse, over the hill. It said so. Well. It pointed.”'],
-    on: [{ flag: 'wizardTalked' }],
+      ? 'Snoad is still behind the cider tent, still eating a banana, still nervous.'
+      : `The hedge-wizard who animated the golem is hiding behind the cider tent, eating a banana, which may be evidence. ${didAdventure(c, 'legging-it') ? 'It’s Snoad, from the Hobbling Arms, warts, beard and all. He sees you, and tucks his feet under the bench.' : 'He is a nervous little man with warts and a beard, called Snoad.'} “I only said it once this time,” he says, with his mouth full. “It’s scared. That’s all. It’s a banana. It knows what happens to bananas. Everybody keeps trying to peel it.” He swallows. “It wants to go somewhere warm, where nobody eats it. Like the Duke’s hothouse, over the hill. It said so. Well. It pointed.”`],
+    on: [{ flag: 'snoadClue' }, { flag: 'wizardTalked' }],
     choices: [{ text: 'Go after it', to: 'orchard' }],
   },
   orchard: {

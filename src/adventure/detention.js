@@ -11,9 +11,9 @@ const spike = { name: 'Spike', proper: true, lvl: 5, hp: 18, range: 'medium', dm
 export const SECTIONS = {
   start: {
     text: [
-      'Headmistress Grimble of the Collegium Arcana is a tall woman with a short temper and a hat like a church spire. “My grimoire,” she says. “Three hundred years of spells, and a pressed flower from my first teaching post. Taken by Spike Wimbledon and his gang, who were supposed to be in detention. They are in Muttering, extorting shopkeepers.” She sniffs. “The inspectors come on Friday. If they find the school’s grimoire is missing, they will close us down. Bring it back. Bring them back, if you can. I have a detention room waiting.”',
+      'Headmistress Grimble of the Collegium Arcana is a tall woman with a short temper and a hat like a church spire. “My grimoire,” she says. “Three hundred years of spells, and a pressed flower from my first teaching post. Taken by Spike Wimbledon and his gang, who were supposed to be in detention. The worst pupils this school has had since a boy called Snoad. They are in Muttering, extorting shopkeepers.” She sniffs. “The inspectors come on Friday. If they find the school’s grimoire is missing, they will close us down. Bring it back. Bring them back, if you can. I have a detention room waiting.”',
     ],
-    on: [{ gold: 40, msg: 'She gives you 40GP for expenses, and a detention slip, signed.' }, { item: 'slip' }], onceOnly: true,
+    on: [{ flag: 'snoadClue' }, { gold: 40, msg: 'She gives you 40GP for expenses, and a detention slip, signed.' }, { item: 'slip' }], onceOnly: true,
     choices: [{ text: 'Go to Muttering', to: 'muttering' }],
   },
   muttering: {

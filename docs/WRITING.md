@@ -89,6 +89,16 @@ a version of the text for a scumbag who's never been there.
 flags that are always or only sometimes set on arrival: read each section against the
 "sometimes" list.
 
+### Snoad
+
+Snoad is a hedge-wizard: warts, beard, very nervous, says his spells too many times. He is the
+open cause of Legging It and Going Bananas, and the quiet cause of a few other messes: a pencilled
+note on Neville's race card, Mother's sleeping charm, the chalked SERVICED. S. in the clock room,
+a hat in the blob, a receipt in the Bursar's office, Ned's cabbages, a mention in Detention.
+Keep these hints rare, short and deniable. Never let anyone in a story join the dots, and never
+bend a plot to fit him. Every section with a hint sets the `snoadClue` flag, so the clues can be
+counted across a career with `pastFlag(c, id, 'snoadClue')`.
+
 ## Skills
 
 Give every test all the skills that could plausibly cover it, and list any professions that could

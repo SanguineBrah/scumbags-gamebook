@@ -1,5 +1,6 @@
 // LEGGING IT — round up forty pairs of animated legs that walked out of a cobbler's shop. For a level 1–2 scumbag.
 // The `boots` counter is how many pairs you've brought back; Welt pays 15GP a pair, and 250 for the seven-league boots.
+import { didAdventure } from '../engine/conditions.js';
 
 export const META = {
   tier: 2, id: 'legging-it', title: 'Legging It', levels: '1–2', final: 'welt_pays',
@@ -22,9 +23,10 @@ export const SECTIONS = {
     ],
   },
   pub: {
+    on: [{ flag: 'snoadClue' }],
     text: (c) => c.flags.snoadTalked
       ? ['Snoad the hedge-wizard is still under his table in the Hobbling Arms, with his pint. He waves at you with his feet, which he keeps a close eye on now.']
-      : ['The Hobbling Arms is empty except for a man under a table, holding his pint above his head to keep it out of reach of his own feet. This is Snoad, hedge-wizard, warts, beard and all. “Are they still out there?” he whispers. “I only meant one pair. I said the spell forty times. I was nervous.”'],
+      : [`The Hobbling Arms is empty except for a man under a table, holding his pint above his head to keep it out of reach of his own feet. ${didAdventure(c, 'going-bananas') ? 'It’s Snoad, the banana man from Pippin-on-Wye, warts, beard and all. He sees you, and groans.' : 'This is Snoad, hedge-wizard, warts, beard and all.'} “Are they still out there?” he whispers. “I only meant one pair. I said the spell forty times. I was nervous.”`],
     choices: [
       { text: 'Ask him how to stop them', test: { stat: 'Cha', dd: 6, skill: ['social', 'arcana'], profs: ['Sorcerer', 'Alchemist'], why: 'one spellcaster to another' }, pass: 'snoad_tells', fail: 'snoad_mumbles', show: { notFlag: 'snoadTalked' } },
       { text: 'Buy him a drink first (2GP)', to: 'snoad_tells', if: { gold: 2 }, effects: [{ gold: -2 }], show: { notFlag: 'snoadTalked' } },

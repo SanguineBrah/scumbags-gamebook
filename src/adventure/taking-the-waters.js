@@ -135,9 +135,9 @@ export const SECTIONS = {
     fight: { ceiling: 'high', key: 'blob', monsters: [{ ...blob, hp: 12, note: 'A giant blob, drying out (12 HP); on hit, d8 Str save or take 2d4 more' }], win: 'blob_dead', flee: { to: 'great_bath', label: 'Back off' } },
   },
   blob_dead: {
-    on: [{ flag: 'blobGone' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'In what’s left of the blob: a tiara worth 120GP.' }, { gold: 60, msg: 'And three wedding rings: 60GP.' }],
+    on: [{ flag: 'snoadClue' }, { flag: 'blobGone' }, { if: { notFlag: 'tiaraTaken' }, item: 'tiara', msg: 'In what’s left of the blob: a tiara worth 120GP.' }, { gold: 60, msg: 'And three wedding rings: 60GP.' }],
     text: (c) => [
-      'The blob slumps, goes cloudy and runs away down the drain, leaving behind everything it ever swallowed.',
+      'The blob slumps, goes cloudy and runs away down the drain, leaving behind everything it ever swallowed, including a pointed hat with the stars sewn on crooked, which nobody will admit to.',
       c.flags.whitlow ? '' : 'That includes Lord Whitlow, who sits up, gasping, wrinkled as a walnut and clean as a whistle. “Six months,” he says. “It was very relaxing, actually.”',
     ].filter(Boolean),
     choices: [{ text: 'Report to Mr Bubbleby', to: 'season' }],

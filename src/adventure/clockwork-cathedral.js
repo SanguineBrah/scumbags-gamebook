@@ -108,10 +108,11 @@ export const SECTIONS = {
     choices: [{ text: 'Keep climbing', to: 'clock_room' }],
   },
   clock_room: {
+    on: [{ if: { flag: 'readTomb' }, flag: 'snoadClue' }],
     text: (c) => [
       'The clock room is a cathedral of its own: wheels as big as millstones, turning; pendulums swinging; and in the middle of it all, His Mechanical Grace, the clockwork bishop, seven feet of brass in a mitre, pulling bell ropes with every one of its six arms. It turns its head, with a click, and looks at you with glass eyes.',
       '“SINNER,” it says, in a voice like a music box. “YOU ARE EXCOMMUNICATED. KNEEL.”',
-      c.flags.readTomb ? 'In the wall of gears behind it, you count the wheels: the fourth one is stuck, a broken tooth jammed in its teeth.' : '',
+      c.flags.readTomb ? 'In the wall of gears behind it, you count the wheels: the fourth one is stuck, a broken tooth jammed in its teeth. On the casing beside it, somebody has chalked, in a wobbly hand: SERVICED. S.' : '',
     ].filter(Boolean),
     choices: [
       { text: 'Look for what’s gone wrong, with your jeweller’s loupe', to: 'loupe', if: { item: 'loupe' }, show: { notFlag: 'readTomb' } },

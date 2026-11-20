@@ -173,8 +173,8 @@ export const SECTIONS = {
     choices: [{ text: 'Back to the quad', to: 'quad' }],
   },
   bursar_clue: {
-    on: [{ flag: 'bursarClue' }],
-    text: ['“It has a price,” says the Bursar. “Everything has a price. The professor of logic paid it in full.” He shows you a receipt, written in a hand that isn’t human, for one professor of logic, received with thanks. It says nothing useful, but you can’t stop looking at it.'],
+    on: [{ flag: 'snoadClue' }, { flag: 'bursarClue' }],
+    text: ['“It has a price,” says the Bursar. “Everything has a price. The professor of logic paid it in full.” He shows you a receipt, written in a hand that isn’t human, for one professor of logic, received with thanks. It says nothing useful, but you can’t stop looking at it. Pinned behind it is a second receipt, for one summoning circle, chalked by a visiting hedge-wizard: CASH ONLY. NO REFUNDS. S.'],
     choices: [{ text: 'Back to the bursar', to: 'bursar' }],
   },
   hall: {

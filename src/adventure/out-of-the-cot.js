@@ -19,10 +19,11 @@ const MOTHER_KNOWS = (c) => {
 
 export const SECTIONS = {
   start: {
+    on: [{ flag: 'snoadClue' }],
     text: (c) => [
       'Halfway down Hogback Hill, Mother is sitting in a field with her apron over her face, crying. She is a hill giant, a hundred feet tall, and when she sobs, the hedges shake.',
       MOTHER_KNOWS(c),
-      `“My baby,” she says. “He climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel.${pastFlag(c, 'mothers-kitchen', 'coin') ? ' Well, most of one. Somebody has taken a chunk out of it. You don’t say anything.' : ''}`,
+      `“My baby,” she says. “I got him a sleeping charm off a little man who came up the hill selling them. Warts. Beard. Very nervous. Out like a light, he was, for nearly an hour. Then he climbed out of his cot and went down the hill, and he’s sitting in the middle of the town, and I can’t go in after him. I’d tread on somebody. I’d tread on everybody.” She wipes her nose on a tree. “And they’ve sent for that Captain Snare. With his nets. Bring my baby home and I’ll give you this.” She holds out a gold coin the size of a cartwheel.${pastFlag(c, 'mothers-kitchen', 'coin') ? ' Well, most of one. Somebody has taken a chunk out of it. You don’t say anything.' : ''}`,
     ].filter(Boolean),
     choices: [{ text: 'Go down into Lower Hogback', to: 'square' }],
   },
