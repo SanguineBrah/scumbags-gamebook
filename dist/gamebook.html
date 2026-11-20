@@ -157,7 +157,7 @@
   .banner { text-align: center; font-family: var(--display); font-size: 2rem; margin: 1.4rem 0 .4rem; }
   .banner.dead { color: var(--blood); }
 </style>
-<meta name="build" content="92e708efc3d6">
+<meta name="build" content="b39416cf89c5">
 </head>
 <body>
 <div id="app"></div>
@@ -9230,7 +9230,7 @@ const META = {
 };
 
 const auditor = { name: 'The Auditor-General', lvl: 8, hp: 30, range: 'engaged', feats: ['dealD6', 'approval'], note: 'Seven feet of black wool and spectacles; deals +d6 damage; acts every other turn, but very hard' };
-const death = { name: 'Death', proper: true, lvl: 10, hp: 80, range: 'engaged', dmg: '3d8', note: 'Four thousand years of practice (80 HP, 3d8). He can’t be killed, but he can be beaten' };
+const death = { name: 'Death', proper: true, lvl: 10, hp: 80, range: 'engaged', dmg: '3d8', note: 'Four thousand years in the job (80 HP, 3d8). He can’t be killed, but he can be beaten' };
 
 const dt = (c, f) => pastFlag(c, 'death-and-taxes', f);
 const mt = (c, f) => pastFlag(c, 'more-taxes', f);
@@ -9247,16 +9247,16 @@ const AUDITOR = (c) => mt(c, 'struckOut') ? 'He is carrying a file with nothing 
         : 'You have never met him. He has a file on you as thick as a door.';
 
 /** Death, as you left him (or as you've never met him). */
-const DEATH = (c) => hol(c, 'returned') ? 'He has a tan, and his scythe, and a stick of Brinemouth rock in his top pocket. He nods to you like an old friend, which in a way he is.'
-  : hol(c, 'soldScythe') ? 'He has his scythe back. “The necromancer,” he says, when he sees you looking at it. “Last Tuesday. He was very surprised.” He looks at you. “I said I’d see you later.”'
-    : didAdventure(c, 'death-takes-a-holiday') ? 'He has his scythe back, no thanks to you. He doesn’t seem to hold it against you. He doesn’t hold anything against anyone. He just holds the scythe.'
-      : 'You have never met. He knows you anyway. He knows everybody, eventually.';
+const DEATH = (c) => hol(c, 'returned') ? 'He still has the tan from Brinemouth, and the look of somebody who took a fortnight off and came back to everything. He nods to you like a colleague.'
+  : hol(c, 'soldScythe') ? 'He has his scythe back. “The necromancer,” he says, when he sees you looking at it. “Last Tuesday. Took me a week to catch up on the paperwork.” He looks at you. “I said I’d see you later.”'
+    : didAdventure(c, 'death-takes-a-holiday') ? 'He has his scythe back, no thanks to you. He doesn’t hold it against you. He doesn’t hold anything against anyone. It isn’t in his job description.'
+      : 'You have never met. He has your name on his list anyway, about two-thirds of the way down, after a man in Sludgeby who argued and before a shipwreck.';
 
 const SECTIONS = {
   start: {
     text: (c) => [
       'Two letters come for you at the Drowned Rat, on the same tray. The landlord puts them down and backs away.',
-      'The first has a black border. Inside, in handwriting like a churchyard railing: APPOINTMENT. THE COUNTING HOUSE, GALLOWS HILL. MIDNIGHT. BRING NOTHING. YOU CAN’T, ANYWAY.',
+      'The first has a black border. Inside is a small printed card, like one from a dentist: YOU HAVE AN APPOINTMENT. Somebody has filled in the blanks in a neat, tired hand: The Counting House, Gallows Hill. Midnight. At the bottom, in print: If you are unable to attend, you will attend anyway. Please bring nothing.',
       `The second has a red seal. FINAL DEMAND. Tax on a lifetime of pointless endeavours: ${owed(c)} gold, plus interest, to be collected in person at your registered address, the Counting House, Gallows Hill, at midnight. It is signed by the Auditor-General.`,
       `You have never registered an address in your life. Somebody has done it for you, because of ${dt(c, 'looted') ? 'a vault you emptied' : 'a vault you visited'} under Gallows Hill, a long time ago, when you were level 1 and didn’t know any better.`,
     ],
@@ -9268,7 +9268,7 @@ const SECTIONS = {
   },
   coach: {
     on: [{ add: ['quarters', 1] }],
-    text: ['You buy a seat on the night coach to the coast. Sitting opposite you is a tall, thin passenger in a black robe, reading a novel about a lighthouse keeper. On the roof, with the luggage, somebody in black wool is doing sums. At the first crossroads, the coach turns, for no reason the driver can explain, towards Gallows Hill.'],
+    text: ['You buy a seat on the night coach to the coast. Sitting opposite you is a tall, thin passenger in a black robe, eating a sandwich out of a tin box and going through a list with a pencil. On the roof, with the luggage, somebody in black wool is doing sums. At the first crossroads, the coach turns, for no reason the driver can explain, towards Gallows Hill.'],
     choices: [{ text: 'Get out at the bottom of the hill', to: 'hill' }],
   },
   stay: {
@@ -9379,14 +9379,14 @@ const SECTIONS = {
     text: (c) => [
       'You are standing in the great hall of the Counting House when, down in the valley, the church clock strikes twelve.',
       `On the last stroke, the front door opens, and two visitors come in at once, and stop, and look at each other. One is seven feet of black wool and spectacles. ${AUDITOR(c)}`,
-      `The other is a skeleton in a black robe, with a scythe. ${DEATH(c)}`,
-      '“After you,” says Death. “No,” says the Auditor-General. “After you.” They both look at you.',
+      `The other is a skeleton in a black robe, with a scythe in one hand and a clipboard in the other. ${DEATH(c)}`,
+      'They know each other, the way two people who work in the same building know each other. “After you,” says Death. “No,” says the Auditor-General. “After you.” They both look at you, and then at their watches.',
     ],
     choices: [{ text: 'Step forward', to: 'midnight' }],
   },
   midnight: {
     text: (c) => [
-      'The Auditor-General opens his file. Death leans on his scythe. They have all the time in the world, and the Auditor-General charges for it.',
+      'The Auditor-General opens his file. Death checks his clipboard. He has eleven more after you tonight, and a shipwreck. The Auditor-General charges by the hour.',
       c.flags.party ? 'Behind them, the kobolds are bringing out the pies, and a fiddler is tuning up.' : '',
     ].filter(Boolean),
     choices: [
@@ -9399,12 +9399,12 @@ const SECTIONS = {
     ],
   },
   midnight_fizzle: {
-    text: ['The spell fizzles. Death watches politely. The Auditor-General makes a note.'],
+    text: ['The spell fizzles. Death waits politely, the way he waits for everything. The Auditor-General makes a note.'],
     choices: [{ text: 'Try something else', to: 'midnight' }],
   },
   petitioned: {
     on: [{ flag: 'knowsDeathTax' }],
-    text: ['You ask your god what to do about Death and taxes. Your god, who has been asked this before, answers at once: “Ask the taxman how Death gets paid.” Death, who heard, looks at the ceiling and whistles.'],
+    text: ['You ask your god what to do about Death and taxes. Your god, who has been asked this before, answers at once: “Ask the taxman how Death gets paid.” Death, who heard, looks at the ceiling and becomes very interested in his clipboard.'],
     choices: [{ text: 'Back to your visitors', to: 'midnight' }],
   },
   intervened: {
@@ -9414,7 +9414,7 @@ const SECTIONS = {
   },
   wished: {
     on: [{ flag: 'immortal' }],
-    text: ['You wish never to die. The air goes still. Death lowers his scythe, looks at you for a long moment, and puts his hood back up. “Well,” he says. “That’s that, then. I’ll see you never.” He leaves. The Auditor-General doesn’t. He sits down, takes out a fresh ledger, and opens it at page one. Nothing is certain except death and taxes. You only got rid of one of them.'],
+    text: ['You wish never to die. The air goes still. Death lowers his scythe, looks at you for a long moment, and crosses you off his clipboard. “Well,” he says. “That’s one fewer. I won’t pretend I’m sorry.” He leaves. The Auditor-General doesn’t. He sits down, takes out a fresh ledger, and opens it at page one. Nothing is certain except death and taxes. You only got rid of one of them.'],
     choices: [{ text: 'Go on living', to: 'retirement' }],
   },
   auditor_talk: {
@@ -9486,21 +9486,21 @@ const SECTIONS = {
     text: (c) => [
       hol(c, 'returned') ? '“He pays in pennies,” you say. “From the eyes of the dead. He paid me six hundred gold in them, in Brinemouth. Four thousand years of pennies, and has he ever filed a return?”'
         : '“How does Death get paid?” you ask the Auditor-General. He opens his mouth to answer, and stops, and turns, very slowly, to look at Death.',
-      'Death looks at the ceiling. The Auditor-General takes out a new file, a very large one, and a pen. “Name,” he says. “Occupation. Income, for the last four thousand years. In pennies will do.” Death sits down on the stairs with a sigh like a closing coffin. You leave them to it.',
+      '“I’m self-employed,” says Death, too quickly. The Auditor-General’s eyes light up behind his spectacles. He takes out a new file, a very large one, and a pen. “Four thousand years,” he says. “Self-employed. Expenses?” “The scythe,” says Death. “Receipts?” Death sits down on the stairs with a sigh like a closing coffin. You leave them to it.',
     ],
     choices: [{ text: 'Walk out into the night', to: 'retirement' }],
   },
   party: {
     on: [{ flag: 'partied' }],
-    text: ['“Party,” you say. Grandmother Snik puts a plate of pie in the Auditor-General’s hands and a cup of something in Death’s, and the fiddler strikes up. Nobody has ever invited Death to a party. He stands at the edge for a while. Then a kobold child asks him to dance, and he does, all night, very well, while the Auditor-General goes through the kobolds’ accounts and pronounces them, for the first time in his career, in perfect order.', 'At dawn, Death pulls up his hood. “Another time,” he says to you. “Not soon.” The Auditor-General takes a second pie for the road.'],
+    text: ['“Party,” you say. Grandmother Snik puts a plate of pie in the Auditor-General’s hands and a cup of something in Death’s, and the fiddler strikes up. Death says he can only stay for one. Then the kobolds start a game of musical chairs, and he wins every round, because he always knows exactly when the music is going to stop. It’s the job. Meanwhile the Auditor-General goes through the kobolds’ accounts and pronounces them, for the first time in his career, in perfect order.', 'At dawn, Death looks at his clipboard, and sighs, and moves you to the bottom of it. “Another time,” he says. “Not soon. I’m behind as it is.” The Auditor-General takes a second pie for the road.'],
     choices: [{ text: 'Go home to bed', to: 'retirement' }],
   },
   death_talk: {
     text: (c) => [
-      c.flags.taxDone ? 'Death is sitting on the bottom step of the stairs with his scythe across his knees, waiting.' : 'Death is sitting on the bottom step of the stairs with his scythe across his knees. Behind you, the Auditor-General waits too, writing down how long you take.',
-      hol(c, 'returned') ? '“I don’t forget a kindness,” he says. “I don’t forget anything. It’s the job.”'
+      c.flags.taxDone ? 'Death is sitting on the bottom step of the stairs with his scythe across his knees and his clipboard on top of it.' : 'Death is sitting on the bottom step of the stairs with his scythe across his knees and his clipboard on top of it. Behind you, the Auditor-General waits too, writing down how long you take.',
+      hol(c, 'returned') ? '“I don’t forget a kindness,” he says. “I don’t forget anything. It’s the job. Name?” He knows your name. He asks anyway. It’s procedure.'
         : hol(c, 'soldScythe') ? '“A necromancer,” he says. “Of all the people to sell it to.” He sounds more disappointed than angry, which is worse.'
-          : '“Well,” he says, not unkindly. “Here we are.”',
+          : '“Name?” he says, not unkindly. He knows it. It’s procedure. He finds you on his list and puts his pencil next to you. “Right. Here we are, then.”',
     ],
     choices: [
       { text: 'Ask him for more time', to: 'more_time', show: { past: ['death-takes-a-holiday', 'returned'] } },
@@ -9515,61 +9515,61 @@ const SECTIONS = {
   },
   more_time: {
     on: [{ flag: 'deferred' }],
-    text: ['“More time,” says Death. He thinks about it, which takes no time at all, for him. “You gave me back my holiday. I suppose I can give you back some of yours.” He gets up, and pulls up his hood. “I’ll come when you’re very old, and you won’t mind. I’ll bring a deckchair.”'],
+    text: ['“More time,” says Death. He takes a small black diary out of his robe, licks his thumb, and turns the pages forward, and forward, and forward. “You gave me back my holiday,” he says. “I can do you in fifty years. A Tuesday. Morning or afternoon?” You say afternoon. He pencils you in. “I’ll bring a deckchair,” he says.'],
     choices: [{ text: 'Shake his hand', to: 'retirement' }],
   },
   bargained: {
     on: [{ flag: 'bargained' }],
-    text: [`You talk. Death listens. Nobody has ever made him an offer he hadn’t heard before, and you don’t either, but you make the old ones very well. At the end, he laughs, a sound like a gate in the wind. “Twenty years,” he says. “Not a day more. And you’ll stop doing this sort of thing.” You shake on it. His hand is cold, and very gentle.`],
+    text: [`You talk. Death listens. Nobody has ever made him an offer he hadn’t heard before, and you don’t either, but you make the old ones very well. At the end, he sighs and takes a form out from under his clipboard: DEFERRAL, GROUNDS FOR. “Twenty years,” he says, filling it in. “Not a day more. And you’ll stop doing this sort of thing. Sign there, and there.” You sign. He gives you the pink copy.`],
     choices: [{ text: 'Retire', to: 'retirement' }],
   },
   death_no: {
     on: [{ flag: 'refused' }],
-    text: ['Death hears you out, all of it, nodding. Then he shakes his head, kindly. “No,” he says. “But it was a good try. Most people just cry.”'],
+    text: ['Death hears you out, all of it, nodding. Then he shakes his head, kindly. “It’s not up to me,” he says. “It’s policy. But it was a good try. Most people just cry.”'],
     choices: [{ text: 'Try something else', to: 'death_talk' }],
   },
   death_waits: {
     on: [{ flag: 'chased' }],
-    text: ['You run. Out of the door, down the hill, through the town, across three counties. At dawn you stop, gasping, at a crossroads. Death is sitting on the milestone, waiting. “I walk,” he says. “It’s quicker, in the end.” He walks you back to Gallows Hill.'],
+    text: ['You run. Out of the door, down the hill, through the town, across three counties. At dawn you stop, gasping, at a crossroads. Death is sitting on the milestone, eating a sandwich. “I walk,” he says. “It’s quicker, in the end.” He finishes the sandwich, and walks you back to Gallows Hill.'],
     choices: [{ text: 'Sit down beside him', to: 'death_talk' }],
   },
   ran: {
     on: [{ flag: 'ran' }],
-    text: ['You run. Out of the door, down the hill, through the town and out of the kingdom. Death doesn’t run after you. He doesn’t need to. You keep running, on and off, for forty years, and you see a great deal of the world, mostly over your shoulder.'],
+    text: ['You run. Out of the door, down the hill, through the town and out of the kingdom. Death doesn’t run after you. He makes a note, and moves on to the shipwreck. You keep running, on and off, for forty years, and you see a great deal of the world, mostly over your shoulder.'],
     choices: [{ text: 'Keep running', to: 'retirement' }],
   },
   cards_won: {
     on: [{ flag: 'cards' }],
-    text: ['Death shuffles. He has played this game with kings and emperors, and they always lose. You don’t. He looks at your cards for a long time, then lays his own face down on the stairs, and smiles, which is the only thing his face does. “Nobody has won in a thousand years,” he says. “Keep your life. I’ll come back for a rematch.”'],
+    text: ['Death shuffles. He plays every lunchtime with the lads from the office, and he never loses. You don’t either. He looks at your cards for a long time, then lays his own face down on the stairs, and smiles, which is the only thing his face does. “They’ll never believe this at work,” he says. “Keep your life. I’ll want a rematch.”'],
     choices: [{ text: 'Pocket your winnings', to: 'retirement' }],
   },
   vane_goes: {
     on: [{ flag: 'vaneTaken' }],
-    text: (c) => [`Usurer Vane comes up the stairs from the vault, faint as smoke, and stands in front of Death${dt(c, 'ledgerBurnt') ? '' : ' with his ledger under his arm'}. “Twenty years overdue,” he whispers. “I believe that’s me.” Death looks at him, and at you. “One’s one,” he says. He takes Vane’s arm, and they go out into the night together, and Vane doesn’t look back once. The books are closed.`],
+    text: (c) => [`Usurer Vane comes up the stairs from the vault, faint as smoke, and stands in front of Death${dt(c, 'ledgerBurnt') ? '' : ' with his ledger under his arm'}. “Twenty years overdue,” he whispers. “I believe that’s me.” Death looks at him, and at you, and at his clipboard. He crosses something out and writes something in. “One’s one,” he says. “It balances.” He takes Vane’s arm, and they go out into the night together, and Vane doesn’t look back once. The books are closed.`],
     choices: [{ text: 'Close the door behind them', to: 'retirement' }],
   },
   death_fight: {
-    text: ['Death sighs, stands up, and shrugs off his robe. Underneath, he is all elbows. “Everybody tries this,” he says, “once.”'],
+    text: ['Death sighs, puts down his clipboard, and shrugs off his robe. Underneath, he is all elbows. “Everybody tries this,” he says. “They don’t pay me enough for it.”'],
     fight: { monsters: [death], win: 'death_beaten', flee: { to: 'death_waits', label: 'Run' } },
   },
   death_beaten: {
     on: [{ flag: 'beatDeath' }],
-    text: ['Death goes down on the flagstones of the hall with a clatter, like a coat stand. He lies there, looking at the ceiling. Then he laughs. “Nobody has ever done that,” he says, and gets up, which you can’t stop him doing. He picks up his scythe. “Later, then,” he says. “Much later. I’ll want to see how you did it.”'],
+    text: ['Death goes down on the flagstones of the hall with a clatter, like a coat stand. He lies there, looking at the ceiling. Then he laughs. “Nobody has ever done that,” he says, and gets up, which you can’t stop him doing. He picks up his clipboard and starts filling in an incident report. “Later, then,” he says, without looking up. “Much later. I’ll have to put you back to the bottom.”'],
     choices: [{ text: 'Sit down before you fall down', to: 'retirement' }],
   },
   taken: {
     end: 'death',
-    text: ['Death stands, and holds out his hand, and you take it. It isn’t cold at all. You walk out of the Counting House together, past the hatch by the door, into the night. “Not bad,” says Death, “for a scumbag.” It’s the nicest thing anyone has ever said to you.'],
+    text: ['Death ticks you off his list, stands, and holds out his hand, and you take it. It isn’t cold at all. You walk out of the Counting House together, past the hatch by the door, into the night. “Not bad,” says Death, “for a scumbag.” It’s the nicest thing anyone has ever said to you.'],
   },
   retirement: {
     end: 'victory',
     text: (c) => [
       c.flags.immortal ? 'You live forever. The Auditor-General visits every spring, with your bill, and the interest. You are, in the end, the most taxed person who ever lived.'
         : c.flags.auditedDeath ? 'Death is still at the Counting House, as far as anyone knows, filling in forms. Nobody dies for a while. You retire to the coast, and live to a great age, and nobody comes for you, because he is still on page four.'
-          : c.flags.partied ? 'The kobolds have a party every year after that, at midnight, and Death comes to every one, and dances. You go too, until one year, a long time later, he asks you to dance instead, and you do.'
-            : c.flags.deferred ? 'You retire to Brinemouth-on-Sea, and buy a beach hut, and paint it black. When Death finally comes, a very long time later, he brings a deckchair, as promised, and you watch the sea together for a while before you go.'
-              : c.flags.bargained ? 'You keep your word, more or less. Twenty years to the day later, Death knocks, and you open the door in your slippers, and you are, to your surprise, ready.'
-                : c.flags.cards ? 'Death comes back for a rematch every few years. You let him win, eventually, when you’re ready. He knows. He doesn’t mind.'
+          : c.flags.partied ? 'The kobolds have a party every year after that, at midnight, and Death comes to every one, and wins at musical chairs, and leaves early because he’s working. You go too, until one year, a long time later, he saves you a chair.'
+            : c.flags.deferred ? 'You retire to Brinemouth-on-Sea, and buy a beach hut, and paint it black. Fifty years later, on a Tuesday afternoon, Death turns up on time to the minute, with a deckchair, as promised, and you watch the sea together for a while before you go.'
+              : c.flags.bargained ? 'You keep your word, more or less. Twenty years to the day later, Death knocks, with the pink copy of your form, and you open the door in your slippers, and you are, to your surprise, ready.'
+                : c.flags.cards ? 'Death comes back for a rematch every few years, in his lunch hour. You let him win, eventually, when you’re ready. He knows. He doesn’t mind.'
                   : c.flags.vaneTaken ? 'You never see Usurer Vane again. You keep his candle, and you sit by it sometimes, counting, out of respect.'
                     : c.flags.beatDeath ? 'You are the scumbag who beat Death in a fair fight. Nobody believes you, so you tell everybody, at length, for the rest of a very long life.'
                       : 'You run until you can’t, and then you sit down on a bench at the end of the world, and Death sits down next to you. “Good run,” he says.',
@@ -9580,7 +9580,7 @@ const SECTIONS = {
 };
 
 const DEATH_TEXT = [
-  'Death walks you down Gallows Hill, where it all started. Somewhere behind you, the Auditor-General closes your file, and writes DECEASED across it, and underlines it twice.',
+  'Death walks you down Gallows Hill, where it all started, briskly, because he has eleven more tonight. Somewhere behind you, the Auditor-General closes your file, and writes DECEASED across it, and underlines it twice.',
 ];
 
 return { META, SECTIONS, DEATH_TEXT };
@@ -9659,9 +9659,9 @@ const LINES = {
 // How it ended, from the finale's flags; or a plain retirement from the town.
 const ENDING = (p) => p('immortal') ? 'Wished never to die, and didn’t. Still pays tax.'
   : p('auditedDeath') ? 'Set the taxman on Death, and walked out while they were busy.'
-    : p('partied') ? 'Took Death and the taxman to a kobold party. Death danced.'
-      : p('deferred') ? 'Asked Death for more time, and got it, for services rendered.'
-        : p('bargained') ? 'Talked Death into twenty more years.'
+    : p('partied') ? 'Took Death and the taxman to a kobold party. Death won at musical chairs.'
+      : p('deferred') ? 'Asked Death for more time, and got pencilled in for a Tuesday, fifty years on.'
+        : p('bargained') ? 'Talked Death into twenty more years, and kept the pink copy.'
           : p('cards') ? 'Beat Death at cards.'
             : p('vaneTaken') ? 'Sent a dead moneylender to Death in their place. One’s one.'
               : p('beatDeath') ? 'Beat Death in a fair fight. Nobody believes it.'

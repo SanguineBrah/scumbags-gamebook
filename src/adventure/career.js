@@ -72,9 +72,9 @@ const LINES = {
 // How it ended, from the finale's flags; or a plain retirement from the town.
 const ENDING = (p) => p('immortal') ? 'Wished never to die, and didn’t. Still pays tax.'
   : p('auditedDeath') ? 'Set the taxman on Death, and walked out while they were busy.'
-    : p('partied') ? 'Took Death and the taxman to a kobold party. Death danced.'
-      : p('deferred') ? 'Asked Death for more time, and got it, for services rendered.'
-        : p('bargained') ? 'Talked Death into twenty more years.'
+    : p('partied') ? 'Took Death and the taxman to a kobold party. Death won at musical chairs.'
+      : p('deferred') ? 'Asked Death for more time, and got pencilled in for a Tuesday, fifty years on.'
+        : p('bargained') ? 'Talked Death into twenty more years, and kept the pink copy.'
           : p('cards') ? 'Beat Death at cards.'
             : p('vaneTaken') ? 'Sent a dead moneylender to Death in their place. One’s one.'
               : p('beatDeath') ? 'Beat Death in a fair fight. Nobody believes it.'
